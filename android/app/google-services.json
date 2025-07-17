@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "571931343862",
+    "project_id": "mend-ai-e582d",
+    "storage_bucket": "mend-ai-e582d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:571931343862:android:1361fcaf264c2177cda5d7",
+        "android_client_info": {
+          "package_name": "com.example.mend_ai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDp4r8PrvLCWYX9cPxbSVtv-cLL0xaD72c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
