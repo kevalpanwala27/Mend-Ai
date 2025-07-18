@@ -12,7 +12,20 @@
           "package_name": "com.example.mend_ai"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "571931343862-dvujiuth2f4unllg3n7eiguquj9pfmmd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mend_ai",
+            "certificate_hash": "e0e238c458142c822a62b607de9c55af16b27286"
+          }
+        },
+        {
+          "client_id": "571931343862-vvr6ddks1ogequvqtq8aoj7837mqe940.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDp4r8PrvLCWYX9cPxbSVtv-cLL0xaD72c"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "571931343862-vvr6ddks1ogequvqtq8aoj7837mqe940.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "571931343862-dq7k0r1e210hhooabg5fbquj76ku9euu.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.mendAi"
+              }
+            }
+          ]
         }
       }
     }

@@ -12,11 +12,16 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
+        print(
+          'AuthWrapper: isLoading= [33m${appState.isLoading} [0m, user= [36m${appState.user} [0m, onboarding= [32m${appState.isOnboardingComplete} [0m',
+        );
         // Show loading screen while initializing
-        if (appState.user == null && appState.isAuthenticated == false) {
-          return const LoginScreen();
+        if (appState.isLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
-        
+
         // User is authenticated
         if (appState.user != null) {
           // Check if onboarding is complete
@@ -26,7 +31,7 @@ class AuthWrapper extends StatelessWidget {
             return const WelcomeScreen();
           }
         }
-        
+
         // Default to login screen
         return const LoginScreen();
       },

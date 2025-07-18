@@ -14,23 +14,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
-    
+
     try {
-      final success = await context.read<FirebaseAppState>().signInWithGoogle();
-      
-      if (!success && mounted) {
+      final error = await context.read<FirebaseAppState>().signInWithGoogle();
+
+      if (error != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to sign in. Please try again.'),
+          SnackBar(
+            content: Text('Failed to sign in: ' + error),
             backgroundColor: Colors.red,
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('Unexpected error in sign-in: $e\n$stack');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('Unexpected error: ' + e.toString()),
             backgroundColor: Colors.red,
           ),
         );
@@ -76,9 +77,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Welcome text
                 Text(
                   'Welcome to Mend',
@@ -88,17 +89,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 Text(
                   'AI-powered couples therapy to help you communicate better and strengthen your relationship.',
                   style: Theme.of(context).textTheme.bodyLarge,
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const SizedBox(height: 60),
-                
+
                 // Google Sign In button
                 SizedBox(
                   width: double.infinity,
@@ -115,7 +116,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             'assets/google_logo.png',
                             height: 24,
                             width: 24,
-                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.login),
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.login),
                           ),
                     label: Text(
                       _isLoading ? 'Signing in...' : 'Continue with Google',
@@ -130,16 +132,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       elevation: 2,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(
-                          color: Colors.grey.shade300,
-                        ),
+                        side: BorderSide(color: Colors.grey.shade300),
                       ),
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Features list
                 Column(
                   children: [
@@ -152,7 +152,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     _buildFeatureItem(
                       icon: Icons.psychology_rounded,
                       title: 'AI Moderation',
-                      description: 'Intelligent feedback on communication patterns',
+                      description:
+                          'Intelligent feedback on communication patterns',
                     ),
                     const SizedBox(height: 16),
                     _buildFeatureItem(
@@ -162,15 +163,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Privacy notice
                 Text(
                   'By continuing, you agree to our Terms of Service and Privacy Policy. Your conversations are private and secure.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -208,16 +209,16 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 4),
               Text(
                 description,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
               ),
             ],
           ),

@@ -2,9 +2,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
 
+class GoogleSignInResult {
+  final UserCredential? userCredential;
+  final String? errorMessage;
+
+  GoogleSignInResult({this.userCredential, this.errorMessage});
+}
+
 class FirebaseAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 
   // Get current user
   User? get currentUser => _auth.currentUser;
@@ -13,40 +20,34 @@ class FirebaseAuthService {
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   // Sign in with Google
-  Future<UserCredential?> signInWithGoogle() async {
+  Future<GoogleSignInResult> signInWithGoogle() async {
     try {
-      // Trigger the authentication flow
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
-      if (googleUser == null) {
-        // User cancelled the sign-in
-        return null;
+      await _googleSignIn.initialize();
+      final client = _googleSignIn.authorizationClient;
+      final authz = await client.authorizeScopes([
+        'email',
+        'https://www.googleapis.com/auth/userinfo.profile',
+      ]);
+      if (authz == null) {
+        return GoogleSignInResult(
+          errorMessage: 'Sign-in cancelled or not authorized by user.',
+        );
       }
-
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-      // Create a new credential
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+        accessToken: authz.accessToken,
       );
-
-      // Sign in to Firebase with the Google credential
-      return await _auth.signInWithCredential(credential);
-    } catch (e) {
-      debugPrint('Error signing in with Google: $e');
-      rethrow;
+      final userCredential = await _auth.signInWithCredential(credential);
+      return GoogleSignInResult(userCredential: userCredential);
+    } catch (e, stack) {
+      debugPrint('Error signing in with Google: $e\n$stack');
+      return GoogleSignInResult(errorMessage: e.toString());
     }
   }
 
   // Sign out
   Future<void> signOut() async {
     try {
-      await Future.wait([
-        _auth.signOut(),
-        _googleSignIn.signOut(),
-      ]);
+      await Future.wait([_auth.signOut(), _googleSignIn.signOut()]);
     } catch (e) {
       debugPrint('Error signing out: $e');
       rethrow;
@@ -70,7 +71,7 @@ class FirebaseAuthService {
   Map<String, dynamic>? get userProfile {
     final user = currentUser;
     if (user == null) return null;
-    
+
     return {
       'uid': user.uid,
       'email': user.email,
