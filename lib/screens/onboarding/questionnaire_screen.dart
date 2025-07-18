@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../models/partner.dart';
 import 'invite_code_screen.dart';
+import '../main/home_screen.dart'; // Corrected import for HomeScreen
 
 class QuestionnaireScreen extends StatefulWidget {
   const QuestionnaireScreen({super.key});
@@ -14,7 +15,7 @@ class QuestionnaireScreen extends StatefulWidget {
 class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  
+
   // Form data
   String _name = '';
   String _gender = '';
@@ -80,12 +81,20 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     );
 
     await context.read<FirebaseAppState>().completeOnboarding(partner);
-    
+    final appState = context.read<FirebaseAppState>();
+    final relationshipData = appState.relationshipData;
     if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const InviteCodeScreen()),
-      );
+      if (relationshipData != null && relationshipData['partnerB'] != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const InviteCodeScreen()),
+        );
+      }
     }
   }
 
@@ -113,7 +122,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
               Theme.of(context).colorScheme.primary,
             ),
           ),
-          
+
           // Page content
           Expanded(
             child: PageView(
@@ -131,7 +140,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
               ],
             ),
           ),
-          
+
           // Navigation buttons
           Padding(
             padding: const EdgeInsets.all(24.0),
@@ -175,7 +184,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 32),
-          
+
           // Name field
           TextFormField(
             decoration: const InputDecoration(
@@ -184,14 +193,11 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
             ),
             onChanged: (value) => setState(() => _name = value),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Gender selection
-          Text(
-            'Gender',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text('Gender', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,
@@ -226,7 +232,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 32),
-          
+
           // Goal options
           Wrap(
             spacing: 8,
@@ -247,9 +253,9 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
               );
             }).toList(),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Custom goal
           TextFormField(
             decoration: const InputDecoration(
@@ -280,7 +286,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 32),
-          
+
           // Challenge options
           Wrap(
             spacing: 8,
@@ -301,9 +307,9 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
               );
             }).toList(),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Custom challenge
           TextFormField(
             decoration: const InputDecoration(
@@ -334,23 +340,23 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 32),
-          
+
           // Summary cards
           _buildSummaryCard('Name', _name),
           _buildSummaryCard('Gender', _gender),
           _buildSummaryCard(
             'Relationship Goals',
-            _relationshipGoals.join(', ') + 
-            (_customGoal.isNotEmpty ? ', $_customGoal' : ''),
+            _relationshipGoals.join(', ') +
+                (_customGoal.isNotEmpty ? ', $_customGoal' : ''),
           ),
           _buildSummaryCard(
             'Current Challenges',
-            _currentChallenges.join(', ') + 
-            (_customChallenge.isNotEmpty ? ', $_customChallenge' : ''),
+            _currentChallenges.join(', ') +
+                (_customChallenge.isNotEmpty ? ', $_customChallenge' : ''),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -385,10 +391,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(
               content.isEmpty ? 'Not specified' : content,

@@ -149,13 +149,10 @@ class FirebaseAppState extends ChangeNotifier {
       _currentUserId = partner.id;
 
       if (partner.id == 'A') {
-        // Create invite code
-        final inviteCode = await _inviteService.createInvite(partner);
-
-        // Create relationship
+        // Create relationship (no invite code)
         final relationshipId = await _relationshipService.createRelationship(
           partner,
-          inviteCode,
+          '', // Pass empty string for invite code
         );
 
         // Load the created relationship

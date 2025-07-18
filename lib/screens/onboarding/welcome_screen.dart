@@ -15,7 +15,7 @@ class WelcomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
-              
+
               // App Logo/Icon
               Container(
                 width: 120,
@@ -30,37 +30,36 @@ class WelcomeScreen extends StatelessWidget {
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // App Name
-              Text(
-                'Mend',
-                style: Theme.of(context).textTheme.headlineLarge,
-              ),
-              
+              Text('Mend', style: Theme.of(context).textTheme.headlineLarge),
+
               const SizedBox(height: 16),
-              
+
               // Tagline
               Text(
                 'Your AI-powered relationship companion',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.7),
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               Text(
                 'Guide natural communication, resolve conflicts, and foster emotional closeness',
                 style: Theme.of(context).textTheme.bodyLarge,
                 textAlign: TextAlign.center,
               ),
-              
+
               const Spacer(),
-              
-              // Get Started Button
+
+              // Get Started Button (Partner A)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -72,13 +71,13 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  child: const Text('Get Started'),
+                  child: const Text('Get Started (Create Relationship)'),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
-              // Join Partner Button
+
+              // Join Partner Button (Partner B)
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
@@ -90,10 +89,10 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  child: const Text('Join Your Partner'),
+                  child: const Text('Join Your Partner (Use Invite Code)'),
                 ),
               ),
-              
+
               const SizedBox(height: 32),
             ],
           ),

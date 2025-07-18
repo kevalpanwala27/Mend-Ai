@@ -73,6 +73,17 @@ Download Mend and use this code to join our relationship space. Let's work on gr
       builder: (context, appState, child) {
         final inviteCode = appState.relationshipData?['inviteCode'] ?? '';
         final partnerName = appState.getCurrentPartner()?.name ?? 'You';
+        final partnerB = appState.relationshipData?['partnerB'];
+
+        // If partnerB is present, go to HomeScreen
+        if (partnerB != null) {
+          Future.microtask(() {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+            );
+          });
+        }
 
         return Scaffold(
           body: SafeArea(

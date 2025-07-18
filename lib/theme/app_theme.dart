@@ -1,102 +1,101 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color partnerAColor = Color(0xFFE3F2FD); // Light blue
-  static const Color partnerBColor = Color(0xFFFCE4EC); // Light pink
-  static const Color partnerADark = Color(0xFF1976D2); // Darker blue
-  static const Color partnerBDark = Color(0xFFC2185B); // Darker pink
-  static const Color interruptionColor = Color(0xFFFF5252); // Red
-  static const Color primaryTeal = Color(0xFF4DB6AC);
-  static const Color accentBlushPink = Color(0xFFF8BBD9);
-  static const Color backgroundLight = Color(0xFFFAFAFA);
-  static const Color textPrimary = Color(0xFF2C2C2C);
-  static const Color textSecondary = Color(0xFF757575);
-  static const Color successGreen = Color(0xFF66BB6A);
+  static const Color primary = Color(0xFF4FC3F7); // Soft blue
+  static const Color secondary = Color(0xFFF8BBD0); // Soft pink
+  static const Color accent = Color(0xFF80CBC4); // Teal
+  static const Color background = Color(0xFFF5F7FA); // Light background
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color onPrimary = Color(0xFF0D47A1);
+  static const Color onSecondary = Color(0xFFAD1457);
+  static const Color successGreen = Color(0xFF43A047);
+  static const Color interruptionColor = Color(0xFFFF5252);
 
-  static ThemeData get lightTheme {
-    return ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryTeal,
-        brightness: Brightness.light,
-        primary: primaryTeal,
-        secondary: accentBlushPink,
-        surface: backgroundLight,
-        error: interruptionColor,
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: primaryTeal,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryTeal,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(25),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: primaryTeal,
-          side: const BorderSide(color: primaryTeal),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(25),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-        ),
-      ),
-      cardTheme: CardThemeData(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: Colors.white,
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: primaryTeal, width: 2),
-        ),
-        contentPadding: const EdgeInsets.all(16),
-      ),
-      textTheme: const TextTheme(
-        headlineLarge: TextStyle(
-          color: textPrimary,
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-        ),
-        headlineMedium: TextStyle(
-          color: textPrimary,
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
-        ),
-        titleLarge: TextStyle(
-          color: textPrimary,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
-        bodyLarge: TextStyle(color: textPrimary, fontSize: 16, height: 1.5),
-        bodyMedium: TextStyle(color: textSecondary, fontSize: 14, height: 1.4),
-      ),
-    );
-  }
-
+  // Partner color coding
   static Color getPartnerColor(String partnerId, {bool isDark = false}) {
     if (partnerId == 'A') {
-      return isDark ? partnerADark : partnerAColor;
+      return isDark ? const Color(0xFF1976D2) : primary;
+    } else if (partnerId == 'B') {
+      return isDark ? const Color(0xFFD81B60) : secondary;
     } else {
-      return isDark ? partnerBDark : partnerBColor;
+      // Fallback for same-gender or unknown
+      return isDark ? accent : accent.withOpacity(0.7);
     }
   }
 
   static Color getSpeakingIndicatorColor(String partnerId) {
-    return partnerId == 'A' ? partnerADark : partnerBDark;
+    if (partnerId == 'A') {
+      return primary;
+    } else if (partnerId == 'B') {
+      return secondary;
+    } else {
+      return accent;
+    }
   }
+
+  static ThemeData get themeData => ThemeData(
+    colorScheme: ColorScheme(
+      brightness: Brightness.light,
+      primary: primary,
+      onPrimary: onPrimary,
+      secondary: secondary,
+      onSecondary: onSecondary,
+      error: interruptionColor,
+      onError: Colors.white,
+      background: background,
+      onBackground: Colors.black,
+      surface: surface,
+      onSurface: Colors.black,
+    ),
+    scaffoldBackgroundColor: background,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: surface,
+      elevation: 0,
+      iconTheme: IconThemeData(color: primary),
+      titleTextStyle: TextStyle(
+        color: onPrimary,
+        fontWeight: FontWeight.bold,
+        fontSize: 20,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primary,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: primary,
+        side: const BorderSide(color: primary, width: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+    ),
+    cardTheme: const CardThemeData(
+      color: surface,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: surface,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: primary, width: 1),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: primary, width: 2),
+      ),
+    ),
+    snackBarTheme: const SnackBarThemeData(
+      backgroundColor: primary,
+      contentTextStyle: TextStyle(color: Colors.white),
+    ),
+  );
 }

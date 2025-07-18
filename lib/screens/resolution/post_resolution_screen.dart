@@ -16,13 +16,13 @@ class PostResolutionScreen extends StatefulWidget {
 class _PostResolutionScreenState extends State<PostResolutionScreen> {
   final PageController _pageController = PageController();
   final AIService _aiService = AIService();
-  
+
   int _currentPage = 0;
   String _gratitudeResponseA = '';
   String _gratitudeResponseB = '';
   String _reflectionResponseA = '';
   String _reflectionResponseB = '';
-  
+
   @override
   void initState() {
     super.initState();
@@ -33,7 +33,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
 
   void _showCelebration() {
     final celebratoryMessage = _aiService.getCelebratoryMessage();
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -97,9 +97,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
   void _completeFlow() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const ScoringScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const ScoringScreen()),
     );
   }
 
@@ -109,7 +107,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
       builder: (context, appState, child) {
         final currentPartner = appState.getCurrentPartner();
         final otherPartner = appState.getOtherPartner();
-        
+
         return Scaffold(
           appBar: AppBar(
             title: const Text('Resolution Complete'),
@@ -125,7 +123,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
                   AppTheme.successGreen,
                 ),
               ),
-              
+
               // Page content
               Expanded(
                 child: PageView(
@@ -136,15 +134,17 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
                     });
                   },
                   children: [
-                    _buildGratitudePage(currentPartner?.name ?? 'Partner A', 
-                                     otherPartner?.name ?? 'Partner B'),
+                    _buildGratitudePage(
+                      currentPartner?.name ?? 'Partner A',
+                      otherPartner?.name ?? 'Partner B',
+                    ),
                     _buildReflectionPage(),
                     _buildBondingActivitiesPage(),
                     _buildSummaryPage(),
                   ],
                 ),
               ),
-              
+
               // Navigation
               Padding(
                 padding: const EdgeInsets.all(24.0),
@@ -165,7 +165,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
 
   Widget _buildGratitudePage(String partnerAName, String partnerBName) {
     final gratitudePrompt = _aiService.getGratitudePrompt();
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -179,11 +179,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.favorite,
-                  color: AppTheme.successGreen,
-                  size: 48,
-                ),
+                Icon(Icons.favorite, color: AppTheme.successGreen, size: 48),
                 const SizedBox(height: 16),
                 Text(
                   'Express Gratitude',
@@ -199,9 +195,9 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Partner A gratitude
           _buildGratitudeSection(
             'A',
@@ -209,9 +205,9 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
             _gratitudeResponseA,
             (value) => setState(() => _gratitudeResponseA = value),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Partner B gratitude
           _buildGratitudeSection(
             'B',
@@ -224,7 +220,12 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
     );
   }
 
-  Widget _buildGratitudeSection(String partnerId, String name, String value, Function(String) onChanged) {
+  Widget _buildGratitudeSection(
+    String partnerId,
+    String name,
+    String value,
+    Function(String) onChanged,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -259,9 +260,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
         TextField(
           decoration: InputDecoration(
             hintText: 'Share what you appreciated about your partner...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
           maxLines: 3,
           onChanged: onChanged,
@@ -272,7 +271,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
 
   Widget _buildReflectionPage() {
     final reflectionQuestion = _aiService.getReflectionQuestion();
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -281,16 +280,12 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppTheme.primaryTeal.withOpacity(0.1),
+              color: AppTheme.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.lightbulb,
-                  color: AppTheme.primaryTeal,
-                  size: 48,
-                ),
+                Icon(Icons.lightbulb, color: AppTheme.primary, size: 48),
                 const SizedBox(height: 16),
                 Text(
                   'Shared Reflection',
@@ -306,9 +301,9 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Reflection responses
           TextField(
             decoration: InputDecoration(
@@ -340,9 +335,9 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
             maxLines: 4,
             onChanged: (value) => setState(() => _reflectionResponseA = value),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           TextField(
             decoration: InputDecoration(
               labelText: 'Partner B\'s Reflection',
@@ -380,7 +375,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
 
   Widget _buildBondingActivitiesPage() {
     final activities = _aiService.getBondingActivities();
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -389,16 +384,12 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppTheme.accentBlushPink.withOpacity(0.3),
+              color: AppTheme.secondary.withOpacity(0.3),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.favorite_border,
-                  color: AppTheme.primaryTeal,
-                  size: 48,
-                ),
+                Icon(Icons.favorite_border, color: AppTheme.primary, size: 48),
                 const SizedBox(height: 16),
                 Text(
                   'Strengthen Your Bond',
@@ -414,54 +405,52 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           Text(
             'Suggested Activities',
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          
+
           const SizedBox(height: 16),
-          
-          ...activities.map((activity) => Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: ListTile(
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryTeal.withOpacity(0.1),
-                  shape: BoxShape.circle,
+
+          ...activities.map(
+            (activity) => Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.favorite, color: AppTheme.primary),
                 ),
-                child: Icon(
-                  Icons.favorite,
-                  color: AppTheme.primaryTeal,
+                title: Text(activity),
+                trailing: Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.5),
                 ),
-              ),
-              title: Text(activity),
-              trailing: Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
               ),
             ),
-          )),
-          
+          ),
+
           const SizedBox(height: 24),
-          
+
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.successGreen.withOpacity(0.1),
+              color: AppTheme.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.info_outline,
-                  color: AppTheme.successGreen,
-                ),
+                Icon(Icons.info_outline, color: AppTheme.successGreen),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -513,55 +502,48 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
-          Text(
-            'What\'s Next?',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          
+
+          Text('What\'s Next?', style: Theme.of(context).textTheme.titleLarge),
+
           const SizedBox(height: 16),
-          
+
           _buildNextStepCard(
             Icons.analytics,
             'View Your Scores',
             'See detailed feedback on your communication skills',
           ),
-          
+
           _buildNextStepCard(
             Icons.insights,
             'Track Progress',
             'Monitor your relationship growth over time',
           ),
-          
+
           _buildNextStepCard(
             Icons.chat,
             'Schedule Next Session',
             'Regular conversations lead to stronger connections',
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.primaryTeal.withOpacity(0.1),
+              color: AppTheme.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.celebration,
-                  color: AppTheme.primaryTeal,
-                  size: 32,
-                ),
+                Icon(Icons.celebration, color: AppTheme.primary, size: 32),
                 const SizedBox(height: 12),
                 Text(
                   'Great job working together!',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppTheme.primaryTeal,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(color: AppTheme.primary),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
@@ -586,14 +568,10 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.primaryTeal.withOpacity(0.1),
+            color: AppTheme.primary.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            icon,
-            color: AppTheme.primaryTeal,
-            size: 20,
-          ),
+          child: Icon(icon, color: AppTheme.primary, size: 20),
         ),
         title: Text(title),
         subtitle: Text(description),

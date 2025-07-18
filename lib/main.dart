@@ -9,12 +9,10 @@ import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(const MendApp());
 }
 
@@ -25,12 +23,14 @@ class MendApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => FirebaseAppState()..initialize()),
+        ChangeNotifierProvider(
+          create: (context) => FirebaseAppState()..initialize(),
+        ),
         ChangeNotifierProvider(create: (context) => AppState()..initialize()),
       ],
       child: MaterialApp(
         title: 'Mend',
-        theme: AppTheme.lightTheme,
+        theme: AppTheme.themeData,
         home: const AuthWrapper(),
         debugShowCheckedModeBanner: false,
       ),

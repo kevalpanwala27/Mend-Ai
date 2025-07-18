@@ -53,5 +53,7 @@
 	<!-- Speech recognition permission -->
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Mend uses speech recognition to convert your voice to text during conversations, helping the AI therapist provide better guidance.</string>
+	<key>GIDClientID</key>
+	<string>571931343862-dq7k0r1e210hhooabg5fbquj76ku9euu.apps.googleusercontent.com</string>
 </dict>
 </plist>

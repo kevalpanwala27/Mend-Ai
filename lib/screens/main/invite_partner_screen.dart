@@ -14,12 +14,31 @@ class InvitePartnerScreen extends StatelessWidget {
         final relationshipData = appState.relationshipData;
         final currentPartner = appState.getCurrentPartner();
 
-        if (relationshipData == null || currentPartner == null) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+        if (relationshipData == null) {
+          // True error: show fallback with retry
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Something went wrong. Please try again.',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () => appState.initialize(),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
           );
         }
 
+        // Always show the invite UI if relationshipData exists
+        final partnerName = currentPartner?.name ?? 'You';
         return Scaffold(
           appBar: AppBar(
             title: const Text('Invite Your Partner'),
@@ -49,7 +68,7 @@ class InvitePartnerScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Welcome, ${currentPartner.name}!',
+                          'Welcome, $partnerName!',
                           style: Theme.of(context).textTheme.headlineMedium,
                           textAlign: TextAlign.center,
                         ),
@@ -149,7 +168,7 @@ class InvitePartnerScreen extends StatelessWidget {
                     child: Text(
                       _getInviteMessage(
                         relationshipData.inviteCode,
-                        partnerName: currentPartner.name,
+                        partnerName: partnerName,
                       ),
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
@@ -161,7 +180,7 @@ class InvitePartnerScreen extends StatelessWidget {
                     child: ElevatedButton.icon(
                       onPressed: () => _shareInvite(
                         relationshipData.inviteCode,
-                        partnerName: currentPartner.name,
+                        partnerName: partnerName,
                       ),
                       icon: const Icon(Icons.share),
                       label: const Text('Share Invite'),
@@ -174,7 +193,7 @@ class InvitePartnerScreen extends StatelessWidget {
                       onPressed: () => _copyInviteMessage(
                         context,
                         relationshipData.inviteCode,
-                        partnerName: currentPartner.name,
+                        partnerName: partnerName,
                       ),
                       icon: const Icon(Icons.message),
                       label: const Text('Copy Message'),

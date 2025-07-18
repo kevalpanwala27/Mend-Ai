@@ -27,18 +27,18 @@ class _ScoringScreenState extends State<ScoringScreen> {
   Future<void> _generateScores() async {
     final appState = context.read<AppState>();
     final currentSession = appState.currentSession;
-    
+
     if (currentSession != null) {
       try {
         final scores = await _aiService.analyzeCommunication(currentSession);
-        
+
         // End the session with scores
         await appState.endCommunicationSession(
           scores: scores,
           reflection: 'Session completed with AI analysis',
           suggestedActivities: _aiService.getBondingActivities(),
         );
-        
+
         setState(() {
           _scores = scores;
           _isLoading = false;
@@ -59,10 +59,7 @@ class _ScoringScreenState extends State<ScoringScreen> {
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
@@ -80,16 +77,13 @@ class _ScoringScreenState extends State<ScoringScreen> {
       builder: (context, appState, child) {
         final currentPartner = appState.getCurrentPartner();
         final otherPartner = appState.getOtherPartner();
-        
+
         return Scaffold(
           appBar: AppBar(
             title: const Text('Communication Scores'),
             automaticallyImplyLeading: false,
             actions: [
-              IconButton(
-                icon: const Icon(Icons.home),
-                onPressed: _returnHome,
-              ),
+              IconButton(icon: const Icon(Icons.home), onPressed: _returnHome),
             ],
           ),
           body: _isLoading
@@ -104,70 +98,70 @@ class _ScoringScreenState extends State<ScoringScreen> {
                   ),
                 )
               : _scores == null
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 64,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Unable to generate scores',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Please try again later',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: 24),
-                          ElevatedButton(
-                            onPressed: _returnHome,
-                            child: const Text('Return Home'),
-                          ),
-                        ],
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.grey[400],
                       ),
-                    )
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Overall feedback
-                          _buildOverallFeedback(),
-                          
-                          const SizedBox(height: 32),
-                          
-                          // Partner scores
-                          _buildPartnerScore(
-                            'A',
-                            currentPartner?.name ?? 'Partner A',
-                            _scores!.partnerScores['A']!,
-                          ),
-                          
-                          const SizedBox(height: 24),
-                          
-                          _buildPartnerScore(
-                            'B',
-                            otherPartner?.name ?? 'Partner B',
-                            _scores!.partnerScores['B']!,
-                          ),
-                          
-                          const SizedBox(height: 32),
-                          
-                          // Improvement suggestions
-                          _buildImprovementSuggestions(),
-                          
-                          const SizedBox(height: 32),
-                          
-                          // Action buttons
-                          _buildActionButtons(),
-                        ],
+                      const SizedBox(height: 16),
+                      Text(
+                        'Unable to generate scores',
+                        style: Theme.of(context).textTheme.headlineSmall,
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Please try again later',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: _returnHome,
+                        child: const Text('Return Home'),
+                      ),
+                    ],
+                  ),
+                )
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Overall feedback
+                      _buildOverallFeedback(),
+
+                      const SizedBox(height: 32),
+
+                      // Partner scores
+                      _buildPartnerScore(
+                        'A',
+                        currentPartner?.name ?? 'Partner A',
+                        _scores!.partnerScores['A']!,
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      _buildPartnerScore(
+                        'B',
+                        otherPartner?.name ?? 'Partner B',
+                        _scores!.partnerScores['B']!,
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Improvement suggestions
+                      _buildImprovementSuggestions(),
+
+                      const SizedBox(height: 32),
+
+                      // Action buttons
+                      _buildActionButtons(),
+                    ],
+                  ),
+                ),
         );
       },
     );
@@ -177,7 +171,7 @@ class _ScoringScreenState extends State<ScoringScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppTheme.primaryTeal.withOpacity(0.1),
+        color: AppTheme.primary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -185,17 +179,13 @@ class _ScoringScreenState extends State<ScoringScreen> {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.psychology,
-                color: AppTheme.primaryTeal,
-                size: 32,
-              ),
+              Icon(Icons.psychology, color: AppTheme.primary, size: 32),
               const SizedBox(width: 12),
               Text(
                 'Overall Assessment',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppTheme.primaryTeal,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(color: AppTheme.primary),
               ),
             ],
           ),
@@ -244,7 +234,10 @@ class _ScoringScreenState extends State<ScoringScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: _getScoreColor(score.averageScore).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -259,9 +252,9 @@ class _ScoringScreenState extends State<ScoringScreen> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Individual scores
             _buildScoreBar('Empathy', score.empathy),
             _buildScoreBar('Listening', score.listening),
@@ -270,68 +263,72 @@ class _ScoringScreenState extends State<ScoringScreen> {
             _buildScoreBar('Respect', score.respect),
             _buildScoreBar('Responsiveness', score.responsiveness),
             _buildScoreBar('Open-Mindedness', score.openMindedness),
-            
+
             const SizedBox(height: 24),
-            
+
             // Strengths
             if (score.strengths.isNotEmpty) ...[
               Text(
                 'Strengths',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppTheme.successGreen,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: AppTheme.successGreen),
               ),
               const SizedBox(height: 8),
-              ...score.strengths.map((strength) => Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.check_circle,
-                      color: AppTheme.successGreen,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        strength,
-                        style: Theme.of(context).textTheme.bodyMedium,
+              ...score.strengths.map(
+                (strength) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        color: AppTheme.successGreen,
+                        size: 16,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          strength,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              )),
+              ),
               const SizedBox(height: 16),
             ],
-            
+
             // Areas for improvement
             if (score.improvements.isNotEmpty) ...[
               Text(
                 'Areas for Growth',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppTheme.primaryTeal,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: AppTheme.primary),
               ),
               const SizedBox(height: 8),
-              ...score.improvements.map((improvement) => Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.trending_up,
-                      color: AppTheme.primaryTeal,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        improvement,
-                        style: Theme.of(context).textTheme.bodyMedium,
+              ...score.improvements.map(
+                (improvement) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.trending_up,
+                        color: AppTheme.primary,
+                        size: 16,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          improvement,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              )),
+              ),
             ],
           ],
         ),
@@ -348,15 +345,12 @@ class _ScoringScreenState extends State<ScoringScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+              Text(label, style: Theme.of(context).textTheme.bodyMedium),
               Text(
                 '${(score * 100).round()}%',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -375,7 +369,7 @@ class _ScoringScreenState extends State<ScoringScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppTheme.accentBlushPink.withOpacity(0.1),
+        color: AppTheme.secondary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -383,45 +377,43 @@ class _ScoringScreenState extends State<ScoringScreen> {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.lightbulb,
-                color: AppTheme.primaryTeal,
-                size: 24,
-              ),
+              Icon(Icons.lightbulb, color: AppTheme.primary, size: 24),
               const SizedBox(width: 12),
               Text(
                 'Suggestions for Growth',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppTheme.primaryTeal,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: AppTheme.primary),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          ..._scores!.improvementSuggestions.map((suggestion) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  margin: const EdgeInsets.only(top: 4),
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryTeal,
-                    shape: BoxShape.circle,
+          ..._scores!.improvementSuggestions.map(
+            (suggestion) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    suggestion,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      suggestion,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          )),
+          ),
         ],
       ),
     );
@@ -462,7 +454,7 @@ class _ScoringScreenState extends State<ScoringScreen> {
     if (score >= 0.8) {
       return AppTheme.successGreen;
     } else if (score >= 0.6) {
-      return AppTheme.primaryTeal;
+      return AppTheme.primary;
     } else {
       return Colors.orange;
     }

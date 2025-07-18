@@ -2,25 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../providers/app_state.dart';
+import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
 import '../chat/voice_chat_screen.dart';
 import '../main/insights_dashboard_screen.dart';
 import 'invite_partner_screen.dart';
+import 'dart:math';
+import 'package:flutter/services.dart';
+import 'session_waiting_room_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    print('HomeScreen: build called');
     return Consumer<AppState>(
       builder: (context, appState, child) {
-        if (!appState.hasPartner) {
-          return const InvitePartnerScreen();
-        }
-
+        // Remove hasPartner/relationshipData check. Always show session-based UI.
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Mend'),
+            title: const Text('Mend Home'),
             actions: [
               IconButton(
                 icon: const Icon(Icons.insights),
@@ -36,30 +38,50 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Welcome section
-                  _buildWelcomeSection(context, appState),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Welcome section
+                _buildWelcomeSection(context, appState),
 
-                  const SizedBox(height: 32),
+                const SizedBox(height: 32),
 
-                  // Partner status
-                  _buildPartnerSection(context, appState),
+                // Partner status (optional, can be removed if not needed)
+                //_buildPartnerSection(context, appState),
 
-                  const SizedBox(height: 32),
+                //const SizedBox(height: 32),
 
-                  // Recent activity
-                  _buildRecentActivity(context, appState),
+                // Recent activity (optional, can be removed if not needed)
+                //_buildRecentActivity(context, appState),
 
-                  const Spacer(),
+                //const Spacer(),
 
-                  // Start conversation button
-                  _buildStartConversationButton(context, appState),
-                ],
-              ),
+                // Start conversation button (shows prompt to use session flow)
+                _buildStartConversationButton(context, appState),
+
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () => _showStartSessionDialog(context),
+                          child: const Text('Start New Session'),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: () => _showJoinSessionDialog(context),
+                          child: const Text('Join Session'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -251,9 +273,17 @@ class HomeScreen extends StatelessWidget {
       width: double.infinity,
       child: ElevatedButton.icon(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const VoiceChatScreen()),
+          // All sessions should use the session code flow now.
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(builder: (context) => const VoiceChatScreen()),
+          // );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Please use "Start New Session" or "Join Session" below.',
+              ),
+            ),
           );
         },
         icon: const Icon(Icons.mic),
@@ -261,6 +291,139 @@ class HomeScreen extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 20),
         ),
+      ),
+    );
+  }
+
+  void _showStartSessionDialog(BuildContext context) {
+    final sessionCode = _generateSessionCode();
+    final userId = context.read<FirebaseAppState>().user?.uid ?? '';
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Session Code'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                sessionCode,
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 4,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: sessionCode));
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Session code copied!')),
+                      );
+                    },
+                    icon: const Icon(Icons.copy),
+                    label: const Text('Copy'),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      // TODO: Add share logic
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.share),
+                    label: const Text('Share'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Share this code with your partner so you can both join the same session.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SessionWaitingRoomScreen(
+                          sessionCode: sessionCode,
+                          userId: userId,
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text('Go to Waiting Room'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showJoinSessionDialog(BuildContext context) {
+    final controller = TextEditingController();
+    final userId = context.read<FirebaseAppState>().user?.uid ?? '';
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Join Session'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  labelText: 'Enter Session Code',
+                  hintText: '6-character code',
+                ),
+                textCapitalization: TextCapitalization.characters,
+                maxLength: 6,
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SessionWaitingRoomScreen(
+                          sessionCode: controller.text.toUpperCase(),
+                          userId: userId,
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text('Join'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _generateSessionCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    final random = Random();
+    return String.fromCharCodes(
+      Iterable.generate(
+        6,
+        (_) => chars.codeUnitAt(random.nextInt(chars.length)),
       ),
     );
   }
