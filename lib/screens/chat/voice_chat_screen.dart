@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:agora_rtc_engine/agora_rtc_engine.dart';
-
-const String agoraAppId = 'dd07721ab911427594816a336df09b95';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class VoiceSessionScreen extends StatefulWidget {
   final String sessionCode;
@@ -28,11 +26,11 @@ class _ChatMessage {
 }
 
 class _VoiceSessionScreenState extends State<VoiceSessionScreen> {
-  bool _connected = false;
-  int? _localUid;
-  final List<int> _remoteUids = [];
   final TextEditingController _controller = TextEditingController();
-  late final RtcEngine _engine;
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  bool _speechAvailable = false;
+  String _recognizedText = '';
 
   CollectionReference<Map<String, dynamic>> get _messagesRef =>
       FirebaseFirestore.instance
@@ -43,63 +41,54 @@ class _VoiceSessionScreenState extends State<VoiceSessionScreen> {
   @override
   void initState() {
     super.initState();
-    _initAgora();
+    _initSpeech();
   }
 
-  Future<void> _initAgora() async {
-    await [Permission.microphone].request();
-    _engine = createAgoraRtcEngine();
-    await _engine.initialize(
-      RtcEngineContext(
-        appId: agoraAppId,
-        channelProfile: ChannelProfileType.channelProfileCommunication,
-      ),
-    );
-    _engine.registerEventHandler(
-      RtcEngineEventHandler(
-        onJoinChannelSuccess: (conn, elapsed) {
-          setState(() {
-            _connected = true;
-            _localUid = conn.localUid;
-          });
-        },
-        onUserJoined: (conn, remoteUid, elapsed) {
-          setState(() {
-            _remoteUids.add(remoteUid);
-          });
-        },
-        onUserOffline: (conn, remoteUid, reason) {
-          setState(() {
-            _remoteUids.remove(remoteUid);
-          });
-        },
-        onLeaveChannel: (conn, stats) {
-          setState(() {
-            _connected = false;
-            _localUid = null;
-            _remoteUids.clear();
-          });
-        },
-      ),
+  Future<void> _initSpeech() async {
+    _speech = stt.SpeechToText();
+    _speechAvailable = await _speech.initialize(
+      onStatus: (status) {
+        setState(() {
+          _isListening = status == 'listening';
+        });
+      },
+      onError: (error) {
+        setState(() {
+          _isListening = false;
+        });
+      },
     );
   }
 
-  Future<void> _joinVoiceChannel() async {
-    await _engine.joinChannel(
-      token: '', // For demo, no token. For production, use a token server.
-      channelId: widget.sessionCode,
-      uid: 0,
-      options: const ChannelMediaOptions(),
-    );
+  Future<void> _startListening() async {
+    if (_speechAvailable && !_isListening) {
+      await _speech.listen(
+        onResult: (result) {
+          setState(() {
+            _recognizedText = result.recognizedWords;
+            _controller.text = _recognizedText;
+          });
+        },
+        listenFor: const Duration(seconds: 30),
+        pauseFor: const Duration(seconds: 5),
+        cancelOnError: true,
+        partialResults: true,
+      );
+    }
   }
 
-  Future<void> _leaveVoiceChannel() async {
-    await _engine.leaveChannel();
+  Future<void> _stopListening() async {
+    if (_isListening) {
+      await _speech.stop();
+      setState(() {
+        _isListening = false;
+      });
+    }
   }
 
   @override
   void dispose() {
-    _engine.release();
+    _speech.stop();
     _controller.dispose();
     super.dispose();
   }
@@ -136,36 +125,94 @@ class _VoiceSessionScreenState extends State<VoiceSessionScreen> {
     return prompts[userMsg.length % prompts.length];
   }
 
+  Future<bool> _showExitConfirmation() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('End Session?'),
+        content: const Text(
+          'Are you sure you want to end this session? Any progress will be lost.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('End Session'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('AI Voice Session')),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await _showExitConfirmation();
+        if (shouldPop && mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('AI Voice Session'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () async {
+              final shouldExit = await _showExitConfirmation();
+              if (shouldExit && mounted) {
+                Navigator.of(context).pop();
+              }
+            },
+          ),
+        ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            Text('Session Code: ${widget.sessionCode}'),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                ElevatedButton.icon(
-                  icon: Icon(_connected ? Icons.call_end : Icons.call),
-                  label: Text(
-                    _connected ? 'Disconnect Voice' : 'Connect Voice',
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _connected ? Colors.red : Colors.green,
-                  ),
-                  onPressed: _connected
-                      ? _leaveVoiceChannel
-                      : _joinVoiceChannel,
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Text(
+                      'Session Code: ${widget.sessionCode}',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    if (_isListening)
+                      Column(
+                        children: [
+                          const Icon(
+                            Icons.mic,
+                            color: Colors.red,
+                            size: 32,
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Listening...',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _recognizedText.isEmpty ? 'Say something...' : _recognizedText,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      )
+                    else
+                      const Text('Tap the mic to start speaking'),
+                  ],
                 ),
-                const SizedBox(width: 16),
-                if (_connected)
-                  Text(
-                    'Connected! Uid: $_localUid, Peers: ${_remoteUids.length}',
-                  ),
-              ],
+              ),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -214,25 +261,49 @@ class _VoiceSessionScreenState extends State<VoiceSessionScreen> {
             ),
             Row(
               children: [
+                GestureDetector(
+                  onTap: _isListening ? _stopListening : _startListening,
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: _isListening ? Colors.red : Colors.blue,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _isListening ? Icons.mic : Icons.mic_none,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: TextField(
                     controller: _controller,
                     decoration: const InputDecoration(
-                      hintText: 'Type a message... (demo)',
+                      hintText: 'Type a message or use the mic...',
+                      border: OutlineInputBorder(),
                     ),
                     onSubmitted: (_) => _handleSend(),
+                    maxLines: null,
                   ),
                 ),
+                const SizedBox(width: 12),
                 IconButton(
                   icon: const Icon(Icons.send),
-                  onPressed: _handleSend,
+                  onPressed: _controller.text.trim().isNotEmpty ? _handleSend : null,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            // Voice chat is now integrated above
+            const SizedBox(height: 16),
           ],
         ),
+      ),
       ),
     );
   }

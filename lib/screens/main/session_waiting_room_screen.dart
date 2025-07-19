@@ -53,10 +53,70 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
     }
   }
 
+  Future<bool> _showExitConfirmation() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Leave Session?'),
+        content: const Text(
+          'Are you sure you want to leave this session? You will need a new session code to rejoin.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Stay'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Leave'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<void> _leaveSession() async {
+    // Remove user from participants list
+    try {
+      final sessionRef = FirebaseFirestore.instance
+          .collection('sessions')
+          .doc(widget.sessionCode);
+      await sessionRef.update({
+        'participants': FieldValue.arrayRemove([widget.userId]),
+      });
+    } catch (e) {
+      // Handle error silently or show a message
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Waiting Room')),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await _showExitConfirmation();
+        if (shouldPop && mounted) {
+          await _leaveSession();
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Waiting Room'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () async {
+              final shouldExit = await _showExitConfirmation();
+              if (shouldExit && mounted) {
+                await _leaveSession();
+                Navigator.of(context).pop();
+              }
+            },
+          ),
+        ),
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: _sessionStream,
         builder: (context, snapshot) {
@@ -68,14 +128,19 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
               (data?['participants'] as List?)?.cast<String>() ?? [];
           final isReady = participants.length >= 2;
 
-          return Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: SizedBox(
+                width: double.infinity,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
                 Text(
                   'Session Code',
                   style: Theme.of(context).textTheme.titleMedium,
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -84,6 +149,7 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
                     fontWeight: FontWeight.bold,
                     letterSpacing: 4,
                   ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
                 if (!isReady) ...[
@@ -119,10 +185,13 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
                     ),
                   ),
                 ],
-              ],
+                ],
+              ),
+            ),
             ),
           );
         },
+      ),
       ),
     );
   }

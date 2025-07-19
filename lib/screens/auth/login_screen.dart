@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../providers/firebase_app_state.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -112,12 +113,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Image.asset(
-                            'assets/google_logo.png',
+                        : SvgPicture.asset(
+                            'assets/google_logo.svg',
                             height: 24,
                             width: 24,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.login),
                           ),
                     label: Text(
                       _isLoading ? 'Signing in...' : 'Continue with Google',

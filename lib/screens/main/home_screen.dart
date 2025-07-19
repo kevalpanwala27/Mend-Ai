@@ -269,8 +269,9 @@ class HomeScreen extends StatelessWidget {
     BuildContext context,
     AppState appState,
   ) {
-    return SizedBox(
+    return Container(
       width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 24),
       child: ElevatedButton.icon(
         onPressed: () {
           // All sessions should use the session code flow now.
@@ -286,10 +287,22 @@ class HomeScreen extends StatelessWidget {
             ),
           );
         },
-        icon: const Icon(Icons.mic),
+        icon: const Icon(Icons.mic, size: 24),
         label: const Text('Start Guided Conversation'),
         style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 20),
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 32),
+          backgroundColor: AppTheme.primary,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          shadowColor: AppTheme.primary.withOpacity(0.3),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
     );
@@ -331,8 +344,11 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(width: 16),
                   ElevatedButton.icon(
                     onPressed: () {
-                      // TODO: Add share logic
                       Navigator.pop(context);
+                      Share.share(
+                        'Join my Mend session with code: $sessionCode\n\nDownload Mend to start improving your relationship communication together!',
+                        subject: 'Join my Mend session',
+                      );
                     },
                     icon: const Icon(Icons.share),
                     label: const Text('Share'),
@@ -396,12 +412,31 @@ class HomeScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
+                    final sessionCode = controller.text.trim().toUpperCase();
+                    if (sessionCode.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please enter a session code'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    if (sessionCode.length != 6) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Session code must be 6 characters'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
                     Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => SessionWaitingRoomScreen(
-                          sessionCode: controller.text.toUpperCase(),
+                          sessionCode: sessionCode,
                           userId: userId,
                         ),
                       ),
