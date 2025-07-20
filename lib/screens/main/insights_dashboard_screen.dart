@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../providers/app_state.dart';
+import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
 
 class InsightsDashboardScreen extends StatelessWidget {
@@ -11,7 +11,18 @@ class InsightsDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Insights Dashboard')),
-      body: Consumer<AppState>(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.gradientStart,
+              AppTheme.gradientEnd,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Consumer<FirebaseAppState>(
         builder: (context, appState, child) {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
@@ -30,11 +41,12 @@ class InsightsDashboardScreen extends StatelessWidget {
             ),
           );
         },
+        ),
       ),
     );
   }
 
-  Widget _buildWeeklySummary(BuildContext context, AppState appState) {
+  Widget _buildWeeklySummary(BuildContext context, FirebaseAppState appState) {
     final weeklyStats = _calculateWeeklyStats(appState);
     
     return Column(
@@ -110,7 +122,7 @@ class InsightsDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCommunicationTrends(BuildContext context, AppState appState) {
+  Widget _buildCommunicationTrends(BuildContext context, FirebaseAppState appState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -133,7 +145,7 @@ class InsightsDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildScoreChart(BuildContext context, AppState appState) {
+  Widget _buildScoreChart(BuildContext context, FirebaseAppState appState) {
     final recentSessions = appState.getRecentSessions(limit: 7);
     
     if (recentSessions.isEmpty) {
@@ -205,7 +217,7 @@ class InsightsDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSavedReflections(BuildContext context, AppState appState) {
+  Widget _buildSavedReflections(BuildContext context, FirebaseAppState appState) {
     final sessionsWithReflections = appState.getRecentSessions()
         .where((session) => session.reflection != null && session.reflection!.isNotEmpty)
         .take(5)
@@ -262,7 +274,7 @@ class InsightsDashboardScreen extends StatelessWidget {
     );
   }
 
-  Map<String, dynamic> _calculateWeeklyStats(AppState appState) {
+  Map<String, dynamic> _calculateWeeklyStats(FirebaseAppState appState) {
     final now = DateTime.now();
     final weekStart = now.subtract(Duration(days: now.weekday - 1));
     final weekEnd = weekStart.add(const Duration(days: 7));

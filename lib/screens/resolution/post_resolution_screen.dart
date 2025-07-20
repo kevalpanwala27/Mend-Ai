@@ -113,8 +113,19 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
             title: const Text('Resolution Complete'),
             automaticallyImplyLeading: false,
           ),
-          body: Column(
-            children: [
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.gradientStart,
+                  AppTheme.gradientEnd,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Column(
+              children: [
               // Progress indicator
               LinearProgressIndicator(
                 value: (_currentPage + 1) / 4,
@@ -157,6 +168,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
                 ),
               ),
             ],
+            ),
           ),
         );
       },

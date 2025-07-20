@@ -201,7 +201,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                             text: 'Create New Relationship',
                             icon: Icons.add_rounded,
                             onPressed: () {
-                              Navigator.push(
+                              Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => const QuestionnaireScreen(),

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import '../chat/voice_chat_screen.dart';
+import '../../providers/firebase_app_state.dart';
+import '../../theme/app_theme.dart';
 
 class SessionWaitingRoomScreen extends StatefulWidget {
   final String sessionCode;
@@ -117,9 +120,20 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
             },
           ),
         ),
-      body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: _sessionStream,
-        builder: (context, snapshot) {
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.gradientStart,
+              AppTheme.gradientEnd,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: _sessionStream,
+          builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -139,7 +153,9 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
                   children: [
                 Text(
                   'Session Code',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
@@ -148,6 +164,7 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     letterSpacing: 4,
+                    color: Colors.white,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -155,22 +172,27 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
                 if (!isReady) ...[
                   const CircularProgressIndicator(),
                   const SizedBox(height: 24),
-                  const Text(
+                  Text(
                     'Waiting for your partner to join...',
+                    style: TextStyle(color: Colors.white),
                     textAlign: TextAlign.center,
                   ),
                 ] else ...[
                   const Icon(Icons.check_circle, color: Colors.green, size: 48),
                   const SizedBox(height: 24),
-                  const Text(
+                  Text(
                     'Both partners are here! You can start your session.',
+                    style: TextStyle(color: Colors.white),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        final appState = Provider.of<FirebaseAppState>(context, listen: false);
+                        await appState.startCommunicationSession(sessionCode: widget.sessionCode);
+                        
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
@@ -191,6 +213,7 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
             ),
           );
         },
+        ),
       ),
       ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../providers/firebase_app_state.dart';
+import '../../theme/app_theme.dart';
 import '../main/home_screen.dart';
 
 class InviteCodeScreen extends StatefulWidget {
@@ -75,7 +76,7 @@ Download Mend and use this code to join our relationship space. Let's work on gr
         final partnerName = appState.getCurrentPartner()?.name ?? 'You';
         final partnerB = appState.relationshipData?['partnerB'];
 
-        // If partnerB is present, go to HomeScreen
+        // If partnerB is present, go to HomeScreen automatically
         if (partnerB != null) {
           Future.microtask(() {
             Navigator.pushReplacement(
@@ -83,13 +84,29 @@ Download Mend and use this code to join our relationship space. Let's work on gr
               MaterialPageRoute(builder: (context) => const HomeScreen()),
             );
           });
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
         }
 
         return Scaffold(
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.gradientStart,
+                  AppTheme.gradientEnd,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
                 children: [
                   const SizedBox(height: 40),
 
@@ -123,7 +140,9 @@ Download Mend and use this code to join our relationship space. Let's work on gr
                   // Welcome message
                   Text(
                     'Welcome to Mend, $partnerName!',
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: Colors.white,
+                    ),
                     textAlign: TextAlign.center,
                   ),
 
@@ -131,7 +150,9 @@ Download Mend and use this code to join our relationship space. Let's work on gr
 
                   Text(
                     'Your relationship space is ready. Share this invite code with your partner to begin your journey together.',
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Colors.white70,
+                    ),
                     textAlign: TextAlign.center,
                   ),
 
@@ -296,6 +317,7 @@ Download Mend and use this code to join our relationship space. Let's work on gr
 
                   const SizedBox(height: 40),
                 ],
+                ),
               ),
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../providers/app_state.dart';
+import '../../theme/app_theme.dart';
 
 class InvitePartnerScreen extends StatelessWidget {
   const InvitePartnerScreen({super.key});
@@ -17,21 +18,35 @@ class InvitePartnerScreen extends StatelessWidget {
         if (relationshipData == null) {
           // True error: show fallback with retry
           return Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Something went wrong. Please try again.',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                    textAlign: TextAlign.center,
-                  ),
+            body: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.gradientStart,
+                    AppTheme.gradientEnd,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Something went wrong. Please try again.',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () => appState.initialize(),
                     child: const Text('Retry'),
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -44,10 +59,21 @@ class InvitePartnerScreen extends StatelessWidget {
             title: const Text('Invite Your Partner'),
             automaticallyImplyLeading: false,
           ),
-          body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.gradientStart,
+                  AppTheme.gradientEnd,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Success message
@@ -254,6 +280,7 @@ class InvitePartnerScreen extends StatelessWidget {
                     ),
                   ),
                 ],
+                ),
               ),
             ),
           ),

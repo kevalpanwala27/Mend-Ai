@@ -37,9 +37,16 @@ class FirestoreSessionsService {
       final user = _auth.currentUser;
       if (user == null) return;
 
+      // Get the existing document to preserve waiting room data
+      final existingDoc = await _firestore.collection('sessions').doc(sessionId).get();
+      final existingData = existingDoc.data() ?? {};
+
       await _firestore.collection('sessions').doc(sessionId).update({
         ...session.toJson(),
         'updatedAt': FieldValue.serverTimestamp(),
+        // Preserve participants from waiting room
+        'participants': existingData['participants'],
+        'createdAt': existingData['createdAt'],
       });
     } catch (e) {
       debugPrint('Error updating session: $e');
@@ -132,6 +139,23 @@ class FirestoreSessionsService {
       });
     } catch (e) {
       debugPrint('Error adding message: $e');
+    }
+  }
+
+  // Mark participant as left
+  Future<void> markParticipantLeft(String sessionId, String participantId) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return;
+
+      debugPrint('Marking participant $participantId as left from session $sessionId');
+      await _firestore.collection('sessions').doc(sessionId).update({
+        'participantStatus.$participantId': false,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      debugPrint('Successfully marked participant $participantId as left');
+    } catch (e) {
+      debugPrint('Error marking participant as left: $e');
     }
   }
 

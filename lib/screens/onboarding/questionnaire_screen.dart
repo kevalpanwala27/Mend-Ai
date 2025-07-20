@@ -133,17 +133,10 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
       final relationshipData = appState.relationshipData;
       
       if (mounted) {
-        if (relationshipData != null && relationshipData['partnerB'] != null) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const InviteCodeScreen()),
-          );
-        }
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -180,8 +173,19 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                 )
               : null,
         ),
-        body: Column(
-          children: [
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppTheme.gradientStart,
+                AppTheme.gradientEnd,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Column(
+            children: [
             // Enhanced Progress indicator
             Container(
               padding: const EdgeInsets.symmetric(
@@ -301,6 +305,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
               ),
             ),
           ],
+          ),
         ),
       ),
     );

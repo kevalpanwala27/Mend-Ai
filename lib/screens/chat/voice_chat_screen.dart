@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:provider/provider.dart';
+import '../../providers/firebase_app_state.dart';
+import '../../theme/app_theme.dart';
 
 class VoiceSessionScreen extends StatefulWidget {
   final String sessionCode;
@@ -31,6 +34,8 @@ class _VoiceSessionScreenState extends State<VoiceSessionScreen> {
   bool _isListening = false;
   bool _speechAvailable = false;
   String _recognizedText = '';
+  bool _hasShownPartnerLeftDialog = false;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _sessionSubscription;
 
   CollectionReference<Map<String, dynamic>> get _messagesRef =>
       FirebaseFirestore.instance
@@ -42,6 +47,44 @@ class _VoiceSessionScreenState extends State<VoiceSessionScreen> {
   void initState() {
     super.initState();
     _initSpeech();
+    _setupSessionMonitoring();
+  }
+
+  void _setupSessionMonitoring() {
+    // Monitor the active session for status changes using the session code
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final appState = Provider.of<FirebaseAppState>(context, listen: false);
+      print('Setting up session monitoring for session code: ${widget.sessionCode}');
+      
+      _sessionSubscription = FirebaseFirestore.instance
+          .collection('sessions')
+          .where(FieldPath.documentId, isEqualTo: widget.sessionCode)
+          .snapshots()
+          .listen((snapshot) {
+        print('Session snapshot received: ${snapshot.docs.length} docs');
+        if (snapshot.docs.isNotEmpty) {
+          final sessionData = snapshot.docs.first.data();
+          final participantStatus = Map<String, bool>.from(sessionData['participantStatus'] ?? {});
+          print('Participant status: $participantStatus');
+          
+          // Get current user's partner ID
+          final currentUserId = appState.currentUserId;
+          if (currentUserId != null) {
+            // Check if the OTHER partner has left (not the current user)
+            final otherPartnerId = currentUserId == 'A' ? 'B' : 'A';
+            final otherPartnerActive = participantStatus[otherPartnerId] ?? true;
+            print('Current user: $currentUserId, Other partner: $otherPartnerId, Other partner active: $otherPartnerActive');
+            
+            if (!otherPartnerActive && !_hasShownPartnerLeftDialog) {
+              print('Partner has left! Showing dialog...');
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _showPartnerLeftDialog();
+              });
+            }
+          }
+        }
+      });
+    });
   }
 
   Future<void> _initSpeech() async {
@@ -90,6 +133,7 @@ class _VoiceSessionScreenState extends State<VoiceSessionScreen> {
   void dispose() {
     _speech.stop();
     _controller.dispose();
+    _sessionSubscription?.cancel();
     super.dispose();
   }
 
@@ -125,6 +169,39 @@ class _VoiceSessionScreenState extends State<VoiceSessionScreen> {
     return prompts[userMsg.length % prompts.length];
   }
 
+  Future<void> _showPartnerLeftDialog() async {
+    if (_hasShownPartnerLeftDialog) return;
+    _hasShownPartnerLeftDialog = true;
+    
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Partner Left'),
+        content: const Text(
+          'Your partner has left the session. Would you like to leave as well?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Stay'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Leave Session'),
+          ),
+        ],
+      ),
+    );
+    
+    if (result == true && mounted) {
+      final appState = Provider.of<FirebaseAppState>(context, listen: false);
+      await appState.leaveCurrentSession();
+      Navigator.of(context).pop();
+    }
+  }
+
   Future<bool> _showExitConfirmation() async {
     final result = await showDialog<bool>(
       context: context,
@@ -157,6 +234,8 @@ class _VoiceSessionScreenState extends State<VoiceSessionScreen> {
         if (didPop) return;
         final shouldPop = await _showExitConfirmation();
         if (shouldPop && mounted) {
+          final appState = Provider.of<FirebaseAppState>(context, listen: false);
+          await appState.leaveCurrentSession();
           Navigator.of(context).pop();
         }
       },
@@ -168,14 +247,27 @@ class _VoiceSessionScreenState extends State<VoiceSessionScreen> {
             onPressed: () async {
               final shouldExit = await _showExitConfirmation();
               if (shouldExit && mounted) {
+                final appState = Provider.of<FirebaseAppState>(context, listen: false);
+                await appState.leaveCurrentSession();
                 Navigator.of(context).pop();
               }
             },
           ),
         ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.gradientStart,
+              AppTheme.gradientEnd,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
           children: [
             Card(
               child: Padding(
@@ -302,6 +394,7 @@ class _VoiceSessionScreenState extends State<VoiceSessionScreen> {
             ),
             const SizedBox(height: 16),
           ],
+        ),
         ),
       ),
       ),

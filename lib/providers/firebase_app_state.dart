@@ -223,20 +223,32 @@ class FirebaseAppState extends ChangeNotifier {
   }
 
   // Start a communication session
-  Future<void> startCommunicationSession() async {
+  Future<void> startCommunicationSession({String? sessionCode}) async {
     try {
       if (_relationshipData == null || !hasPartner || _user == null) return;
 
       final session = CommunicationSession(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: sessionCode ?? DateTime.now().millisecondsSinceEpoch.toString(),
         startTime: DateTime.now(),
         messages: [],
+        participantStatus: {
+          'A': true,
+          'B': true,
+        },
       );
 
-      _currentSessionId = await _sessionsService.createSession(
-        _relationshipData!['id'],
-        session,
-      );
+      if (sessionCode != null) {
+        // Use the existing session document from waiting room
+        _currentSessionId = sessionCode;
+        await _sessionsService.updateSession(sessionCode, session);
+      } else {
+        // Create a new session
+        _currentSessionId = await _sessionsService.createSession(
+          _relationshipData!['id'],
+          session,
+        );
+      }
+      
       _currentSession = session;
 
       notifyListeners();
@@ -272,6 +284,23 @@ class FirebaseAppState extends ChangeNotifier {
     }
   }
 
+  // Mark current user as left from session
+  Future<void> leaveCurrentSession() async {
+    try {
+      if (_currentSession == null || _currentSessionId == null || _currentUserId == null) {
+        debugPrint('Cannot leave session - missing session info: session=$_currentSession, sessionId=$_currentSessionId, userId=$_currentUserId');
+        return;
+      }
+
+      debugPrint('Leaving session: sessionId=$_currentSessionId, userId=$_currentUserId');
+      await _sessionsService.markParticipantLeft(_currentSessionId!, _currentUserId!);
+      
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error leaving communication session: $e');
+    }
+  }
+
   // End the current communication session
   Future<void> endCommunicationSession({
     CommunicationScores? scores,
@@ -298,6 +327,7 @@ class FirebaseAppState extends ChangeNotifier {
         scores: scores,
         reflection: reflection,
         suggestedActivities: suggestedActivities ?? [],
+        participantStatus: _currentSession!.participantStatus,
       );
 
       _sessions.insert(0, completedSession);

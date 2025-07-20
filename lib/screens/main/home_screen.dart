@@ -1,31 +1,89 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../providers/app_state.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
-import '../chat/voice_chat_screen.dart';
+import '../../widgets/gradient_button.dart';
+import '../../widgets/animated_card.dart';
 import '../main/insights_dashboard_screen.dart';
-import 'invite_partner_screen.dart';
+import 'session_waiting_room_screen.dart';
 import 'dart:math';
 import 'package:flutter/services.dart';
-import 'session_waiting_room_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeInOut,
+    ));
+    _fadeController.forward();
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    print('HomeScreen: build called');
-    return Consumer<AppState>(
+    return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
-        // Remove hasPartner/relationshipData check. Always show session-based UI.
         return Scaffold(
+          backgroundColor: AppTheme.background,
           appBar: AppBar(
-            title: const Text('Mend Home'),
+            title: ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [
+                  AppTheme.gradientStart,
+                  AppTheme.gradientEnd,
+                ],
+              ).createShader(bounds),
+              child: const Text(
+                'Mend',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             actions: [
               IconButton(
-                icon: const Icon(Icons.insights),
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                  ),
+                  child: const Icon(
+                    Icons.insights_rounded,
+                    color: AppTheme.primary,
+                    size: 20,
+                  ),
+                ),
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -35,53 +93,51 @@ class HomeScreen extends StatelessWidget {
                   );
                 },
               ),
+              const SizedBox(width: AppTheme.spacingM),
             ],
           ),
-          body: SafeArea(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Welcome section
-                _buildWelcomeSection(context, appState),
-
-                const SizedBox(height: 32),
-
-                // Partner status (optional, can be removed if not needed)
-                //_buildPartnerSection(context, appState),
-
-                //const SizedBox(height: 32),
-
-                // Recent activity (optional, can be removed if not needed)
-                //_buildRecentActivity(context, appState),
-
-                //const Spacer(),
-
-                // Start conversation button (shows prompt to use session flow)
-                _buildStartConversationButton(context, appState),
-
-                Padding(
-                  padding: const EdgeInsets.all(24.0),
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.background,
+                  Color(0xFFF8F9FA),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+            child: SafeArea(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppTheme.spacingL),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => _showStartSessionDialog(context),
-                          child: const Text('Start New Session'),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: () => _showJoinSessionDialog(context),
-                          child: const Text('Join Session'),
-                        ),
-                      ),
+                      // Welcome Section
+                      _buildWelcomeSection(context, appState),
+
+                      const SizedBox(height: AppTheme.spacingXL),
+
+                      // Quick Stats Card
+                      _buildQuickStatsCard(context, appState),
+
+                      const SizedBox(height: AppTheme.spacingXL),
+
+                      // Session Actions
+                      _buildSessionActions(context),
+
+                      const SizedBox(height: AppTheme.spacingXL),
+
+                      // Features Overview
+                      _buildFeaturesOverview(context),
+
+                      const SizedBox(height: AppTheme.spacingXL),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         );
@@ -89,7 +145,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWelcomeSection(BuildContext context, AppState appState) {
+  Widget _buildWelcomeSection(BuildContext context, FirebaseAppState appState) {
     final currentPartner = appState.getCurrentPartner();
     final timeOfDay = DateTime.now().hour;
     String greeting = 'Good morning';
@@ -99,212 +155,269 @@ class HomeScreen extends StatelessWidget {
       greeting = 'Good evening';
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '$greeting, ${currentPartner?.name ?? 'there'}!',
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Ready to strengthen your relationship today?',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+    return AnimatedCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacingM),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      AppTheme.gradientStart,
+                      AppTheme.gradientEnd,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                ),
+                child: const Icon(
+                  Icons.waving_hand_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacingM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$greeting, ${currentPartner?.name ?? 'there'}!',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacingS),
+                    Text(
+                      'Ready to strengthen your relationship today?',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppTheme.textSecondary,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPartnerSection(BuildContext context, AppState appState) {
-    final currentPartner = appState.getCurrentPartner();
-    final otherPartner = appState.getOtherPartner();
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: AppTheme.getPartnerColor(currentPartner?.id ?? 'A'),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    currentPartner?.name ?? 'You',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: AppTheme.getPartnerColor(otherPartner?.id ?? 'B'),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    otherPartner?.name ?? 'Partner',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                Icon(
-                  Icons.check_circle,
-                  color: AppTheme.successGreen,
-                  size: 20,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Both partners are connected and ready for guided conversations.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildRecentActivity(BuildContext context, AppState appState) {
-    final recentSessions = appState.getRecentSessions(limit: 3);
+  Widget _buildQuickStatsCard(BuildContext context, FirebaseAppState appState) {
+    final recentSessions = appState.getRecentSessions(limit: 10);
+    final totalSessions = recentSessions.length;
+    final avgScore = totalSessions > 0 
+        ? recentSessions.map((s) => s.scores?.averageScore ?? 0.0).reduce((a, b) => a + b) / totalSessions
+        : 0.0;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Recent Activity', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 16),
-
-        if (recentSessions.isEmpty)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.chat_bubble_outline,
-                    size: 48,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withOpacity(0.5),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No conversations yet',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Start your first guided conversation to begin your journey together.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+    return AnimatedCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.analytics_rounded,
+                color: AppTheme.primary,
+                size: 24,
               ),
-            ),
-          )
-        else
-          ...recentSessions.map(
-            (session) => Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.primary.withOpacity(0.1),
-                  child: Icon(
-                    Icons.chat,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+              const SizedBox(width: AppTheme.spacingM),
+              Text(
+                'Your Progress',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.w600,
                 ),
-                title: Text('Conversation Session'),
-                subtitle: Text(
-                  'Duration: ${session.duration.inMinutes} minutes\n'
-                  '${_formatDate(session.startTime)}',
-                ),
-                trailing: session.scores != null
-                    ? Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.successGreen.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          'Completed',
-                          style: TextStyle(
-                            color: AppTheme.successGreen,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      )
-                    : null,
               ),
-            ),
+            ],
           ),
+          const SizedBox(height: AppTheme.spacingL),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatItem(
+                  context,
+                  'Sessions',
+                  totalSessions.toString(),
+                  Icons.chat_rounded,
+                ),
+              ),
+              Expanded(
+                child: _buildStatItem(
+                  context,
+                  'Avg Score',
+                  totalSessions > 0 ? '${avgScore.toStringAsFixed(1)}/10' : '--',
+                  Icons.star_rounded,
+                ),
+              ),
+              Expanded(
+                child: _buildStatItem(
+                  context,
+                  'Streak',
+                  '${_calculateStreak(recentSessions)} days',
+                  Icons.local_fire_department_rounded,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(BuildContext context, String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(AppTheme.spacingM),
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(AppTheme.radiusM),
+          ),
+          child: Icon(
+            icon,
+            color: AppTheme.primary,
+            size: 24,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacingS),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppTheme.textSecondary,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildStartConversationButton(
-    BuildContext context,
-    AppState appState,
-  ) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      child: ElevatedButton.icon(
-        onPressed: () {
-          // All sessions should use the session code flow now.
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(builder: (context) => const VoiceChatScreen()),
-          // );
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Please use "Start New Session" or "Join Session" below.',
-              ),
-            ),
-          );
-        },
-        icon: const Icon(Icons.mic, size: 24),
-        label: const Text('Start Guided Conversation'),
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 32),
-          backgroundColor: AppTheme.primary,
-          foregroundColor: Colors.white,
-          elevation: 4,
-          shadowColor: AppTheme.primary.withOpacity(0.3),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusL),
-          ),
-          textStyle: const TextStyle(
+  Widget _buildSessionActions(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Start a Conversation',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: AppTheme.textPrimary,
             fontWeight: FontWeight.w600,
-            fontSize: 18,
-            letterSpacing: 0.5,
           ),
         ),
+        const SizedBox(height: AppTheme.spacingM),
+        Text(
+          'Choose how you\'d like to begin your guided communication session',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AppTheme.textSecondary,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacingL),
+        SizedBox(
+          width: double.infinity,
+          child: GradientButton(
+            text: 'Start New Session',
+            icon: Icons.add_circle_outline_rounded,
+            onPressed: () => _showStartSessionDialog(context),
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacingM),
+        SizedBox(
+          width: double.infinity,
+          child: GradientButton(
+            text: 'Join Session',
+            icon: Icons.group_add_rounded,
+            isSecondary: true,
+            onPressed: () => _showJoinSessionDialog(context),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeaturesOverview(BuildContext context) {
+    return AnimatedCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'How Mend Helps',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacingL),
+          _buildFeatureItem(
+            Icons.record_voice_over_rounded,
+            'Real-time Guidance',
+            'AI-powered conversation moderation and live feedback',
+          ),
+          const SizedBox(height: AppTheme.spacingM),
+          _buildFeatureItem(
+            Icons.psychology_rounded,
+            'Smart Insights',
+            'Detailed analysis of communication patterns and growth',
+          ),
+          const SizedBox(height: AppTheme.spacingM),
+          _buildFeatureItem(
+            Icons.favorite_rounded,
+            'Stronger Bond',
+            'Personalized activities to deepen your connection',
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildFeatureItem(IconData icon, String title, String description) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(AppTheme.spacingM),
+          decoration: BoxDecoration(
+            color: AppTheme.secondary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(AppTheme.radiusM),
+          ),
+          child: Icon(
+            icon,
+            color: AppTheme.secondary,
+            size: 24,
+          ),
+        ),
+        const SizedBox(width: AppTheme.spacingM),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacingXS),
+              Text(
+                description,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.textSecondary,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -315,56 +428,105 @@ class HomeScreen extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Session Code'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacingS),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                ),
+                child: const Icon(
+                  Icons.qr_code_rounded,
+                  color: AppTheme.primary,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacingM),
+              const Text('Session Code'),
+            ],
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                sessionCode,
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 4,
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacingL),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                  border: Border.all(
+                    color: AppTheme.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Text(
+                  sessionCode,
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 4,
+                    color: AppTheme.primary,
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacingL),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: sessionCode));
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Session code copied!')),
-                      );
-                    },
-                    icon: const Icon(Icons.copy),
-                    label: const Text('Copy'),
+                  Expanded(
+                    child: SizedBox(
+                      height: 48, // Smaller height for dialog buttons
+                      child: GradientButton(
+                        text: 'Copy',
+                        icon: Icons.copy_rounded,
+                        isSecondary: true,
+                        fontSize: 14,
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: sessionCode));
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Session code copied!'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 16),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Share.share(
-                        'Join my Mend session with code: $sessionCode\n\nDownload Mend to start improving your relationship communication together!',
-                        subject: 'Join my Mend session',
-                      );
-                    },
-                    icon: const Icon(Icons.share),
-                    label: const Text('Share'),
+                  const SizedBox(width: AppTheme.spacingM),
+                  Expanded(
+                    child: SizedBox(
+                      height: 48, // Smaller height for dialog buttons
+                      child: GradientButton(
+                        text: 'Share',
+                        icon: Icons.share_rounded,
+                        fontSize: 14,
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Share.share(
+                            'Join my Mend session with code: $sessionCode\n\nDownload Mend to start improving your relationship communication together!',
+                            subject: 'Join my Mend session',
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacingL),
               Text(
                 'Share this code with your partner so you can both join the same session.',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacingL),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: GradientButton(
+                  text: 'Go to Waiting Room',
+                  icon: Icons.meeting_room_rounded,
                   onPressed: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -377,7 +539,6 @@ class HomeScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  child: const Text('Go to Waiting Room'),
                 ),
               ),
             ],
@@ -394,39 +555,56 @@ class HomeScreen extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Join Session'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacingS),
+                decoration: BoxDecoration(
+                  color: AppTheme.secondary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                ),
+                child: const Icon(
+                  Icons.group_add_rounded,
+                  color: AppTheme.secondary,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacingM),
+              const Text('Join Session'),
+            ],
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
                 controller: controller,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Enter Session Code',
                   hintText: '6-character code',
+                  prefixIcon: const Icon(Icons.vpn_key_rounded),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                  ),
                 ),
                 textCapitalization: TextCapitalization.characters,
                 maxLength: 6,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacingL),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: GradientButton(
+                  text: 'Join Session',
+                  icon: Icons.login_rounded,
                   onPressed: () {
                     final sessionCode = controller.text.trim().toUpperCase();
-                    if (sessionCode.isEmpty) {
+                    if (sessionCode.isEmpty || sessionCode.length != 6) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Please enter a session code'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                      return;
-                    }
-                    if (sessionCode.length != 6) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Session code must be 6 characters'),
-                          backgroundColor: Colors.red,
+                          content: Text('Please enter a valid 6-character session code'),
+                          backgroundColor: AppTheme.interruptionColor,
+                          behavior: SnackBarBehavior.floating,
                         ),
                       );
                       return;
@@ -442,7 +620,6 @@ class HomeScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  child: const Text('Join'),
                 ),
               ),
             ],
@@ -463,27 +640,31 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
+  int _calculateStreak(List<dynamic> sessions) {
+    if (sessions.isEmpty) return 0;
+    
+    int streak = 0;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final sessionDate = DateTime(date.year, date.month, date.day);
-
-    if (sessionDate == today) {
-      return 'Today at ${_formatTime(date)}';
-    } else if (sessionDate == yesterday) {
-      return 'Yesterday at ${_formatTime(date)}';
-    } else {
-      return '${date.month}/${date.day}/${date.year} at ${_formatTime(date)}';
+    
+    for (int i = 0; i < 30; i++) {
+      final checkDate = today.subtract(Duration(days: i));
+      final hasSessionOnDate = sessions.any((session) {
+        final sessionDate = DateTime(
+          session.startTime.year,
+          session.startTime.month,
+          session.startTime.day,
+        );
+        return sessionDate == checkDate;
+      });
+      
+      if (hasSessionOnDate) {
+        streak++;
+      } else {
+        break;
+      }
     }
-  }
-
-  String _formatTime(DateTime date) {
-    final hour = date.hour > 12
-        ? date.hour - 12
-        : (date.hour == 0 ? 12 : date.hour);
-    final minute = date.minute.toString().padLeft(2, '0');
-    final period = date.hour >= 12 ? 'PM' : 'AM';
-    return '$hour:$minute $period';
+    
+    return streak;
   }
 }

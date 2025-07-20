@@ -10,6 +10,7 @@ class GradientButton extends StatefulWidget {
   final double? height;
   final EdgeInsets? padding;
   final bool isSecondary;
+  final double? fontSize;
 
   const GradientButton({
     super.key,
@@ -21,6 +22,7 @@ class GradientButton extends StatefulWidget {
     this.height,
     this.padding,
     this.isSecondary = false,
+    this.fontSize,
   });
 
   @override
@@ -109,7 +111,7 @@ class _GradientButtonState extends State<GradientButton>
                     ? null
                     : [
                         BoxShadow(
-                          color: AppTheme.primary.withOpacity(0.3),
+                          color: AppTheme.primary.withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -143,15 +145,19 @@ class _GradientButtonState extends State<GradientButton>
                       ),
                       const SizedBox(width: AppTheme.spacingS),
                     ],
-                    Text(
-                      widget.text,
-                      style: TextStyle(
-                        color: widget.isSecondary
-                            ? AppTheme.primary
-                            : Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                        letterSpacing: 0.5,
+                    Flexible(
+                      child: Text(
+                        widget.text,
+                        style: TextStyle(
+                          color: widget.isSecondary
+                              ? AppTheme.primary
+                              : Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: widget.fontSize ?? 16,
+                          letterSpacing: 0.5,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ],

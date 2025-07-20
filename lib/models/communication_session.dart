@@ -6,6 +6,7 @@ class CommunicationSession {
   final CommunicationScores? scores;
   final String? reflection;
   final List<String> suggestedActivities;
+  final Map<String, bool> participantStatus;
 
   CommunicationSession({
     required this.id,
@@ -15,6 +16,7 @@ class CommunicationSession {
     this.scores,
     this.reflection,
     this.suggestedActivities = const [],
+    this.participantStatus = const {},
   });
 
   Duration get duration {
@@ -25,6 +27,8 @@ class CommunicationSession {
   }
 
   bool get isCompleted => endTime != null;
+  
+  bool get hasPartnerLeft => participantStatus.values.any((active) => !active);
 
   Map<String, dynamic> toJson() {
     return {
@@ -35,6 +39,7 @@ class CommunicationSession {
       'scores': scores?.toJson(),
       'reflection': reflection,
       'suggestedActivities': suggestedActivities,
+      'participantStatus': participantStatus,
     };
   }
 
@@ -51,6 +56,7 @@ class CommunicationSession {
           : null,
       reflection: json['reflection'],
       suggestedActivities: List<String>.from(json['suggestedActivities'] ?? []),
+      participantStatus: Map<String, bool>.from(json['participantStatus'] ?? {}),
     );
   }
 }

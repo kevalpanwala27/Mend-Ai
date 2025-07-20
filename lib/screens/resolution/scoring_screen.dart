@@ -5,6 +5,7 @@ import '../../services/ai_service.dart';
 import '../../models/communication_session.dart';
 import '../../theme/app_theme.dart';
 import '../main/home_screen.dart';
+import '../main/insights_dashboard_screen.dart';
 
 class ScoringScreen extends StatefulWidget {
   const ScoringScreen({super.key});
@@ -86,82 +87,98 @@ class _ScoringScreenState extends State<ScoringScreen> {
               IconButton(icon: const Icon(Icons.home), onPressed: _returnHome),
             ],
           ),
-          body: _isLoading
-              ? const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Analyzing your conversation...'),
-                    ],
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.gradientStart,
+                  AppTheme.gradientEnd,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: _isLoading
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(color: Colors.white),
+                        SizedBox(height: 16),
+                        Text('Analyzing your conversation...', style: TextStyle(color: Colors.white)),
+                      ],
+                    ),
+                  )
+                : _scores == null
+                    ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.white70,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Unable to generate scores',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Please try again later',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.white70,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: _returnHome,
+                          child: const Text('Return Home'),
+                        ),
+                      ],
+                    ),
+                  )
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Overall feedback
+                        _buildOverallFeedback(),
+
+                        const SizedBox(height: 32),
+
+                        // Partner scores
+                        _buildPartnerScore(
+                          'A',
+                          currentPartner?.name ?? 'Partner A',
+                          _scores!.partnerScores['A']!,
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        _buildPartnerScore(
+                          'B',
+                          otherPartner?.name ?? 'Partner B',
+                          _scores!.partnerScores['B']!,
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Improvement suggestions
+                        _buildImprovementSuggestions(),
+
+                        const SizedBox(height: 32),
+
+                        // Action buttons
+                        _buildActionButtons(),
+                      ],
+                    ),
                   ),
-                )
-              : _scores == null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Unable to generate scores',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Please try again later',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: _returnHome,
-                        child: const Text('Return Home'),
-                      ),
-                    ],
-                  ),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Overall feedback
-                      _buildOverallFeedback(),
-
-                      const SizedBox(height: 32),
-
-                      // Partner scores
-                      _buildPartnerScore(
-                        'A',
-                        currentPartner?.name ?? 'Partner A',
-                        _scores!.partnerScores['A']!,
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      _buildPartnerScore(
-                        'B',
-                        otherPartner?.name ?? 'Partner B',
-                        _scores!.partnerScores['B']!,
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // Improvement suggestions
-                      _buildImprovementSuggestions(),
-
-                      const SizedBox(height: 32),
-
-                      // Action buttons
-                      _buildActionButtons(),
-                    ],
-                  ),
-                ),
+            ),
         );
       },
     );
@@ -436,9 +453,11 @@ class _ScoringScreenState extends State<ScoringScreen> {
           child: OutlinedButton.icon(
             onPressed: () {
               // Navigate to insights dashboard
-              Navigator.pushNamedAndRemoveUntil(
+              Navigator.pushAndRemoveUntil(
                 context,
-                '/insights',
+                MaterialPageRoute(
+                  builder: (context) => const InsightsDashboardScreen(),
+                ),
                 (route) => false,
               );
             },

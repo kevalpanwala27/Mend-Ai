@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../models/partner.dart';
+import '../../theme/app_theme.dart';
 import '../main/home_screen.dart';
 
 class JoinScreen extends StatefulWidget {
@@ -67,19 +68,34 @@ class _JoinScreenState extends State<JoinScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.gradientStart,
+              AppTheme.gradientEnd,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Join your relationship space',
-              style: Theme.of(context).textTheme.headlineMedium,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               'Enter the invite code your partner shared with you',
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Colors.white70,
+              ),
             ),
             const SizedBox(height: 32),
             
@@ -118,7 +134,9 @@ class _JoinScreenState extends State<JoinScreen> {
             // Gender selection
             Text(
               'Gender',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -188,6 +206,7 @@ class _JoinScreenState extends State<JoinScreen> {
               ),
             ),
           ],
+          ),
         ),
       ),
     );
