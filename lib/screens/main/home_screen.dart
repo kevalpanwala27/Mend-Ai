@@ -480,6 +480,10 @@ class _HomeScreenState extends State<HomeScreen>
                         icon: Icons.copy_rounded,
                         isSecondary: true,
                         fontSize: 14,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacingS,
+                          vertical: AppTheme.spacingS,
+                        ),
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: sessionCode));
                           Navigator.pop(context);
@@ -493,7 +497,7 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(width: AppTheme.spacingM),
+                  const SizedBox(width: AppTheme.spacingS),
                   Expanded(
                     child: SizedBox(
                       height: 48, // Smaller height for dialog buttons
@@ -501,6 +505,10 @@ class _HomeScreenState extends State<HomeScreen>
                         text: 'Share',
                         icon: Icons.share_rounded,
                         fontSize: 14,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacingS,
+                          vertical: AppTheme.spacingS,
+                        ),
                         onPressed: () {
                           Navigator.pop(context);
                           Share.share(

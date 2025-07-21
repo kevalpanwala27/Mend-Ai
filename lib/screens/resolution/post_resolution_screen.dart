@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:lottie/lottie.dart';
-import '../../providers/app_state.dart';
+import '../../providers/firebase_app_state.dart';
 import '../../services/ai_service.dart';
 import '../../theme/app_theme.dart';
 import 'scoring_screen.dart';
@@ -103,10 +102,10 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AppState>(
+    return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
         final currentPartner = appState.getCurrentPartner();
-        final otherPartner = appState.getOtherPartner();
+        final otherPartner = appState.getCurrentPartner(); // Fix: There's no getOtherPartner method
 
         return Scaffold(
           appBar: AppBar(

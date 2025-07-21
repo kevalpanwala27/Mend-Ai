@@ -94,17 +94,43 @@ class _AnimatedCardState extends State<AnimatedCard>
         builder: (context, child) {
           return Transform.scale(
             scale: _scaleAnimation.value,
-            child: Card(
-              elevation: _elevationAnimation.value,
-              color: widget.backgroundColor ?? AppTheme.surface,
+            child: Container(
               margin: widget.margin ?? const EdgeInsets.all(AppTheme.spacingS),
-              shape: RoundedRectangleBorder(
+              decoration: BoxDecoration(
+                color: widget.backgroundColor ?? AppTheme.surface,
                 borderRadius: widget.borderRadius ??
                     BorderRadius.circular(AppTheme.radiusL),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: _elevationAnimation.value * 2,
+                    offset: Offset(0, _elevationAnimation.value / 2),
+                    spreadRadius: _elevationAnimation.value / 4,
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: _elevationAnimation.value,
+                    offset: Offset(0, _elevationAnimation.value / 4),
+                  ),
+                ],
+                border: Border.all(
+                  color: AppTheme.borderColor.withValues(alpha: 0.5),
+                  width: 0.5,
+                ),
+                gradient: widget.backgroundColor == null
+                    ? const LinearGradient(
+                        colors: [
+                          AppTheme.surface,
+                          Color(0xFFFDFDFD),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
               ),
               child: Padding(
                 padding: widget.padding ??
-                    const EdgeInsets.all(AppTheme.spacingM),
+                    const EdgeInsets.all(AppTheme.spacingL),
                 child: widget.child,
               ),
             ),

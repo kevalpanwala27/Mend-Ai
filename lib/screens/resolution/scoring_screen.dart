@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/app_state.dart';
+import '../../providers/firebase_app_state.dart';
 import '../../services/ai_service.dart';
 import '../../models/communication_session.dart';
 import '../../theme/app_theme.dart';
@@ -26,7 +26,7 @@ class _ScoringScreenState extends State<ScoringScreen> {
   }
 
   Future<void> _generateScores() async {
-    final appState = context.read<AppState>();
+    final appState = context.read<FirebaseAppState>();
     final currentSession = appState.currentSession;
 
     if (currentSession != null) {
@@ -74,10 +74,10 @@ class _ScoringScreenState extends State<ScoringScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AppState>(
+    return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
         final currentPartner = appState.getCurrentPartner();
-        final otherPartner = appState.getOtherPartner();
+        final otherPartner = appState.getCurrentPartner(); // Fix: There's no getOtherPartner method
 
         return Scaffold(
           appBar: AppBar(

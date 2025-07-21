@@ -334,9 +334,25 @@ class FirebaseAppState extends ChangeNotifier {
       _currentSession = null;
       _currentSessionId = null;
 
+      // Reload sessions to refresh insights data
+      await _reloadSessions();
+
       notifyListeners();
     } catch (e) {
       debugPrint('Error ending communication session: $e');
+    }
+  }
+
+  // Reload sessions from Firestore
+  Future<void> _reloadSessions() async {
+    if (_relationshipData != null) {
+      try {
+        _sessions = await _sessionsService.getRelationshipSessions(
+          _relationshipData!['id'],
+        );
+      } catch (e) {
+        debugPrint('Error reloading sessions: $e');
+      }
     }
   }
 

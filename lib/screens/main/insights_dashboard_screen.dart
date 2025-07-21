@@ -15,11 +15,11 @@ class InsightsDashboardScreen extends StatelessWidget {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppTheme.gradientStart,
-              AppTheme.gradientEnd,
+              AppTheme.background,
+              Color(0xFFF8F9FA),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
         child: Consumer<FirebaseAppState>(

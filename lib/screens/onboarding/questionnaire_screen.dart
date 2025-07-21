@@ -177,11 +177,11 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppTheme.gradientStart,
-                AppTheme.gradientEnd,
+                AppTheme.background,
+                Color(0xFFF8F9FA),
               ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
           child: Column(
@@ -293,7 +293,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                   Expanded(
                     flex: _currentPage > 0 ? 1 : 2,
                     child: GradientButton(
-                      text: _currentPage == 3 ? 'Complete Setup' : 'Next',
+                      text: _currentPage == 3 ? 'Start' : 'Next',
                       icon: _currentPage == 3 
                           ? Icons.check_rounded 
                           : Icons.arrow_forward_ios_rounded,
