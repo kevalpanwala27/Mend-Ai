@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -28,11 +29,18 @@ class MendApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (context) => AppState()..initialize()),
       ],
-      child: MaterialApp(
-        title: 'Mend',
-        theme: AppTheme.themeData,
-        home: const AuthWrapper(),
-        debugShowCheckedModeBanner: false,
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        builder: (context, child) {
+          return MaterialApp(
+            title: 'Mend',
+            theme: AppTheme.themeData,
+            home: const AuthWrapper(),
+            debugShowCheckedModeBanner: false,
+          );
+        },
       ),
     );
   }

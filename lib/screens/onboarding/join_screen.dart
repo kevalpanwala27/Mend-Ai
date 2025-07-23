@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../models/partner.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/gradient_button.dart';
 import '../main/home_screen.dart';
 
 class JoinScreen extends StatefulWidget {
@@ -72,11 +73,11 @@ class _JoinScreenState extends State<JoinScreen> {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppTheme.gradientStart,
-              AppTheme.gradientEnd,
+              AppTheme.background,
+              Color(0xFFF8F9FA),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
         child: SingleChildScrollView(
@@ -87,14 +88,15 @@ class _JoinScreenState extends State<JoinScreen> {
             Text(
               'Join your relationship space',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Colors.white,
+                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Enter the invite code your partner shared with you',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.white70,
+                color: AppTheme.textSecondary,
               ),
             ),
             const SizedBox(height: 32),
@@ -135,7 +137,8 @@ class _JoinScreenState extends State<JoinScreen> {
             Text(
               'Gender',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.white,
+                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 16),
@@ -181,18 +184,11 @@ class _JoinScreenState extends State<JoinScreen> {
             const SizedBox(height: 32),
             
             // Join button
-            SizedBox(
+            GradientButton(
+              text: 'Join Relationship Space',
+              onPressed: _isLoading ? null : _joinPartner,
+              isLoading: _isLoading,
               width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _joinPartner,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Join Relationship Space'),
-              ),
             ),
             
             const SizedBox(height: 16),

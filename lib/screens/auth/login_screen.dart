@@ -69,9 +69,10 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppTheme.spacingL),
-              child: Column(
-                children: [
-                  const Spacer(flex: 2),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.05),
 
                   // App Logo with animation
                   const AppLogo(size: 140, animate: true),
@@ -123,35 +124,39 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  const Spacer(flex: 2),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.08),
 
                   // Features showcase
                   AnimatedCard(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _buildFeatureItem(
-                            Icons.record_voice_over_rounded,
-                            'Voice Chat',
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingS),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Flexible(
+                            child: _buildFeatureItem(
+                              Icons.record_voice_over_rounded,
+                              'Voice Chat',
+                            ),
                           ),
-                        ),
-                        Expanded(
-                          child: _buildFeatureItem(
-                            Icons.psychology_rounded,
-                            'AI Guidance',
+                          Flexible(
+                            child: _buildFeatureItem(
+                              Icons.psychology_rounded,
+                              'AI Guidance',
+                            ),
                           ),
-                        ),
-                        Expanded(
-                          child: _buildFeatureItem(
-                            Icons.analytics_rounded,
-                            'Progress Tracking',
+                          Flexible(
+                            child: _buildFeatureItem(
+                              Icons.analytics_rounded,
+                              'Progress Tracking',
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
 
-                  const Spacer(flex: 2),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.08),
 
                   // Google Sign In button
                   SizedBox(
@@ -227,7 +232,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
 
                   const SizedBox(height: AppTheme.spacingXL),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -238,23 +244,27 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildFeatureItem(IconData icon, String label) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          padding: const EdgeInsets.all(AppTheme.spacingM),
+          padding: const EdgeInsets.all(AppTheme.spacingS),
           decoration: BoxDecoration(
             color: AppTheme.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(AppTheme.radiusM),
+            borderRadius: BorderRadius.circular(AppTheme.radiusS),
           ),
-          child: Icon(icon, color: AppTheme.primary, size: 24),
+          child: Icon(icon, color: AppTheme.primary, size: 20),
         ),
-        const SizedBox(height: AppTheme.spacingS),
+        const SizedBox(height: AppTheme.spacingXS),
         Text(
           label,
           style: const TextStyle(
             color: AppTheme.textSecondary,
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.w500,
           ),
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../models/partner.dart';
@@ -25,7 +26,11 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
   final TextEditingController _customChallengeController = TextEditingController();
   
   late AnimationController _fadeController;
+  late AnimationController _slideController;
+  late AnimationController _bounceController;
   late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _bounceAnimation;
   
   int _currentPage = 0;
   bool _isLoading = false;
@@ -41,18 +46,54 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
   @override
   void initState() {
     super.initState();
+    
     _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
+    
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    
+    _bounceController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _fadeController,
-      curve: Curves.easeInOut,
+      curve: Curves.easeOutQuart,
     ));
+    
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _slideController,
+      curve: Curves.easeOutCubic,
+    ));
+    
+    _bounceAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _bounceController,
+      curve: Curves.elasticOut,
+    ));
+    
+    // Stagger animations for a more polished feel
     _fadeController.forward();
+    Future.delayed(const Duration(milliseconds: 200), () {
+      _slideController.forward();
+    });
+    Future.delayed(const Duration(milliseconds: 400), () {
+      _bounceController.forward();
+    });
   }
 
   @override
@@ -62,6 +103,8 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
     _customGoalController.dispose();
     _customChallengeController.dispose();
     _fadeController.dispose();
+    _slideController.dispose();
+    _bounceController.dispose();
     super.dispose();
   }
 
@@ -188,9 +231,9 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
             children: [
             // Enhanced Progress indicator
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacingL,
-                vertical: AppTheme.spacingM,
+              padding: EdgeInsets.symmetric(
+                horizontal: 24.w,
+                vertical: 16.h,
               ),
               child: Column(
                 children: [
@@ -199,28 +242,28 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                     children: [
                       Text(
                         'Step ${_currentPage + 1} of 4',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppTheme.textSecondary,
-                          fontSize: 14,
+                          fontSize: 14.sp,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       Text(
                         '${((_currentPage + 1) / 4 * 100).round()}%',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppTheme.primary,
-                          fontSize: 14,
+                          fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppTheme.spacingS),
+                  SizedBox(height: 8.h),
                   Container(
-                    height: 6,
+                    height: 6.h,
                     decoration: BoxDecoration(
                       color: AppTheme.borderColor,
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: BorderRadius.circular(3.r),
                     ),
                     child: FractionallySizedBox(
                       alignment: Alignment.centerLeft,
@@ -233,7 +276,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                               AppTheme.gradientEnd,
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: BorderRadius.circular(3.r),
                         ),
                       ),
                     ),
@@ -267,7 +310,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
 
             // Enhanced Navigation buttons
             Container(
-              padding: const EdgeInsets.all(AppTheme.spacingL),
+              padding: EdgeInsets.all(24.w),
               decoration: const BoxDecoration(
                 color: AppTheme.surface,
                 border: Border(
@@ -288,7 +331,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                         onPressed: _previousPage,
                       ),
                     ),
-                    const SizedBox(width: AppTheme.spacingM),
+                    SizedBox(width: 16.w),
                   ],
                   Expanded(
                     flex: _currentPage > 0 ? 1 : 2,
@@ -313,112 +356,283 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
 
   Widget _buildBasicInfoPage() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppTheme.spacingL),
+      padding: EdgeInsets.symmetric(
+        horizontal: 24.w,
+        vertical: 20.h,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header section
-          AnimatedCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spacingM),
+          // Welcome Header with elegant styling and animations
+          SlideTransition(
+            position: _slideAnimation,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: ScaleTransition(
+                scale: _bounceAnimation,
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(32.w),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppTheme.primary.withOpacity(0.12),
+                        AppTheme.secondary.withOpacity(0.08),
+                        AppTheme.accent.withOpacity(0.06),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(24.r),
+                    border: Border.all(
+                      color: AppTheme.primary.withOpacity(0.15),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primary.withOpacity(0.1),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
-                  child: const Icon(
-                    Icons.person_outline_rounded,
-                    color: AppTheme.primary,
-                    size: 32,
+                  child: Column(
+                    children: [
+                      // Elegant icon container
+                      Container(
+                        width: 80.w,
+                        height: 80.w,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppTheme.primary.withOpacity(0.2),
+                              AppTheme.secondary.withOpacity(0.2),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                        child: Icon(
+                          Icons.favorite_outline_rounded,
+                          color: AppTheme.primary,
+                          size: 36.sp,
+                        ),
+                      ),
+                      SizedBox(height: 24.h),
+                      Text(
+                        "Let's Begin Your Mend Journey",
+                        style: TextStyle(
+                          fontSize: 28.sp,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
+                          letterSpacing: -0.5,
+                          height: 1.2,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 12.h),
+                      Text(
+                        'To personalize your experience, tell us a bit about yourself.',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w400,
+                          color: AppTheme.textSecondary,
+                          height: 1.4,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: AppTheme.spacingM),
-                Text(
-                  'Let\'s start with the basics',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: AppTheme.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacingS),
-                Text(
-                  'This helps us personalize your experience and create better communication guidance',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.textSecondary,
-                    height: 1.5,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
 
-          const SizedBox(height: AppTheme.spacingL),
+          SizedBox(height: 40.h),
 
-          // Name field
-          AnimatedCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CustomTextField(
-                  labelText: 'Your Name',
-                  hintText: 'Enter your first name',
-                  controller: _nameController,
-                  prefixIcon: const Icon(Icons.person_rounded),
-                  onChanged: (value) => setState(() => _name = value),
+          // Name field with modern styling and animations
+          SlideTransition(
+            position: _slideAnimation,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Container(
+                padding: EdgeInsets.all(24.w),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primary.withOpacity(0.08),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    ),
+                    BoxShadow(
+                      color: AppTheme.secondary.withOpacity(0.04),
+                      blurRadius: 40,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: AppTheme.spacingL),
-
-          // Gender selection
-          AnimatedCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Gender',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppTheme.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacingM),
-                Wrap(
-                  spacing: AppTheme.spacingM,
-                  runSpacing: AppTheme.spacingS,
-                  children: ['Male', 'Female', 'Other'].map((gender) {
-                    final isSelected = _gender == gender;
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      child: ChoiceChip(
-                        label: Text(
-                          gender,
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : AppTheme.textPrimary,
-                            fontWeight: FontWeight.w500,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Name',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.background,
+                        borderRadius: BorderRadius.circular(16.r),
+                        border: Border.all(
+                          color: _name.isNotEmpty 
+                              ? AppTheme.primary.withOpacity(0.3)
+                              : AppTheme.borderColor,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: TextField(
+                        controller: _nameController,
+                        onChanged: (value) => setState(() => _name = value),
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.textPrimary,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Enter your first name',
+                          hintStyle: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w400,
+                            color: AppTheme.textTertiary,
+                          ),
+                          prefixIcon: Container(
+                            padding: EdgeInsets.all(12.w),
+                            child: Icon(
+                              Icons.person_outline_rounded,
+                              color: _name.isNotEmpty 
+                                  ? AppTheme.primary 
+                                  : AppTheme.textTertiary,
+                              size: 20.sp,
+                            ),
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 20.w,
+                            vertical: 20.h,
                           ),
                         ),
-                        selected: isSelected,
-                        selectedColor: AppTheme.primary,
-                        backgroundColor: AppTheme.cardBackground,
-                        side: BorderSide(
-                          color: isSelected ? AppTheme.primary : AppTheme.borderColor,
-                          width: isSelected ? 2 : 1,
-                        ),
-                        onSelected: (selected) {
-                          setState(() => _gender = selected ? gender : '');
-                        },
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
+
+          SizedBox(height: 32.h),
+
+          // Gender selection with modern chips and animations
+          SlideTransition(
+            position: _slideAnimation,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Container(
+                padding: EdgeInsets.all(24.w),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primary.withOpacity(0.08),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    ),
+                    BoxShadow(
+                      color: AppTheme.secondary.withOpacity(0.04),
+                      blurRadius: 40,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Gender',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                    Wrap(
+                      spacing: 8.w,
+                      runSpacing: 12.h,
+                      children: ['Male', 'Female', 'Non-Binary', 'Prefer not to say']
+                          .map((gender) {
+                        final isSelected = _gender == gender;
+                        
+                        return GestureDetector(
+                          onTap: () => setState(() => _gender = gender),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            padding: EdgeInsets.symmetric(
+                              vertical: 16.h,
+                              horizontal: 20.w,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: isSelected
+                                  ? LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        AppTheme.primary,
+                                        AppTheme.primary.withOpacity(0.8),
+                                      ],
+                                    )
+                                  : null,
+                              color: isSelected
+                                  ? null
+                                  : AppTheme.background,
+                              borderRadius: BorderRadius.circular(12.r),
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppTheme.primary
+                                    : AppTheme.borderColor,
+                                width: isSelected ? 2 : 1,
+                              ),
+                            ),
+                            child: Text(
+                              gender,
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected
+                                    ? Colors.white
+                                    : AppTheme.textPrimary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          SizedBox(height: 60.h),
         ],
       ),
     );
@@ -426,7 +640,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
 
   Widget _buildGoalsPage() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.all(24.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -434,17 +648,17 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
             'What do you want to improve?',
             style: Theme.of(context).textTheme.headlineMedium,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
             'Select all that apply to your relationship goals',
             style: Theme.of(context).textTheme.bodyLarge,
           ),
-          const SizedBox(height: 32),
+          SizedBox(height: 32.h),
 
           // Goal options
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 8.w,
+            runSpacing: 8.h,
             children: _goalOptions.map((goal) {
               return FilterChip(
                 label: Text(goal),
@@ -462,7 +676,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
             }).toList(),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
 
           // Custom goal
           TextFormField(
@@ -480,7 +694,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
 
   Widget _buildChallengesPage() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.all(24.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -488,17 +702,17 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
             'What challenges are you facing?',
             style: Theme.of(context).textTheme.headlineMedium,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
             'Understanding your challenges helps us provide better guidance',
             style: Theme.of(context).textTheme.bodyLarge,
           ),
-          const SizedBox(height: 32),
+          SizedBox(height: 32.h),
 
           // Challenge options
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 8.w,
+            runSpacing: 8.h,
             children: _challengeOptions.map((challenge) {
               return FilterChip(
                 label: Text(challenge),
@@ -516,7 +730,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
             }).toList(),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
 
           // Custom challenge
           TextFormField(
@@ -534,7 +748,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
 
   Widget _buildSummaryPage() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.all(24.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -542,12 +756,12 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
             'Ready to get started!',
             style: Theme.of(context).textTheme.headlineMedium,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
-            'Here\'s a summary of your responses',
+            "Here's a summary of your responses",
             style: Theme.of(context).textTheme.bodyLarge,
           ),
-          const SizedBox(height: 32),
+          SizedBox(height: 32.h),
 
           // Summary cards
           _buildSummaryCard('Name', _name),
@@ -563,13 +777,13 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                 (_customChallenge.isNotEmpty ? ', $_customChallenge' : ''),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
 
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12.r),
             ),
             child: Column(
               children: [
@@ -577,9 +791,9 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                   Icons.info_outline,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
                 Text(
-                  'Mend works best with your partner! After completing setup, you\'ll get an invite code to share.',
+                  "Mend works best with your partner! After completing setup, you'll get an invite code to share.",
                   style: Theme.of(context).textTheme.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -593,14 +807,14 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
 
   Widget _buildSummaryCard(String title, String content) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: 16.h),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Text(
               content.isEmpty ? 'Not specified' : content,
               style: Theme.of(context).textTheme.bodyLarge,

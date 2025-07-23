@@ -4,6 +4,7 @@ import '../../providers/firebase_app_state.dart';
 import '../../services/ai_service.dart';
 import '../../theme/app_theme.dart';
 import 'scoring_screen.dart';
+import 'package:lottie/lottie.dart';
 
 class PostResolutionScreen extends StatefulWidget {
   const PostResolutionScreen({super.key});
@@ -40,18 +41,14 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Heart animation (using simple icon for MVP)
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: AppTheme.successGreen.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.favorite,
-                size: 50,
-                color: AppTheme.successGreen,
+            // Lottie glowing heart animation
+            SizedBox(
+              width: 120,
+              height: 120,
+              child: Lottie.asset(
+                'assets/lottie/glowing_heart.json',
+                repeat: true,
+                animate: true,
               ),
             ),
             const SizedBox(height: 24),
@@ -105,7 +102,8 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
     return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
         final currentPartner = appState.getCurrentPartner();
-        final otherPartner = appState.getCurrentPartner(); // Fix: There's no getOtherPartner method
+        final otherPartner = appState
+            .getCurrentPartner(); // Fix: There's no getOtherPartner method
 
         return Scaffold(
           appBar: AppBar(
@@ -115,58 +113,57 @@ class _PostResolutionScreenState extends State<PostResolutionScreen> {
           body: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  AppTheme.gradientStart,
-                  AppTheme.gradientEnd,
-                ],
+                colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
             ),
             child: Column(
               children: [
-              // Progress indicator
-              LinearProgressIndicator(
-                value: (_currentPage + 1) / 4,
-                backgroundColor: Colors.grey[300],
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  AppTheme.successGreen,
-                ),
-              ),
-
-              // Page content
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  onPageChanged: (index) {
-                    setState(() {
-                      _currentPage = index;
-                    });
-                  },
-                  children: [
-                    _buildGratitudePage(
-                      currentPartner?.name ?? 'Partner A',
-                      otherPartner?.name ?? 'Partner B',
-                    ),
-                    _buildReflectionPage(),
-                    _buildBondingActivitiesPage(),
-                    _buildSummaryPage(),
-                  ],
-                ),
-              ),
-
-              // Navigation
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _nextPage,
-                    child: Text(_currentPage == 3 ? 'View Scores' : 'Continue'),
+                // Progress indicator
+                LinearProgressIndicator(
+                  value: (_currentPage + 1) / 4,
+                  backgroundColor: Colors.grey[300],
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppTheme.successGreen,
                   ),
                 ),
-              ),
-            ],
+
+                // Page content
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentPage = index;
+                      });
+                    },
+                    children: [
+                      _buildGratitudePage(
+                        currentPartner?.name ?? 'Partner A',
+                        otherPartner?.name ?? 'Partner B',
+                      ),
+                      _buildReflectionPage(),
+                      _buildBondingActivitiesPage(),
+                      _buildSummaryPage(),
+                    ],
+                  ),
+                ),
+
+                // Navigation
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _nextPage,
+                      child: Text(
+                        _currentPage == 3 ? 'View Scores' : 'Continue',
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );

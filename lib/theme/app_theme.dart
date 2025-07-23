@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color primary = Color(0xFF4FC3F7); // Soft blue
-  static const Color secondary = Color(0xFFF8BBD0); // Soft pink
-  static const Color accent = Color(0xFF80CBC4); // Teal
-  static const Color background = Color(0xFFF5F7FA); // Light background
+  // Emotionally soothing color palette
+  static const Color primary = Color(0xFF6A9BD1); // Soft blue
+  static const Color secondary = Color(0xFFF4A6CD); // Blush pink  
+  static const Color accent = Color(0xFFB8A9E0); // Lavender
+  static const Color background = Color(0xFFF8F9FB); // Warm light background
   static const Color surface = Color(0xFFFFFFFF);
   static const Color onPrimary = Color(0xFF0D47A1);
   static const Color onSecondary = Color(0xFFAD1457);
   static const Color successGreen = Color(0xFF43A047);
   static const Color interruptionColor = Color(0xFFFF5252);
 
-  // Additional colors for professional UI
-  static const Color cardBackground = Color(0xFFFAFBFC);
-  static const Color borderColor = Color(0xFFE1E8ED);
-  static const Color textPrimary = Color(0xFF1A202C);
-  static const Color textSecondary = Color(0xFF4A5568);
-  static const Color textTertiary = Color(0xFF718096);
-  static const Color gradientStart = Color(0xFF667eea);
-  static const Color gradientEnd = Color(0xFF764ba2);
+  // Professional and soothing UI colors
+  static const Color cardBackground = Color(0xFFFBFCFD);
+  static const Color borderColor = Color(0xFFE3E8F0);
+  static const Color textPrimary = Color(0xFF2D3748); // Warm gray instead of harsh black
+  static const Color textSecondary = Color(0xFF4A5568); // Soft charcoal
+  static const Color textTertiary = Color(0xFF718096); // Muted gray
+  static const Color gradientStart = Color(0xFF6A9BD1); // Matching primary
+  static const Color gradientEnd = Color(0xFFB8A9E0); // Matching lavender
 
   // Spacing constants
   static const double spacingXS = 4.0;

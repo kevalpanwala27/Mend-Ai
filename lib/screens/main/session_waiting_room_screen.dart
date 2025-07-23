@@ -10,10 +10,10 @@ class SessionWaitingRoomScreen extends StatefulWidget {
   final String userId;
 
   const SessionWaitingRoomScreen({
-    Key? key,
+    super.key,
     required this.sessionCode,
     required this.userId,
-  }) : super(key: key);
+  });
 
   @override
   State<SessionWaitingRoomScreen> createState() =>
@@ -124,11 +124,11 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppTheme.gradientStart,
-              AppTheme.gradientEnd,
+              AppTheme.background,
+              Color(0xFFF8F9FA),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
         child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -154,7 +154,8 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
                 Text(
                   'Session Code',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
+                    color: AppTheme.textSecondary,
+                    fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -164,7 +165,7 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     letterSpacing: 4,
-                    color: Colors.white,
+                    color: AppTheme.textPrimary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -174,7 +175,10 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
                   const SizedBox(height: 24),
                   Text(
                     'Waiting for your partner to join...',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 16,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ] else ...[
@@ -182,7 +186,11 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
                   const SizedBox(height: 24),
                   Text(
                     'Both partners are here! You can start your session.',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
@@ -196,7 +204,7 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => VoiceSessionScreen(
+                            builder: (_) => VoiceChatScreen(
                               sessionCode: widget.sessionCode,
                               userId: widget.userId,
                             ),
