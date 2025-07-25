@@ -51,7 +51,7 @@ class _LoadingOverlayState extends State<LoadingOverlay>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _scaleController,
-      curve: Curves.elasticOut,
+      curve: Curves.easeOutQuart,
     ));
   }
 

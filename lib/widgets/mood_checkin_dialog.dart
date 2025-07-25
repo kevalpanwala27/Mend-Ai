@@ -35,52 +35,59 @@ class MoodCheckinDialog extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'How are you feeling today?',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              alignment: WrapAlignment.center,
-              children: moods.map((mood) {
-                return GestureDetector(
-                  onTap: () => Navigator.of(context).pop(mood),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.3)),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(mood.emoji, style: const TextStyle(fontSize: 36)),
-                        const SizedBox(height: 8),
-                        Text(
-                          mood.label,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'How are you feeling today?',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
                   ),
-                );
-              }).toList(),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  alignment: WrapAlignment.center,
+                  children: moods.map((mood) {
+                    return GestureDetector(
+                      onTap: () => Navigator.of(context).pop(mood),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(mood.emoji, style: const TextStyle(fontSize: 36)),
+                            const SizedBox(height: 8),
+                            Text(
+                              mood.label,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

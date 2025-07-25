@@ -36,7 +36,10 @@ class AppTheme {
   static const double radiusL = 16.0;
   static const double radiusXL = 24.0;
 
-  // Partner color coding
+  // Partner color coding for voice chat
+  static const Color partnerAColor = Color(0xFF6A9BD1); // Light blue
+  static const Color partnerBColor = Color(0xFFF4A6CD); // Light pink
+  
   static Color getPartnerColor(String partnerId, {bool isDark = false}) {
     if (partnerId == 'A') {
       return isDark ? const Color(0xFF1976D2) : primary;
@@ -44,7 +47,7 @@ class AppTheme {
       return isDark ? const Color(0xFFD81B60) : secondary;
     } else {
       // Fallback for same-gender or unknown
-      return isDark ? accent : accent.withOpacity(0.7);
+      return isDark ? accent : accent.withValues(alpha: 0.7);
     }
   }
 

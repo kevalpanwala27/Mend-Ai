@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-import '../chat/voice_chat_screen.dart';
+import '../chat/real_time_voice_chat_screen.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
 
@@ -204,7 +204,7 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => VoiceChatScreen(
+                            builder: (_) => RealTimeVoiceChatScreen(
                               sessionCode: widget.sessionCode,
                               userId: widget.userId,
                             ),

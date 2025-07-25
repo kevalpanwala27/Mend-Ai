@@ -4,11 +4,9 @@ import 'package:provider/provider.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../models/partner.dart';
 import '../../widgets/gradient_button.dart';
-import '../../widgets/custom_text_field.dart';
 import '../../widgets/animated_card.dart';
 import '../../widgets/loading_overlay.dart';
 import '../../theme/app_theme.dart';
-import 'invite_code_screen.dart';
 import '../main/home_screen.dart';
 
 class QuestionnaireScreen extends StatefulWidget {
@@ -83,7 +81,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _bounceController,
-      curve: Curves.elasticOut,
+      curve: Curves.easeOutQuart,
     ));
     
     // Stagger animations for a more polished feel

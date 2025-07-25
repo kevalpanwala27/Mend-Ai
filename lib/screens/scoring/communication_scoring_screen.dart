@@ -129,7 +129,7 @@ class _CommunicationScoringScreenState extends State<CommunicationScoringScreen>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _scoreController,
-      curve: Curves.elasticOut,
+      curve: Curves.easeOutQuart,
     ));
 
     _confettiAnimation = Tween<double>(
@@ -641,7 +641,7 @@ class _CommunicationScoringScreenState extends State<CommunicationScoringScreen>
                               child: GradientButton(
                                 text: 'Start Reflection',
                                 onPressed: () {
-                                  // TODO: Navigate to reflection screen
+                                  Navigator.pop(context);
                                   Navigator.pop(context);
                                 },
                                 isSecondary: true,
@@ -660,7 +660,7 @@ class _CommunicationScoringScreenState extends State<CommunicationScoringScreen>
                                 ),
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    // TODO: Navigate to schedule next session
+                                    Navigator.pop(context);
                                     Navigator.pop(context);
                                   },
                                   style: ElevatedButton.styleFrom(
@@ -721,7 +721,7 @@ class ConfettiPainter extends CustomPainter {
         AppTheme.successGreen,
       ][i % 4];
       
-      paint.color = color.withValues(alpha: 0.7 * (1 - animationValue * 0.5));
+      paint.color = color.withValues(alpha: (0.7 * (1 - animationValue * 0.5)).clamp(0.0, 1.0));
       
       final rect = Rect.fromCenter(
         center: Offset(x, y),

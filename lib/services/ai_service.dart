@@ -8,6 +8,9 @@ class AIService {
     "What brought you here today? What would you like to work on together?",
     "Can you share what's been on your mind lately regarding your relationship?",
     "What's one thing you'd like your partner to understand better about you?",
+    "Let's start with something positive - what's been going well in your relationship lately?",
+    "How would you like today's conversation to help strengthen your connection?",
+    "What topic would feel most important for you both to discuss right now?",
   ];
 
   static const List<String> _guidingQuestions = [
@@ -19,6 +22,10 @@ class AIService {
     "Can you share more about what this means to you?",
     "How would you like to move forward on this topic?",
     "What support do you need from each other?",
+    "Let's pause for a moment - what are you both hearing from each other?",
+    "How might you express that in a way that shows care for your partner?",
+    "What underlying need or feeling is driving this concern?",
+    "Can you both take a breath and share what you most want your partner to know?",
   ];
 
   static const List<String> _gratitudePrompts = [
@@ -74,7 +81,14 @@ class AIService {
   }
 
   String getInterruptionWarning(String partnerName) {
-    return "Please let $partnerName finish their thought before responding.";
+    final warnings = [
+      "Please let $partnerName finish their thought before responding.",
+      "Let's give $partnerName space to complete their thoughts.",
+      "Hold on - let's make sure $partnerName feels heard before responding.",
+      "Take a moment to let $partnerName finish sharing.",
+    ];
+    final random = Random();
+    return warnings[random.nextInt(warnings.length)];
   }
 
   String getCelebratoryMessage() {

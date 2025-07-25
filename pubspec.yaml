@@ -78,6 +78,8 @@ dependencies:
   flutter_svg: ^2.0.9
   url_launcher: ^6.3.2
   flutter_webrtc: ^0.14.2
+  socket_io_client: ^2.0.3+1
+  uuid: ^4.4.2
 
 dev_dependencies:
   flutter_test:

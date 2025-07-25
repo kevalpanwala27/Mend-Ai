@@ -38,69 +38,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _fadeController.forward();
   }
 
-  void _showAccessibilitySettings() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.accessibility_new, size: 28),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Accessibility Settings',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('High Contrast Mode'),
-                  Switch(
-                    value: _highContrast,
-                    onChanged: (val) {
-                      setState(() => _highContrast = val);
-                      Navigator.pop(context);
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Font Size'),
-                  Expanded(
-                    child: Slider(
-                      value: _fontScale,
-                      min: 0.8,
-                      max: 1.5,
-                      divisions: 7,
-                      label: '${(_fontScale * 100).round()}%',
-                      onChanged: (val) {
-                        setState(() => _fontScale = val);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   @override
   void dispose() {
     _fadeController.dispose();
@@ -168,13 +105,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       );
                     },
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.settings_accessibility_rounded,
-                      semanticLabel: 'Accessibility Settings',
-                    ),
-                    onPressed: _showAccessibilitySettings,
                   ),
                   const SizedBox(width: AppTheme.spacingM),
                 ],

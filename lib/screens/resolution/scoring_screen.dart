@@ -77,7 +77,7 @@ class _ScoringScreenState extends State<ScoringScreen> {
     return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
         final currentPartner = appState.getCurrentPartner();
-        final otherPartner = appState.getCurrentPartner(); // Fix: There's no getOtherPartner method
+        final otherPartner = appState.getOtherPartner();
 
         return Scaffold(
           appBar: AppBar(
@@ -151,20 +151,23 @@ class _ScoringScreenState extends State<ScoringScreen> {
 
                         const SizedBox(height: 32),
 
-                        // Partner scores
-                        _buildPartnerScore(
-                          'A',
-                          currentPartner?.name ?? 'Partner A',
-                          _scores!.partnerScores['A']!,
-                        ),
+                        // Current user's scores
+                        if (_scores!.partnerScores[appState.currentUserId] != null)
+                          _buildPartnerScore(
+                            appState.currentUserId ?? 'A',
+                            currentPartner?.name ?? 'You',
+                            _scores!.partnerScores[appState.currentUserId]!,
+                          ),
 
                         const SizedBox(height: 24),
 
-                        _buildPartnerScore(
-                          'B',
-                          otherPartner?.name ?? 'Partner B',
-                          _scores!.partnerScores['B']!,
-                        ),
+                        // Partner's scores (if available)
+                        if (otherPartner != null && _scores!.partnerScores[otherPartner.id] != null)
+                          _buildPartnerScore(
+                            otherPartner.id,
+                            otherPartner.name,
+                            _scores!.partnerScores[otherPartner.id]!,
+                          ),
 
                         const SizedBox(height: 32),
 
