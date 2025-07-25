@@ -4,7 +4,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_logo.dart';
-import '../../widgets/gradient_button.dart';
 import '../../widgets/animated_card.dart';
 import '../../widgets/loading_overlay.dart';
 
