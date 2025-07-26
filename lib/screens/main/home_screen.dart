@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../providers/firebase_app_state.dart';
@@ -17,10 +18,13 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
-    with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
+
+  // Accessibility settings (for demo, use local state)
+  bool _highContrast = false;
+  double _fontScale = 1.0;
 
   @override
   void initState() {
@@ -29,13 +33,9 @@ class _HomeScreenState extends State<HomeScreen>
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
     _fadeController.forward();
   }
 
@@ -49,92 +49,110 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
-        return Scaffold(
-          backgroundColor: AppTheme.background,
-          appBar: AppBar(
-            title: ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [
-                  AppTheme.gradientStart,
-                  AppTheme.gradientEnd,
-                ],
-              ).createShader(bounds),
-              child: const Text(
-                'Mend',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
-                ),
-              ),
-            ),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            actions: [
-              IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                  ),
-                  child: const Icon(
-                    Icons.insights_rounded,
-                    color: AppTheme.primary,
-                    size: 20,
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const InsightsDashboardScreen(),
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaleFactor: _fontScale),
+          child: Theme(
+            data: _highContrast
+                ? Theme.of(context).copyWith(
+                    colorScheme: Theme.of(context).colorScheme.copyWith(
+                      primary: Colors.black,
+                      secondary: Colors.yellow,
+                      background: Colors.white,
+                      surface: Colors.white,
+                      onPrimary: Colors.white,
+                      onSecondary: Colors.black,
                     ),
-                  );
-                },
-              ),
-              const SizedBox(width: AppTheme.spacingM),
-            ],
-          ),
-          body: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppTheme.background,
-                  Color(0xFFF8F9FA),
+                    scaffoldBackgroundColor: Colors.white,
+                  )
+                : Theme.of(context),
+            child: Scaffold(
+              backgroundColor: AppTheme.background,
+              appBar: AppBar(
+                title: ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
+                  ).createShader(bounds),
+                  child: const Text(
+                    'Mend',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                    ),
+                  ),
+                ),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                actions: [
+                  IconButton(
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                      ),
+                      child: const Icon(
+                        Icons.insights_rounded,
+                        color: AppTheme.primary,
+                        size: 20,
+                        semanticLabel: 'Insights Dashboard',
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const InsightsDashboardScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: AppTheme.spacingM),
                 ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
               ),
-            ),
-            child: SafeArea(
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppTheme.spacingL),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Welcome Section
-                      _buildWelcomeSection(context, appState),
-
-                      const SizedBox(height: AppTheme.spacingXL),
-
-                      // Quick Stats Card
-                      _buildQuickStatsCard(context, appState),
-
-                      const SizedBox(height: AppTheme.spacingXL),
-
-                      // Session Actions
-                      _buildSessionActions(context),
-
-                      const SizedBox(height: AppTheme.spacingXL),
-
-                      // Features Overview
-                      _buildFeaturesOverview(context),
-
-                      const SizedBox(height: AppTheme.spacingXL),
-                    ],
+              body: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppTheme.background, Color(0xFFF8F9FA)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+                child: SafeArea(
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(AppTheme.spacingL),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Welcome Section
+                          Semantics(
+                            label: 'Welcome Section',
+                            child: _buildWelcomeSection(context, appState),
+                          ),
+                          const SizedBox(height: AppTheme.spacingXL),
+                          // Quick Stats Card
+                          Semantics(
+                            label: 'Quick Stats',
+                            child: _buildQuickStatsCard(context, appState),
+                          ),
+                          const SizedBox(height: AppTheme.spacingXL),
+                          // Session Actions
+                          Semantics(
+                            label: 'Session Actions',
+                            child: _buildSessionActions(context),
+                          ),
+                          const SizedBox(height: AppTheme.spacingXL),
+                          // Features Overview
+                          Semantics(
+                            label: 'Features Overview',
+                            child: _buildFeaturesOverview(context),
+                          ),
+                          const SizedBox(height: AppTheme.spacingXL),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -165,10 +183,7 @@ class _HomeScreenState extends State<HomeScreen>
                 padding: const EdgeInsets.all(AppTheme.spacingM),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [
-                      AppTheme.gradientStart,
-                      AppTheme.gradientEnd,
-                    ],
+                    colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
                   ),
                   borderRadius: BorderRadius.circular(AppTheme.radiusM),
                 ),
@@ -185,10 +200,11 @@ class _HomeScreenState extends State<HomeScreen>
                   children: [
                     Text(
                       '$greeting, ${currentPartner?.name ?? 'there'}!',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
+                            color: AppTheme.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                     const SizedBox(height: AppTheme.spacingS),
                     Text(
@@ -211,8 +227,11 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildQuickStatsCard(BuildContext context, FirebaseAppState appState) {
     final recentSessions = appState.getRecentSessions(limit: 10);
     final totalSessions = recentSessions.length;
-    final avgScore = totalSessions > 0 
-        ? recentSessions.map((s) => s.scores?.averageScore ?? 0.0).reduce((a, b) => a + b) / totalSessions
+    final avgScore = totalSessions > 0
+        ? recentSessions
+                  .map((s) => s.scores?.averageScore ?? 0.0)
+                  .reduce((a, b) => a + b) /
+              totalSessions
         : 0.0;
 
     return AnimatedCard(
@@ -221,11 +240,7 @@ class _HomeScreenState extends State<HomeScreen>
         children: [
           Row(
             children: [
-              Icon(
-                Icons.analytics_rounded,
-                color: AppTheme.primary,
-                size: 24,
-              ),
+              Icon(Icons.analytics_rounded, color: AppTheme.primary, size: 24),
               const SizedBox(width: AppTheme.spacingM),
               Text(
                 'Your Progress',
@@ -251,7 +266,9 @@ class _HomeScreenState extends State<HomeScreen>
                 child: _buildStatItem(
                   context,
                   'Avg Score',
-                  totalSessions > 0 ? '${avgScore.toStringAsFixed(1)}/10' : '--',
+                  totalSessions > 0
+                      ? '${avgScore.toStringAsFixed(1)}/10'
+                      : '--',
                   Icons.star_rounded,
                 ),
               ),
@@ -270,7 +287,12 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildStatItem(BuildContext context, String label, String value, IconData icon) {
+  Widget _buildStatItem(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+  ) {
     return Column(
       children: [
         Container(
@@ -279,11 +301,7 @@ class _HomeScreenState extends State<HomeScreen>
             color: AppTheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(AppTheme.radiusM),
           ),
-          child: Icon(
-            icon,
-            color: AppTheme.primary,
-            size: 24,
-          ),
+          child: Icon(icon, color: AppTheme.primary, size: 24),
         ),
         const SizedBox(height: AppTheme.spacingS),
         Text(
@@ -295,9 +313,9 @@ class _HomeScreenState extends State<HomeScreen>
         ),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppTheme.textSecondary,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
         ),
       ],
     );
@@ -317,9 +335,9 @@ class _HomeScreenState extends State<HomeScreen>
         const SizedBox(height: AppTheme.spacingM),
         Text(
           'Choose how you\'d like to begin your guided communication session',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppTheme.textSecondary,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
         ),
         const SizedBox(height: AppTheme.spacingL),
         SizedBox(
@@ -388,11 +406,7 @@ class _HomeScreenState extends State<HomeScreen>
             color: AppTheme.secondary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(AppTheme.radiusM),
           ),
-          child: Icon(
-            icon,
-            color: AppTheme.secondary,
-            size: 24,
-          ),
+          child: Icon(icon, color: AppTheme.secondary, size: 24),
         ),
         const SizedBox(width: AppTheme.spacingM),
         Expanded(
@@ -525,9 +539,9 @@ class _HomeScreenState extends State<HomeScreen>
               Text(
                 'Share this code with your partner so you can both join the same session.',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondary,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
               ),
               const SizedBox(height: AppTheme.spacingL),
               SizedBox(
@@ -610,7 +624,9 @@ class _HomeScreenState extends State<HomeScreen>
                     if (sessionCode.isEmpty || sessionCode.length != 6) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Please enter a valid 6-character session code'),
+                          content: Text(
+                            'Please enter a valid 6-character session code',
+                          ),
                           backgroundColor: AppTheme.interruptionColor,
                           behavior: SnackBarBehavior.floating,
                         ),
@@ -650,11 +666,11 @@ class _HomeScreenState extends State<HomeScreen>
 
   int _calculateStreak(List<dynamic> sessions) {
     if (sessions.isEmpty) return 0;
-    
+
     int streak = 0;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    
+
     for (int i = 0; i < 30; i++) {
       final checkDate = today.subtract(Duration(days: i));
       final hasSessionOnDate = sessions.any((session) {
@@ -665,14 +681,14 @@ class _HomeScreenState extends State<HomeScreen>
         );
         return sessionDate == checkDate;
       });
-      
+
       if (hasSessionOnDate) {
         streak++;
       } else {
         break;
       }
     }
-    
+
     return streak;
   }
 }

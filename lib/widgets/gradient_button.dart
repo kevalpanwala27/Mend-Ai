@@ -117,52 +117,76 @@ class _GradientButtonState extends State<GradientButton>
                         ),
                       ],
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (widget.isLoading)
-                    SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          widget.isSecondary
-                              ? AppTheme.primary
-                              : Colors.white,
+              child: widget.isLoading
+                  ? Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            widget.isSecondary
+                                ? AppTheme.primary
+                                : Colors.white,
+                          ),
                         ),
                       ),
                     )
-                  else ...[
-                    if (widget.icon != null) ...[
-                      Icon(
-                        widget.icon,
-                        color: widget.isSecondary
-                            ? AppTheme.primary
-                            : Colors.white,
-                        size: 20,
-                      ),
-                      const SizedBox(width: AppTheme.spacingS),
-                    ],
-                    Flexible(
-                      child: Text(
-                        widget.text,
-                        style: TextStyle(
-                          color: widget.isSecondary
-                              ? AppTheme.primary
-                              : Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: widget.fontSize ?? 16,
-                          letterSpacing: 0.5,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
+                  : Center(
+                      child: widget.icon != null && widget.text.isNotEmpty
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  widget.icon,
+                                  color: widget.isSecondary
+                                      ? AppTheme.primary
+                                      : Colors.white,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: AppTheme.spacingS),
+                                Flexible(
+                                  child: Text(
+                                    widget.text,
+                                    style: TextStyle(
+                                      color: widget.isSecondary
+                                          ? AppTheme.primary
+                                          : Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: widget.fontSize ?? 16,
+                                      letterSpacing: 0.5,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : widget.icon != null
+                              ? Icon(
+                                  widget.icon,
+                                  color: widget.isSecondary
+                                      ? AppTheme.primary
+                                      : Colors.white,
+                                  size: 20,
+                                )
+                              : Text(
+                                  widget.text,
+                                  style: TextStyle(
+                                    color: widget.isSecondary
+                                        ? AppTheme.primary
+                                        : Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: widget.fontSize ?? 16,
+                                    letterSpacing: 0.5,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                ),
                     ),
-                  ],
-                ],
-              ),
             ),
           );
         },

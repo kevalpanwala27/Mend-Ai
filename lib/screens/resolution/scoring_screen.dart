@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../services/ai_service.dart';
@@ -29,9 +30,30 @@ class _ScoringScreenState extends State<ScoringScreen> {
     final appState = context.read<FirebaseAppState>();
     final currentSession = appState.currentSession;
 
+    debugPrint('=== SCORING DEBUG INFO ===');
+    debugPrint('Current session exists: ${currentSession != null}');
+    if (currentSession != null) {
+      debugPrint('Session ID: ${currentSession.id}');
+      debugPrint('Session start time: ${currentSession.startTime}');
+      debugPrint('Session end time: ${currentSession.endTime}');
+      debugPrint(
+        'Session duration: ${currentSession.duration.inMinutes} minutes',
+      );
+      debugPrint('Session messages count: ${currentSession.messages.length}');
+    }
+    debugPrint('========================');
+
     if (currentSession != null) {
       try {
         final scores = await _aiService.analyzeCommunication(currentSession);
+
+        debugPrint('Scores generated successfully!');
+        debugPrint(
+          'Partner A score: ${scores.partnerScores['A']?.averageScore}',
+        );
+        debugPrint(
+          'Partner B score: ${scores.partnerScores['B']?.averageScore}',
+        );
 
         // End the session with scores
         await appState.endCommunicationSession(
@@ -48,13 +70,18 @@ class _ScoringScreenState extends State<ScoringScreen> {
         setState(() {
           _isLoading = false;
         });
-        _showError('Failed to generate communication scores');
+        debugPrint('Scoring error details: $e');
+        debugPrint('Error type: ${e.runtimeType}');
+        _showError('Failed to generate communication scores: ${e.toString()}');
       }
     } else {
       setState(() {
         _isLoading = false;
       });
-      _showError('No active session found');
+      debugPrint('No current session available for scoring');
+      _showError(
+        'No active session found. Please complete a communication session first.',
+      );
     }
   }
 
@@ -72,113 +99,215 @@ class _ScoringScreenState extends State<ScoringScreen> {
     );
   }
 
+  Widget _buildLoadingState() {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.all(AppTheme.spacingL),
+        padding: const EdgeInsets.all(AppTheme.spacingXL),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppTheme.spacingL),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: const CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 3,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacingL),
+            Text(
+              'Analyzing Your Conversation',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacingM),
+            Text(
+              'Please wait while we generate your communication insights...',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.textSecondary,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.all(AppTheme.spacingL),
+        padding: const EdgeInsets.all(AppTheme.spacingXL),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppTheme.spacingL),
+              decoration: BoxDecoration(
+                color: AppTheme.interruptionColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppTheme.interruptionColor.withValues(alpha: 0.3),
+                  width: 2,
+                ),
+              ),
+              child: Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: AppTheme.interruptionColor,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacingL),
+            Text(
+              'Unable to Generate Scores',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacingM),
+            Text(
+              'We encountered an issue analyzing your conversation. Please try again later.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacingL),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _returnHome,
+                icon: const Icon(Icons.home_rounded),
+                label: const Text('Return Home'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacingL,
+                    vertical: AppTheme.spacingM,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
         final currentPartner = appState.getCurrentPartner();
-        final otherPartner = appState.getCurrentPartner(); // Fix: There's no getOtherPartner method
+        final otherPartner = appState.getOtherPartner();
 
         return Scaffold(
+          backgroundColor: AppTheme.background,
           appBar: AppBar(
-            title: const Text('Communication Scores'),
-            automaticallyImplyLeading: false,
-            actions: [
-              IconButton(icon: const Icon(Icons.home), onPressed: _returnHome),
-            ],
+            title: ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
+              ).createShader(bounds),
+              child: const Text(
+                'Communication Scores',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
+              ),
+            ),
           ),
           body: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  AppTheme.gradientStart,
-                  AppTheme.gradientEnd,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                colors: [AppTheme.background, Color(0xFFF8F9FA)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
             ),
-            child: _isLoading
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(color: Colors.white),
-                        SizedBox(height: 16),
-                        Text('Analyzing your conversation...', style: TextStyle(color: Colors.white)),
-                      ],
+            child: SafeArea(
+              child: _isLoading
+                  ? _buildLoadingState()
+                  : _scores == null
+                  ? _buildErrorState()
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.all(AppTheme.spacingL),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Overall feedback
+                          _buildOverallFeedback(),
+
+                          const SizedBox(height: AppTheme.spacingXL),
+
+                          // Current user's scores
+                          if (_scores!.partnerScores[appState.currentUserId] !=
+                              null)
+                            _buildPartnerScore(
+                              appState.currentUserId ?? 'A',
+                              currentPartner?.name ?? 'You',
+                              _scores!.partnerScores[appState.currentUserId]!,
+                            ),
+
+                          const SizedBox(height: AppTheme.spacingL),
+
+                          // Partner's scores (if available)
+                          if (otherPartner != null &&
+                              _scores!.partnerScores[otherPartner.id] != null)
+                            _buildPartnerScore(
+                              otherPartner.id,
+                              otherPartner.name,
+                              _scores!.partnerScores[otherPartner.id]!,
+                            ),
+
+                          const SizedBox(height: AppTheme.spacingXL),
+
+                          // Improvement suggestions
+                          _buildImprovementSuggestions(),
+
+                          const SizedBox(height: AppTheme.spacingXL),
+
+                          // Action buttons
+                          _buildActionButtons(),
+                        ],
+                      ),
                     ),
-                  )
-                : _scores == null
-                    ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: Colors.white70,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Unable to generate scores',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Please try again later',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white70,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: _returnHome,
-                          child: const Text('Return Home'),
-                        ),
-                      ],
-                    ),
-                  )
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Overall feedback
-                        _buildOverallFeedback(),
-
-                        const SizedBox(height: 32),
-
-                        // Partner scores
-                        _buildPartnerScore(
-                          'A',
-                          currentPartner?.name ?? 'Partner A',
-                          _scores!.partnerScores['A']!,
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        _buildPartnerScore(
-                          'B',
-                          otherPartner?.name ?? 'Partner B',
-                          _scores!.partnerScores['B']!,
-                        ),
-
-                        const SizedBox(height: 32),
-
-                        // Improvement suggestions
-                        _buildImprovementSuggestions(),
-
-                        const SizedBox(height: 32),
-
-                        // Action buttons
-                        _buildActionButtons(),
-                      ],
-                    ),
-                  ),
             ),
+          ),
         );
       },
     );
@@ -186,30 +315,92 @@ class _ScoringScreenState extends State<ScoringScreen> {
 
   Widget _buildOverallFeedback() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spacingL),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.psychology, color: AppTheme.primary, size: 32),
-              const SizedBox(width: 12),
-              Text(
-                'Overall Assessment',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(color: AppTheme.primary),
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacingM),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
+                  ),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                ),
+                child: const Icon(
+                  Icons.analytics_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacingM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Session Complete!',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacingXS),
+                    Text(
+                      'Here are your communication insights',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            _scores!.overallFeedback,
-            style: Theme.of(context).textTheme.bodyLarge,
+          const SizedBox(height: AppTheme.spacingL),
+          Container(
+            padding: const EdgeInsets.all(AppTheme.spacingM),
+            decoration: BoxDecoration(
+              color: AppTheme.successGreen.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppTheme.radiusM),
+              border: Border.all(
+                color: AppTheme.successGreen.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.psychology_rounded,
+                  color: AppTheme.successGreen,
+                  size: 20,
+                ),
+                const SizedBox(width: AppTheme.spacingM),
+                Expanded(
+                  child: Text(
+                    _scores?.overallFeedback ?? 'Great communication session!',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -217,165 +408,167 @@ class _ScoringScreenState extends State<ScoringScreen> {
   }
 
   Widget _buildPartnerScore(String partnerId, String name, PartnerScore score) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppTheme.getPartnerColor(partnerId),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      partnerId,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    '$name\'s Scores',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getScoreColor(score.averageScore).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${(score.averageScore * 100).round()}%',
-                    style: TextStyle(
-                      color: _getScoreColor(score.averageScore),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+    final partnerColor = AppTheme.getPartnerColor(partnerId);
+    final overallScore = (score.averageScore * 100).round();
 
-            const SizedBox(height: 24),
-
-            // Individual scores
-            _buildScoreBar('Empathy', score.empathy),
-            _buildScoreBar('Listening', score.listening),
-            _buildScoreBar('Reception', score.reception),
-            _buildScoreBar('Clarity', score.clarity),
-            _buildScoreBar('Respect', score.respect),
-            _buildScoreBar('Responsiveness', score.responsiveness),
-            _buildScoreBar('Open-Mindedness', score.openMindedness),
-
-            const SizedBox(height: 24),
-
-            // Strengths
-            if (score.strengths.isNotEmpty) ...[
-              Text(
-                'Strengths',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(color: AppTheme.successGreen),
-              ),
-              const SizedBox(height: 8),
-              ...score.strengths.map(
-                (strength) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.check_circle,
-                        color: AppTheme.successGreen,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          strength,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-
-            // Areas for improvement
-            if (score.improvements.isNotEmpty) ...[
-              Text(
-                'Areas for Growth',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(color: AppTheme.primary),
-              ),
-              const SizedBox(height: 8),
-              ...score.improvements.map(
-                (improvement) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.trending_up,
-                        color: AppTheme.primary,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          improvement,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spacingL),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        border: Border.all(
+          color: partnerColor.withValues(alpha: 0.2),
+          width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildScoreBar(String label, double score) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label, style: Theme.of(context).textTheme.bodyMedium),
-              Text(
-                '${(score * 100).round()}%',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacingM),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [partnerColor, partnerColor.withValues(alpha: 0.8)],
+                  ),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                ),
+                child: Icon(
+                  Icons.person_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacingM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.spacingXS),
+                    Text(
+                      'Communication Score',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacingM,
+                  vertical: AppTheme.spacingS,
+                ),
+                decoration: BoxDecoration(
+                  color: partnerColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                ),
+                child: Text(
+                  '$overallScore/100',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: partnerColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          LinearProgressIndicator(
-            value: score,
-            backgroundColor: Colors.grey[300],
-            valueColor: AlwaysStoppedAnimation<Color>(_getScoreColor(score)),
+          const SizedBox(height: AppTheme.spacingL),
+          // Score breakdown
+          Container(
+            padding: const EdgeInsets.all(AppTheme.spacingM),
+            decoration: BoxDecoration(
+              color: AppTheme.cardBackground,
+              borderRadius: BorderRadius.circular(AppTheme.radiusM),
+              border: Border.all(color: AppTheme.borderColor, width: 1),
+            ),
+            child: Column(
+              children: [
+                _buildScoreRow(
+                  'Empathy',
+                  score.empathy,
+                  Icons.favorite_rounded,
+                  partnerColor,
+                ),
+                _buildScoreRow(
+                  'Listening',
+                  score.listening,
+                  Icons.hearing_rounded,
+                  partnerColor,
+                ),
+                _buildScoreRow(
+                  'Reception',
+                  score.reception,
+                  Icons.psychology_rounded,
+                  partnerColor,
+                ),
+                _buildScoreRow(
+                  'Clarity',
+                  score.clarity,
+                  Icons.record_voice_over_rounded,
+                  partnerColor,
+                ),
+                _buildScoreRow(
+                  'Respect',
+                  score.respect,
+                  Icons.handshake_rounded,
+                  partnerColor,
+                ),
+                _buildScoreRow(
+                  'Responsiveness',
+                  score.responsiveness,
+                  Icons.reply_rounded,
+                  partnerColor,
+                ),
+                _buildScoreRow(
+                  'Open-mindedness',
+                  score.openMindedness,
+                  Icons.lightbulb_rounded,
+                  partnerColor,
+                  isLast: true,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacingL),
+          // Strengths and improvements
+          Row(
+            children: [
+              Expanded(
+                child: _buildInsightCard(
+                  'Strengths',
+                  score.strengths.join(', '),
+                  Icons.thumb_up_rounded,
+                  AppTheme.successGreen,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacingM),
+              Expanded(
+                child: _buildInsightCard(
+                  'Growth Areas',
+                  score.improvements.join(', '),
+                  Icons.trending_up_rounded,
+                  AppTheme.accent,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -384,51 +577,120 @@ class _ScoringScreenState extends State<ScoringScreen> {
 
   Widget _buildImprovementSuggestions() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spacingL),
       decoration: BoxDecoration(
-        color: AppTheme.secondary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.lightbulb, color: AppTheme.primary, size: 24),
-              const SizedBox(width: 12),
-              Text(
-                'Suggestions for Growth',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(color: AppTheme.primary),
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacingM),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.accent,
+                      AppTheme.accent.withValues(alpha: 0.8),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                ),
+                child: const Icon(
+                  Icons.lightbulb_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacingM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Suggestions for Growth',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacingXS),
+                    Text(
+                      'Areas to focus on for your next session',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          ..._scores!.improvementSuggestions.map(
-            (suggestion) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(top: 4),
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary,
-                      shape: BoxShape.circle,
+          const SizedBox(height: AppTheme.spacingL),
+          Container(
+            padding: const EdgeInsets.all(AppTheme.spacingM),
+            decoration: BoxDecoration(
+              color: AppTheme.cardBackground,
+              borderRadius: BorderRadius.circular(AppTheme.radiusM),
+              border: Border.all(color: AppTheme.borderColor, width: 1),
+            ),
+            child: Column(
+              children: _scores!.improvementSuggestions.asMap().entries.map((
+                entry,
+              ) {
+                final index = entry.key;
+                final suggestion = entry.value;
+                final isLast =
+                    index == _scores!.improvementSuggestions.length - 1;
+
+                return Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(top: 6),
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accent.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: AppTheme.accent,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.spacingM),
+                        Expanded(
+                          child: Text(
+                            suggestion,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: AppTheme.textSecondary,
+                                  height: 1.4,
+                                ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      suggestion,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ),
-                ],
-              ),
+                    if (!isLast) const SizedBox(height: AppTheme.spacingM),
+                  ],
+                );
+              }).toList(),
             ),
           ),
         ],
@@ -436,36 +698,219 @@ class _ScoringScreenState extends State<ScoringScreen> {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildScoreRow(
+    String label,
+    double score,
+    IconData icon,
+    Color color, {
+    bool isLast = false,
+  }) {
+    final percentage = (score * 100).round();
     return Column(
       children: [
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: _returnHome,
-            icon: const Icon(Icons.home),
-            label: const Text('Return to Home'),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () {
-              // Navigate to insights dashboard
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const InsightsDashboardScreen(),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXS),
+              ),
+              child: Icon(icon, size: 16, color: color),
+            ),
+            const SizedBox(width: AppTheme.spacingM),
+            Expanded(
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.w500,
                 ),
-                (route) => false,
-              );
-            },
-            icon: const Icon(Icons.analytics),
-            label: const Text('View Detailed Insights'),
-          ),
+              ),
+            ),
+            Container(
+              width: 60,
+              height: 6,
+              decoration: BoxDecoration(
+                color: AppTheme.borderColor,
+                borderRadius: BorderRadius.circular(3),
+              ),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: score,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacingS),
+            SizedBox(
+              width: 35,
+              child: Text(
+                '$percentage%',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.end,
+              ),
+            ),
+          ],
         ),
+        if (!isLast) const SizedBox(height: AppTheme.spacingM),
       ],
+    );
+  }
+
+  Widget _buildInsightCard(
+    String title,
+    String content,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacingM),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 16),
+              const SizedBox(width: AppTheme.spacingS),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacingS),
+          Text(
+            content,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppTheme.textSecondary,
+              height: 1.3,
+              fontSize: 11,
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spacingL),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacingM),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
+                  ),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                ),
+                child: const Icon(
+                  Icons.celebration_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacingM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Great Progress!',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacingXS),
+                    Text(
+                      'Continue practicing to strengthen your relationship',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondary,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacingL),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _returnHome,
+                  icon: const Icon(Icons.home_rounded),
+                  label: const Text('Return Home'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacingM,
+                      vertical: AppTheme.spacingM,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacingM),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const InsightsDashboardScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                  icon: const Icon(Icons.analytics_rounded),
+                  label: const Text('Insights'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacingM,
+                      vertical: AppTheme.spacingM,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

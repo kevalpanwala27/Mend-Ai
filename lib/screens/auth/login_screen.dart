@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_logo.dart';
-import '../../widgets/gradient_button.dart';
 import '../../widgets/animated_card.dart';
 import '../../widgets/loading_overlay.dart';
 
@@ -69,14 +69,15 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppTheme.spacingL),
-              child: Column(
-                children: [
-                  const Spacer(flex: 2),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                  SizedBox(height: 40.h),
 
                   // App Logo with animation
                   const AppLogo(size: 140, animate: true),
 
-                  const SizedBox(height: AppTheme.spacingXL),
+                  SizedBox(height: AppTheme.spacingXL),
 
                   // App Name with gradient
                   ShaderMask(
@@ -87,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       'Mend',
                       style: Theme.of(context).textTheme.headlineLarge
                           ?.copyWith(
-                            fontSize: 48,
+                            fontSize: 48.sp,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                             letterSpacing: -1,
@@ -123,35 +124,39 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  const Spacer(flex: 2),
+                  SizedBox(height: 60.h),
 
                   // Features showcase
                   AnimatedCard(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _buildFeatureItem(
-                            Icons.record_voice_over_rounded,
-                            'Voice Chat',
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingS),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Flexible(
+                            child: _buildFeatureItem(
+                              Icons.record_voice_over_rounded,
+                              'Voice Chat',
+                            ),
                           ),
-                        ),
-                        Expanded(
-                          child: _buildFeatureItem(
-                            Icons.psychology_rounded,
-                            'AI Guidance',
+                          Flexible(
+                            child: _buildFeatureItem(
+                              Icons.psychology_rounded,
+                              'AI Guidance',
+                            ),
                           ),
-                        ),
-                        Expanded(
-                          child: _buildFeatureItem(
-                            Icons.analytics_rounded,
-                            'Progress Tracking',
+                          Flexible(
+                            child: _buildFeatureItem(
+                              Icons.analytics_rounded,
+                              'Progress Tracking',
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
 
-                  const Spacer(flex: 2),
+                  SizedBox(height: 60.h),
 
                   // Google Sign In button
                   SizedBox(
@@ -227,7 +232,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
 
                   const SizedBox(height: AppTheme.spacingXL),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -238,23 +244,27 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildFeatureItem(IconData icon, String label) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          padding: const EdgeInsets.all(AppTheme.spacingM),
+          padding: const EdgeInsets.all(AppTheme.spacingS),
           decoration: BoxDecoration(
             color: AppTheme.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(AppTheme.radiusM),
+            borderRadius: BorderRadius.circular(AppTheme.radiusS),
           ),
-          child: Icon(icon, color: AppTheme.primary, size: 24),
+          child: Icon(icon, color: AppTheme.primary, size: 20),
         ),
-        const SizedBox(height: AppTheme.spacingS),
+        const SizedBox(height: AppTheme.spacingXS),
         Text(
           label,
           style: const TextStyle(
             color: AppTheme.textSecondary,
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.w500,
           ),
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );

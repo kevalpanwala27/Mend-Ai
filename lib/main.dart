@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'providers/firebase_app_state.dart';
-import 'providers/app_state.dart';
 import 'screens/auth/auth_wrapper.dart';
 import 'theme/app_theme.dart';
 
@@ -21,18 +21,20 @@ class MendApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (context) => FirebaseAppState()..initialize(),
-        ),
-        ChangeNotifierProvider(create: (context) => AppState()..initialize()),
-      ],
-      child: MaterialApp(
-        title: 'Mend',
-        theme: AppTheme.themeData,
-        home: const AuthWrapper(),
-        debugShowCheckedModeBanner: false,
+    return ChangeNotifierProvider(
+      create: (context) => FirebaseAppState()..initialize(),
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        builder: (context, child) {
+          return MaterialApp(
+            title: 'Mend',
+            theme: AppTheme.themeData,
+            home: const AuthWrapper(),
+            debugShowCheckedModeBanner: false,
+          );
+        },
       ),
     );
   }

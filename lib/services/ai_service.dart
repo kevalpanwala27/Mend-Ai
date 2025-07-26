@@ -8,6 +8,9 @@ class AIService {
     "What brought you here today? What would you like to work on together?",
     "Can you share what's been on your mind lately regarding your relationship?",
     "What's one thing you'd like your partner to understand better about you?",
+    "Let's start with something positive - what's been going well in your relationship lately?",
+    "How would you like today's conversation to help strengthen your connection?",
+    "What topic would feel most important for you both to discuss right now?",
   ];
 
   static const List<String> _guidingQuestions = [
@@ -19,6 +22,10 @@ class AIService {
     "Can you share more about what this means to you?",
     "How would you like to move forward on this topic?",
     "What support do you need from each other?",
+    "Let's pause for a moment - what are you both hearing from each other?",
+    "How might you express that in a way that shows care for your partner?",
+    "What underlying need or feeling is driving this concern?",
+    "Can you both take a breath and share what you most want your partner to know?",
   ];
 
   static const List<String> _gratitudePrompts = [
@@ -74,7 +81,14 @@ class AIService {
   }
 
   String getInterruptionWarning(String partnerName) {
-    return "Please let $partnerName finish their thought before responding.";
+    final warnings = [
+      "Please let $partnerName finish their thought before responding.",
+      "Let's give $partnerName space to complete their thoughts.",
+      "Hold on - let's make sure $partnerName feels heard before responding.",
+      "Take a moment to let $partnerName finish sharing.",
+    ];
+    final random = Random();
+    return warnings[random.nextInt(warnings.length)];
   }
 
   String getCelebratoryMessage() {
@@ -90,48 +104,58 @@ class AIService {
 
   // Simulated AI analysis - in a real app, this would call an actual AI service
   Future<CommunicationScores> analyzeCommunication(CommunicationSession session) async {
-    // Simulate API delay
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Simulate API delay
+      await Future.delayed(const Duration(seconds: 2));
 
-    // Generate mock scores based on session data
-    final random = Random();
-    final partnerA = session.messages.where((m) => m.speakerId == 'A').length;
-    final partnerB = session.messages.where((m) => m.speakerId == 'B').length;
-    final totalMessages = session.messages.length;
-    
-    // Simulate scoring logic
-    final partnerAScore = _generatePartnerScore(partnerA, totalMessages, random);
-    final partnerBScore = _generatePartnerScore(partnerB, totalMessages, random);
+      // For voice-based sessions, we'll simulate scores based on session duration and participation
+      final random = Random();
+      final sessionDuration = session.endTime?.difference(session.startTime).inMinutes ?? 0;
+      
+      // Simulate participation based on session duration (longer sessions = better participation)
+      final hasGoodParticipation = sessionDuration >= 5; // At least 5 minutes
+      
+      // Generate scores for both partners
+      final partnerAScore = _generateVoiceBasedScore(hasGoodParticipation, random, true);
+      final partnerBScore = _generateVoiceBasedScore(hasGoodParticipation, random, false);
 
-    return CommunicationScores(
-      partnerScores: {
-        'A': partnerAScore,
-        'B': partnerBScore,
-      },
-      overallFeedback: _generateOverallFeedback(partnerAScore, partnerBScore),
-      improvementSuggestions: _generateImprovementSuggestions(),
-    );
+      return CommunicationScores(
+        partnerScores: {
+          'A': partnerAScore,
+          'B': partnerBScore,
+        },
+        overallFeedback: _generateOverallFeedback(partnerAScore, partnerBScore),
+        improvementSuggestions: _generateImprovementSuggestions(),
+      );
+    } catch (e) {
+      // If anything fails, throw a clear error
+      throw Exception('Failed to analyze communication: $e');
+    }
   }
 
-  PartnerScore _generatePartnerScore(int messageCount, int totalMessages, Random random) {
-    // Base scores with some randomness
-    final participation = messageCount / totalMessages;
-    final empathy = 0.7 + (random.nextDouble() * 0.3);
-    final listening = 0.6 + (random.nextDouble() * 0.4);
-    final reception = 0.65 + (random.nextDouble() * 0.35);
-    final clarity = 0.7 + (random.nextDouble() * 0.3);
-    final respect = 0.8 + (random.nextDouble() * 0.2);
-    final responsiveness = participation > 0.3 ? 0.7 + (random.nextDouble() * 0.3) : 0.4 + (random.nextDouble() * 0.3);
-    final openMindedness = 0.65 + (random.nextDouble() * 0.35);
+  PartnerScore _generateVoiceBasedScore(bool hasGoodParticipation, Random random, bool isPartnerA) {
+    // Generate realistic scores for voice-based communication
+    // Vary scores slightly between partners for realism
+    final baseModifier = isPartnerA ? 0.0 : 0.05; // Partner B gets slightly different scores
+    
+    final empathy = (0.65 + baseModifier) + (random.nextDouble() * 0.25);
+    final listening = (0.60 + baseModifier) + (random.nextDouble() * 0.30);
+    final reception = (0.70 + baseModifier) + (random.nextDouble() * 0.25);
+    final clarity = (0.65 + baseModifier) + (random.nextDouble() * 0.25);
+    final respect = (0.75 + baseModifier) + (random.nextDouble() * 0.20);
+    final responsiveness = hasGoodParticipation 
+        ? (0.70 + baseModifier) + (random.nextDouble() * 0.25)
+        : (0.50 + baseModifier) + (random.nextDouble() * 0.30);
+    final openMindedness = (0.60 + baseModifier) + (random.nextDouble() * 0.30);
 
     return PartnerScore(
-      empathy: empathy,
-      listening: listening,
-      reception: reception,
-      clarity: clarity,
-      respect: respect,
-      responsiveness: responsiveness,
-      openMindedness: openMindedness,
+      empathy: empathy.clamp(0.0, 1.0),
+      listening: listening.clamp(0.0, 1.0),
+      reception: reception.clamp(0.0, 1.0),
+      clarity: clarity.clamp(0.0, 1.0),
+      respect: respect.clamp(0.0, 1.0),
+      responsiveness: responsiveness.clamp(0.0, 1.0),
+      openMindedness: openMindedness.clamp(0.0, 1.0),
       strengths: _generateStrengths(empathy, listening, respect),
       improvements: _generateImprovements(reception, clarity, openMindedness),
     );
