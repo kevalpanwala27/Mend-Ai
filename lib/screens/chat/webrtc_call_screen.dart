@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -223,7 +224,7 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> {
         children: [
           // Local video
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: EdgeInsets.all(8.w),
             child: AspectRatio(
               aspectRatio: 1,
               child: RTCVideoView(_localRenderer, mirror: true),
@@ -236,7 +237,7 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> {
               children: [
                 for (final id in _remoteRenderers.keys)
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: EdgeInsets.all(8.w),
                     child: AspectRatio(
                       aspectRatio: 1,
                       child: RTCVideoView(_remoteRenderers[id]!),
@@ -252,19 +253,19 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> {
               IconButton(
                 icon: Icon(_micOn ? Icons.mic : Icons.mic_off),
                 onPressed: _toggleMic,
-                iconSize: 36,
+                iconSize: 36.sp,
               ),
-              const SizedBox(width: 24),
+              SizedBox(width: 24.w),
               IconButton(
                 icon: Icon(_videoOn ? Icons.videocam : Icons.videocam_off),
                 onPressed: _toggleVideo,
-                iconSize: 36,
+                iconSize: 36.sp,
               ),
-              const SizedBox(width: 24),
+              SizedBox(width: 24.w),
               IconButton(
                 icon: const Icon(Icons.call_end, color: Colors.red),
                 onPressed: _hangUp,
-                iconSize: 36,
+                iconSize: 36.sp,
               ),
             ],
           ),

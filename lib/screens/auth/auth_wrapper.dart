@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import '../../providers/firebase_app_state.dart';
 import 'login_screen.dart';
@@ -29,8 +30,11 @@ class AuthWrapper extends StatelessWidget {
                   end: Alignment.bottomRight,
                 ),
               ),
-              child: const Center(
-                child: CircularProgressIndicator(color: Colors.white),
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 3.w,
+                ),
               ),
             ),
           );

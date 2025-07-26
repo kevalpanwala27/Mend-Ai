@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../chat/real_time_voice_chat_screen.dart';
@@ -144,7 +145,7 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
 
           return Center(
             child: Padding(
-              padding: const EdgeInsets.all(32.0),
+              padding: EdgeInsets.all(32.w),
               child: SizedBox(
                 width: double.infinity,
                 child: Column(
@@ -159,7 +160,7 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12.h),
                 Text(
                   widget.sessionCode,
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
@@ -169,31 +170,31 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: 32.h),
                 if (!isReady) ...[
                   const CircularProgressIndicator(),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
                   Text(
                     'Waiting for your partner to join...',
                     style: TextStyle(
                       color: AppTheme.textSecondary,
-                      fontSize: 16,
+                      fontSize: 16.sp,
                     ),
                     textAlign: TextAlign.center,
                   ),
                 ] else ...[
-                  const Icon(Icons.check_circle, color: Colors.green, size: 48),
-                  const SizedBox(height: 24),
+                  Icon(Icons.check_circle, color: Colors.green, size: 48.sp),
+                  SizedBox(height: 24.h),
                   Text(
                     'Both partners are here! You can start your session.',
                     style: TextStyle(
                       color: AppTheme.textPrimary,
-                      fontSize: 16,
+                      fontSize: 16.sp,
                       fontWeight: FontWeight.w500,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32.h),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(

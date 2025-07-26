@@ -6,7 +6,6 @@ import '../../providers/firebase_app_state.dart';
 import '../../services/ai_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/gradient_button.dart';
-import '../scoring/communication_scoring_screen.dart';
 import 'scoring_screen.dart';
 import 'package:lottie/lottie.dart';
 
@@ -92,31 +91,27 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
+        elevation: 0,
         child: Container(
-          padding: EdgeInsets.all(32.w),
+          margin: EdgeInsets.all(AppTheme.spacingL.w),
+          padding: EdgeInsets.all(AppTheme.spacingXL.w),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                AppTheme.gradientStart,
-                AppTheme.gradientEnd,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: AppTheme.surface,
             borderRadius: BorderRadius.circular(AppTheme.radiusXL),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primary.withValues(alpha: 0.3),
-                blurRadius: 30,
-                offset: const Offset(0, 15),
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
           child: Stack(
             children: [
-              // Sparkle animations
+              // Sparkle animations (subtle)
               Positioned.fill(
                 child: AnimatedBuilder(
                   animation: _sparkleAnimation,
@@ -134,27 +129,31 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Animated glowing heart
+                    // Animated heart icon container
                     AnimatedBuilder(
                       animation: _heartAnimation,
                       builder: (context, child) {
                         return Transform.scale(
                           scale: _heartAnimation.value,
                           child: Container(
-                            width: 120.w,
-                            height: 120.w,
+                            width: 100.w,
+                            height: 100.w,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: RadialGradient(
-                                colors: [
-                                  Colors.white.withValues(alpha: 0.3),
-                                  Colors.transparent,
-                                ],
+                              gradient: const LinearGradient(
+                                colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.primary.withValues(alpha: 0.3),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
                             ),
                             child: Icon(
-                              Icons.favorite,
-                              size: 60.sp,
+                              Icons.favorite_rounded,
+                              size: 48.sp,
                               color: Colors.white,
                             ),
                           ),
@@ -162,41 +161,40 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
                       },
                     ),
                     
-                    SizedBox(height: 24.h),
+                    SizedBox(height: AppTheme.spacingL.h),
                     
                     Text(
                       'Great work! 💜',
-                      style: TextStyle(
-                        fontSize: 28.sp,
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: AppTheme.textPrimary,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     
-                    SizedBox(height: 12.h),
+                    SizedBox(height: AppTheme.spacingM.h),
                     
                     Text(
                       'You\'ve taken an important step toward understanding each other better.',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        color: Colors.white.withValues(alpha: 0.9),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppTheme.textSecondary,
                         height: 1.4,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     
-                    SizedBox(height: 32.h),
+                    SizedBox(height: AppTheme.spacingXL.h),
                     
-                    GradientButton(
-                      text: 'Continue',
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        _startFlowAnimations();
-                      },
-                      isSecondary: true,
+                    SizedBox(
                       width: double.infinity,
-                      height: 48.h,
+                      child: GradientButton(
+                        text: 'Continue',
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _startFlowAnimations();
+                        },
+                        height: 56.h,
+                      ),
                     ),
                   ],
                 ),
@@ -275,57 +273,120 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
           body: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                colors: [AppTheme.background, Color(0xFFF8F9FA)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
             ),
-            child: Column(
-              children: [
-                // Progress indicator
-                LinearProgressIndicator(
-                  value: (_currentPage + 1) / 4,
-                  backgroundColor: Colors.grey[300],
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppTheme.successGreen,
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // Progress indicator card
+                  Container(
+                    margin: const EdgeInsets.all(AppTheme.spacingL),
+                    padding: const EdgeInsets.all(AppTheme.spacingM),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Step ${_currentPage + 1} of 4',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: AppTheme.textPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.spacingM,
+                                vertical: AppTheme.spacingS,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.successGreen.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                              ),
+                              child: Text(
+                                '${((_currentPage + 1) / 4 * 100).round()}%',
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: AppTheme.successGreen,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppTheme.spacingM),
+                        LinearProgressIndicator(
+                          value: (_currentPage + 1) / 4,
+                          backgroundColor: AppTheme.borderColor,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            AppTheme.successGreen,
+                          ),
+                          borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
 
-                // Page content
-                Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentPage = index;
-                      });
-                    },
-                    children: [
-                      _buildGratitudePage(
-                        currentPartner?.name ?? 'You',
-                        otherPartner?.name ?? 'Your Partner',
-                      ),
-                      _buildReflectionPage(),
-                      _buildBondingActivitiesPage(),
-                      _buildSummaryPage(),
-                    ],
+                  // Page content
+                  Expanded(
+                    child: PageView(
+                      controller: _pageController,
+                      onPageChanged: (index) {
+                        setState(() {
+                          _currentPage = index;
+                        });
+                      },
+                      children: [
+                        _buildGratitudePage(
+                          currentPartner?.name ?? 'You',
+                          otherPartner?.name ?? 'Your Partner',
+                        ),
+                        _buildReflectionPage(),
+                        _buildBondingActivitiesPage(),
+                        _buildSummaryPage(),
+                      ],
+                    ),
                   ),
-                ),
 
-                // Navigation
-                Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _nextPage,
-                      child: Text(
-                        _currentPage == 3 ? 'View Scores' : 'Continue',
+                  // Navigation
+                  Container(
+                    margin: const EdgeInsets.all(AppTheme.spacingL),
+                    padding: const EdgeInsets.all(AppTheme.spacingM),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: GradientButton(
+                        text: _currentPage == 3 ? 'View Scores' : 'Continue',
+                        onPressed: _nextPage,
+                        height: 56,
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -335,36 +396,64 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
 
   Widget _buildGratitudePage(String currentPartnerName, String otherPartnerName) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(AppTheme.spacingL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header Card
           Container(
-            padding: const EdgeInsets.all(20),
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppTheme.spacingXL),
             decoration: BoxDecoration(
-              color: AppTheme.successGreen.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(AppTheme.radiusL),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               children: [
-                Icon(Icons.favorite, color: AppTheme.successGreen, size: 48),
-                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spacingM),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
+                    ),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                  ),
+                  child: const Icon(
+                    Icons.favorite_rounded,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacingL),
                 Text(
                   'Express Gratitude',
-                  style: Theme.of(context).textTheme.headlineMedium,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacingM),
                 Text(
                   'Take a moment to express gratitude to $otherPartnerName for their participation in this conversation.',
-                  style: Theme.of(context).textTheme.bodyLarge,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppTheme.textSecondary,
+                    height: 1.4,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: AppTheme.spacingXL),
 
           // Current user's gratitude toward their partner
           _buildPersonalGratitudeSection(otherPartnerName),
@@ -917,7 +1006,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
 
           // Bonding activities carousel
           SizedBox(
-            height: 180.h,
+            height: 200.h,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: activities.length,
@@ -929,7 +1018,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
                     right: 16.w,
                     left: index == 0 ? 0 : 0,
                   ),
-                  padding: EdgeInsets.all(20.w),
+                  padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
                     color: AppTheme.surface,
                     borderRadius: BorderRadius.circular(AppTheme.radiusL),
@@ -947,10 +1036,11 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 60.w,
-                        height: 60.w,
+                        width: 50.w,
+                        height: 50.w,
                         decoration: BoxDecoration(
                           color: (activity['color'] as Color).withValues(alpha: 0.15),
                           shape: BoxShape.circle,
@@ -958,34 +1048,38 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
                         child: Icon(
                           activity['icon'] as IconData,
                           color: activity['color'] as Color,
-                          size: 28.sp,
+                          size: 24.sp,
                         ),
                       ),
                       
-                      SizedBox(height: 16.h),
+                      SizedBox(height: 12.h),
                       
-                      Text(
-                        activity['title'] as String,
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
+                      Flexible(
+                        child: Text(
+                          activity['title'] as String,
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimary,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
                       
-                      SizedBox(height: 8.h),
+                      SizedBox(height: 6.h),
                       
-                      Text(
-                        activity['description'] as String,
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: AppTheme.textSecondary,
-                          height: 1.3,
+                      Flexible(
+                        child: Text(
+                          activity['description'] as String,
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: AppTheme.textSecondary,
+                            height: 1.3,
+                          ),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -1062,89 +1156,177 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
 
   Widget _buildSummaryPage() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(AppTheme.spacingL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Success Header Card
           Container(
-            padding: const EdgeInsets.all(20),
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppTheme.spacingXL),
             decoration: BoxDecoration(
-              color: AppTheme.successGreen.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(AppTheme.radiusL),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.check_circle,
-                  color: AppTheme.successGreen,
-                  size: 64,
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spacingL),
+                  decoration: BoxDecoration(
+                    color: AppTheme.successGreen.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppTheme.successGreen.withValues(alpha: 0.3),
+                      width: 2,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    color: AppTheme.successGreen,
+                    size: 48,
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacingL),
                 Text(
                   'Session Complete!',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: AppTheme.successGreen,
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.w600,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacingM),
                 Text(
                   'You\'ve successfully completed a guided conversation session.',
-                  style: Theme.of(context).textTheme.bodyLarge,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppTheme.textSecondary,
+                    height: 1.4,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: AppTheme.spacingXL),
 
-          Text('What\'s Next?', style: Theme.of(context).textTheme.titleLarge),
-
-          const SizedBox(height: 16),
-
-          _buildNextStepCard(
-            Icons.analytics,
-            'View Your Scores',
-            'See detailed feedback on your communication skills',
-          ),
-
-          _buildNextStepCard(
-            Icons.insights,
-            'Track Progress',
-            'Monitor your relationship growth over time',
-          ),
-
-          _buildNextStepCard(
-            Icons.chat,
-            'Schedule Next Session',
-            'Regular conversations lead to stronger connections',
-          ),
-
-          const SizedBox(height: 24),
-
+          // What's Next Section
           Container(
-            padding: const EdgeInsets.all(16),
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppTheme.spacingL),
             decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(AppTheme.radiusL),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.celebration, color: AppTheme.primary, size: 32),
-                const SizedBox(height: 12),
-                Text(
-                  'Great job working together!',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleMedium?.copyWith(color: AppTheme.primary),
-                  textAlign: TextAlign.center,
+                Row(
+                  children: [
+                    Icon(Icons.timeline_rounded, color: AppTheme.primary, size: 24),
+                    const SizedBox(width: AppTheme.spacingM),
+                    Text(
+                      'What\'s Next?',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Your commitment to better communication is strengthening your relationship.',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  textAlign: TextAlign.center,
+                const SizedBox(height: AppTheme.spacingL),
+                _buildNextStepCard(
+                  Icons.analytics_rounded,
+                  'View Your Scores',
+                  'See detailed feedback on your communication skills',
+                ),
+                const SizedBox(height: AppTheme.spacingM),
+                _buildNextStepCard(
+                  Icons.insights_rounded,
+                  'Track Progress',
+                  'Monitor your relationship growth over time',
+                ),
+                const SizedBox(height: AppTheme.spacingM),
+                _buildNextStepCard(
+                  Icons.chat_rounded,
+                  'Schedule Next Session',
+                  'Regular conversations lead to stronger connections',
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppTheme.spacingXL),
+
+          // Encouragement Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppTheme.spacingL),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.primary.withValues(alpha: 0.1),
+                  AppTheme.accent.withValues(alpha: 0.05),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(AppTheme.radiusL),
+              border: Border.all(
+                color: AppTheme.primary.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spacingM),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
+                    ),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                  ),
+                  child: const Icon(
+                    Icons.celebration_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacingM),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Great job working together!',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: AppTheme.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacingS),
+                      Text(
+                        'Your commitment to better communication is strengthening your relationship.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.textSecondary,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -1155,20 +1337,51 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
   }
 
   Widget _buildNextStepCard(IconData icon, String title, String description) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: AppTheme.primary.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: AppTheme.primary, size: 20),
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacingM),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        border: Border.all(
+          color: AppTheme.borderColor,
+          width: 1,
         ),
-        title: Text(title),
-        subtitle: Text(description),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: AppTheme.primary, size: 20),
+          ),
+          const SizedBox(width: AppTheme.spacingM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacingXS),
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.textSecondary,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1191,20 +1404,20 @@ class SparklesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: (0.8 * (1 - animationValue * 0.5)).clamp(0.0, 1.0))
-      ..strokeWidth = 2;
+      ..color = AppTheme.primary.withValues(alpha: (0.3 * (1 - animationValue * 0.5)).clamp(0.0, 1.0))
+      ..strokeWidth = 1.5;
     
     final random = math.Random(42); // Fixed seed for consistent animation
     
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 12; i++) {
       final x = random.nextDouble() * size.width;
       final y = random.nextDouble() * size.height;
       final progress = (animationValue + (i * 0.1)) % 1.0;
       
       if (progress < 0.8) {
-        final sparkleSize = 4 * (1 - progress) * progress * 4;
+        final sparkleSize = 3 * (1 - progress) * progress * 4;
         
-        // Draw sparkle as a cross
+        // Draw subtle sparkle as a cross
         canvas.drawLine(
           Offset(x - sparkleSize, y),
           Offset(x + sparkleSize, y),
