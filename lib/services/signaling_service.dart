@@ -1,438 +1,158 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'dart:developer' as developer;
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:uuid/uuid.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SignalingService {
-  static final SignalingService _instance = SignalingService._internal();
-  factory SignalingService() => _instance;
-  SignalingService._internal();
+  // Update this to your EC2 instance IP
+  static const String serverUrl = 'http://13.223.2.148:3000';
 
-  // Firebase references
-  late CollectionReference _signalingCollection;
-  late DocumentReference _sessionDoc;
-  StreamSubscription<DocumentSnapshot>? _sessionSubscription;
-  StreamSubscription<QuerySnapshot>? _messagesSubscription;
-  
-  // Connection info
+  IO.Socket? _socket;
   String? _sessionId;
-  String? _localId;
-  bool _isConnected = false;
-  
-  // Getters
-  String? get localId => _localId;
-  
-  // Callbacks for WebRTC events
-  Function(RTCSessionDescription offer, String fromId)? onOfferReceived;
-  Function(RTCSessionDescription answer, String fromId)? onAnswerReceived;
-  Function(RTCIceCandidate candidate, String fromId)? onIceCandidateReceived;
-  Function(String partnerId)? onPartnerDisconnected;
-  Function(String partnerId)? onPartnerConnected;
-  Function(Map<String, dynamic> data, String fromId)? onCustomMessage;
+  String? localId;
+  String? _participantName;
 
-  // Message types
-  static const String _messageTypeOffer = 'offer';
-  static const String _messageTypeAnswer = 'answer';
-  static const String _messageTypeIceCandidate = 'ice_candidate';
-  static const String _messageTypeSessionEnd = 'session_end';
-  static const String _messageTypeHeartbeat = 'heartbeat';
-  static const String _messageTypeCustom = 'custom';
+  // Callbacks
+  Function(RTCSessionDescription, String)? onOfferReceived;
+  Function(RTCSessionDescription, String)? onAnswerReceived;
+  Function(RTCIceCandidate, String)? onIceCandidateReceived;
+  Function(String, String)? onPartnerConnected; // partnerId, partnerName
+  Function(String)? onPartnerDisconnected;
 
-  // Heartbeat timer
-  Timer? _heartbeatTimer;
-  final Duration _heartbeatInterval = const Duration(seconds: 30);
-
-  // Connect to signaling server (Firebase)
-  Future<void> connect(String sessionId) async {
+  Future<void> connect(String sessionId, {String? participantName}) async {
     _sessionId = sessionId;
-    _localId = const Uuid().v4();
-    
-    // Initialize Firebase references
-    _signalingCollection = FirebaseFirestore.instance.collection('signaling');
-    _sessionDoc = _signalingCollection.doc(sessionId);
-    
+    _participantName = participantName;
+    localId = DateTime.now().millisecondsSinceEpoch.toString();
+
     try {
-      // Create or join session
-      await _initializeSession();
-      
-      // Start listening for messages
-      _startListening();
-      
-      // Start heartbeat
-      _startHeartbeat();
-      
-      _isConnected = true;
-      
-      if (kDebugMode) {
-        print('Signaling service connected to session: $sessionId');
-      }
+      _socket = IO.io(serverUrl, <String, dynamic>{
+        'transports': ['websocket'],
+        'autoConnect': false,
+      });
+
+      _socket!.connect();
+
+      _setupSocketListeners();
+
+      // Join session after connection
+      _socket!.onConnect((_) {
+        developer.log('Connected to signaling server');
+        _joinSession();
+      });
     } catch (e) {
-      if (kDebugMode) {
-        print('Error connecting to signaling service: $e');
-      }
+      developer.log('Failed to connect to signaling server: $e');
       rethrow;
     }
   }
 
-  // Initialize session document
-  Future<void> _initializeSession() async {
-    final sessionSnapshot = await _sessionDoc.get();
-    
-    if (!sessionSnapshot.exists) {
-      // Create new session
-      await _sessionDoc.set({
-        'createdAt': FieldValue.serverTimestamp(),
-        'participants': [_localId],
-        'status': 'waiting',
-        'lastActivity': FieldValue.serverTimestamp(),
-      });
-    } else {
-      // Join existing session
-      await _sessionDoc.update({
-        'participants': FieldValue.arrayUnion([_localId]),
-        'status': 'active',
-        'lastActivity': FieldValue.serverTimestamp(),
-      });
-    }
-  }
+  void _setupSocketListeners() {
+    _socket!.onConnect((_) {
+      developer.log('Signaling service connected to session: $_sessionId');
+    });
 
-  // Start listening for signaling messages
-  void _startListening() {
-    // Listen for session changes
-    _sessionSubscription = _sessionDoc.snapshots().listen(
-      _handleSessionUpdate,
-      onError: (error) {
-        if (kDebugMode) {
-          print('Session subscription error: $error');
-        }
-      },
-    );
+    _socket!.onDisconnect((_) {
+      developer.log('Disconnected from signaling server');
+    });
 
-    // Listen for signaling messages
-    _messagesSubscription = _sessionDoc
-        .collection('messages')
-        .orderBy('timestamp', descending: false)
-        .snapshots()
-        .listen(
-      _handleMessages,
-      onError: (error) {
-        if (kDebugMode) {
-          print('Messages subscription error: $error');
-        }
-      },
-    );
-  }
+    _socket!.on('session-joined', (data) {
+      developer.log('Successfully joined session: ${data['sessionId']}');
+    });
 
-  // Handle session document updates
-  void _handleSessionUpdate(DocumentSnapshot snapshot) {
-    if (!snapshot.exists) return;
-    
-    final data = snapshot.data() as Map<String, dynamic>?;
-    if (data == null) return;
-    
-    // Safely handle participants list
-    final participantsData = data['participants'];
-    final participants = <String>[];
-    
-    if (participantsData is List) {
-      participants.addAll(participantsData.cast<String>());
-    } else if (participantsData is Map) {
-      // Handle case where participants might be stored as a map
-      participants.addAll(participantsData.keys.cast<String>());
-    }
-    
-    final status = data['status'] as String?;
-    
-    // Check for partner connection/disconnection
-    final otherParticipants = participants.where((id) => id != _localId).toList();
-    
-    if (otherParticipants.isNotEmpty && onPartnerConnected != null) {
-      onPartnerConnected!(otherParticipants.first);
-    }
-    
-    // Handle session status changes
-    if (status == 'ended') {
-      _handleSessionEnded();
-    }
-  }
+    _socket!.on('partner-connected', (data) {
+      developer.log('Partner connected: ${data['partnerId']}, name: ${data['partnerName']}');
+      onPartnerConnected?.call(data['partnerId'], data['partnerName']);
+    });
 
-  // Handle incoming signaling messages
-  void _handleMessages(QuerySnapshot snapshot) {
-    for (final change in snapshot.docChanges) {
-      if (change.type == DocumentChangeType.added) {
-        final data = change.doc.data() as Map<String, dynamic>?;
-        if (data == null) continue;
-        
-        final fromId = data['fromId'] as String?;
-        final type = data['type'] as String?;
-        final payload = data['payload'] as Map<String, dynamic>?;
-        
-        // Skip messages from self
-        if (fromId == _localId) continue;
-        
-        // Process message based on type
-        _processMessage(type, payload, fromId);
-        
-        // Clean up old messages (optional)
-        _cleanupOldMessage(change.doc.id);
-      }
-    }
-  }
+    _socket!.on('partner-disconnected', (data) {
+      developer.log('Partner disconnected: ${data['partnerId']}');
+      onPartnerDisconnected?.call(data['partnerId']);
+    });
 
-  // Process different types of signaling messages
-  void _processMessage(String? type, Map<String, dynamic>? payload, String? fromId) {
-    if (type == null || payload == null || fromId == null) return;
-    
-    switch (type) {
-      case _messageTypeOffer:
-        if (onOfferReceived != null) {
-          final offer = RTCSessionDescription(
-            payload['sdp'] as String,
-            payload['type'] as String,
-          );
-          onOfferReceived!(offer, fromId);
-        }
-        break;
-        
-      case _messageTypeAnswer:
-        if (onAnswerReceived != null) {
-          final answer = RTCSessionDescription(
-            payload['sdp'] as String,
-            payload['type'] as String,
-          );
-          onAnswerReceived!(answer, fromId);
-        }
-        break;
-        
-      case _messageTypeIceCandidate:
-        if (onIceCandidateReceived != null) {
-          final candidate = RTCIceCandidate(
-            payload['candidate'] as String,
-            payload['sdpMid'] as String?,
-            payload['sdpMLineIndex'] as int?,
-          );
-          onIceCandidateReceived!(candidate, fromId);
-        }
-        break;
-        
-      case _messageTypeSessionEnd:
-        if (onPartnerDisconnected != null) {
-          onPartnerDisconnected!(fromId);
-        }
-        break;
-        
-      case _messageTypeCustom:
-        if (onCustomMessage != null) {
-          onCustomMessage!(payload, fromId);
-        }
-        break;
-        
-      case _messageTypeHeartbeat:
-        // Handle heartbeat (update last seen, etc.)
-        break;
-    }
-  }
+    _socket!.on('offer', (data) {
+      developer.log('Received offer from: ${data['fromId']}');
+      final offer = RTCSessionDescription(
+        data['offer']['sdp'],
+        data['offer']['type'],
+      );
+      onOfferReceived?.call(offer, data['fromId']);
+    });
 
-  // Send WebRTC offer
-  Future<void> sendOffer(RTCSessionDescription offer, String toId) async {
-    if (kDebugMode) {
-      print('Sending offer to: $toId');
-    }
-    await _sendMessage(_messageTypeOffer, {
-      'sdp': offer.sdp,
-      'type': offer.type,
-    }, toId);
-  }
+    _socket!.on('answer', (data) {
+      developer.log('Received answer from: ${data['fromId']}');
+      final answer = RTCSessionDescription(
+        data['answer']['sdp'],
+        data['answer']['type'],
+      );
+      onAnswerReceived?.call(answer, data['fromId']);
+    });
 
-  // Send WebRTC answer
-  Future<void> sendAnswer(RTCSessionDescription answer, String toId) async {
-    if (kDebugMode) {
-      print('Sending answer to: $toId');
-    }
-    await _sendMessage(_messageTypeAnswer, {
-      'sdp': answer.sdp,
-      'type': answer.type,
-    }, toId);
-  }
-
-  // Send ICE candidate
-  Future<void> sendIceCandidate(RTCIceCandidate candidate, String toId) async {
-    if (kDebugMode) {
-      print('Sending ICE candidate to: $toId');
-    }
-    await _sendMessage(_messageTypeIceCandidate, {
-      'candidate': candidate.candidate,
-      'sdpMid': candidate.sdpMid,
-      'sdpMLineIndex': candidate.sdpMLineIndex,
-    }, toId);
-  }
-
-  // Send session end signal
-  Future<void> sendSessionEnd(String toId) async {
-    await _sendMessage(_messageTypeSessionEnd, {
-      'reason': 'user_left',
-    }, toId);
-  }
-
-  // Send custom message (for AI prompts, etc.)
-  Future<void> sendCustomMessage(Map<String, dynamic> data, String toId) async {
-    await _sendMessage(_messageTypeCustom, data, toId);
-  }
-
-  // Send heartbeat to keep connection alive
-  Future<void> _sendHeartbeat() async {
-    if (!_isConnected || _sessionId == null) return;
-    
-    try {
-      await _sessionDoc.update({
-        'lastActivity': FieldValue.serverTimestamp(),
-        'participants.$_localId.lastSeen': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error sending heartbeat: $e');
-      }
-    }
-  }
-
-  // Generic message sending method
-  Future<void> _sendMessage(String type, Map<String, dynamic> payload, String toId) async {
-    if (!_isConnected || _sessionId == null) {
-      throw Exception('Signaling service not connected');
-    }
-    
-    try {
-      await _sessionDoc.collection('messages').add({
-        'type': type,
-        'fromId': _localId,
-        'toId': toId,
-        'payload': payload,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+    _socket!.on('ice-candidate', (data) {
+      developer.log('SignalingService: Received ICE candidate from: ${data['fromId']}');
+      developer.log('SignalingService: Candidate data: ${data['candidate']}');
       
-      if (kDebugMode) {
-        print('Sent signaling message: $type');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error sending message: $e');
-      }
-      rethrow;
-    }
-  }
-
-  // Start heartbeat timer
-  void _startHeartbeat() {
-    _heartbeatTimer = Timer.periodic(_heartbeatInterval, (timer) {
-      _sendHeartbeat();
+      final candidate = RTCIceCandidate(
+        data['candidate']['candidate'],
+        data['candidate']['sdpMid'],
+        data['candidate']['sdpMLineIndex'],
+      );
+      onIceCandidateReceived?.call(candidate, data['fromId']);
+      developer.log('SignalingService: ICE candidate callback completed');
     });
   }
 
-  // Clean up old messages to prevent database bloat
-  Future<void> _cleanupOldMessage(String messageId) async {
-    // Delete message after a delay to ensure all clients have processed it
-    Timer(const Duration(minutes: 5), () async {
-      try {
-        await _sessionDoc.collection('messages').doc(messageId).delete();
-      } catch (e) {
-        // Ignore cleanup errors
-      }
+  void _joinSession() {
+    _socket!.emit('join-session', {
+      'sessionId': _sessionId,
+      'participantId': localId,
+      'participantName': _participantName ?? 'Partner', // Use actual participant name
     });
   }
 
-  // Handle session ended
-  void _handleSessionEnded() {
-    _isConnected = false;
-    if (onPartnerDisconnected != null) {
-      onPartnerDisconnected!('session_ended');
-    }
+  Future<void> sendOffer(RTCSessionDescription offer, String targetId) async {
+    _socket!.emit('offer', {
+      'sessionId': _sessionId,
+      'targetId': targetId,
+      'offer': {'sdp': offer.sdp, 'type': offer.type},
+    });
   }
 
-  // Get session participants
-  Future<List<String>> getParticipants() async {
-    try {
-      final snapshot = await _sessionDoc.get();
-      if (snapshot.exists) {
-        final data = snapshot.data() as Map<String, dynamic>?;
-        return List<String>.from(data?['participants'] ?? []);
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error getting participants: $e');
-      }
-    }
-    return [];
+  Future<void> sendAnswer(RTCSessionDescription answer, String targetId) async {
+    _socket!.emit('answer', {
+      'sessionId': _sessionId,
+      'targetId': targetId,
+      'answer': {'sdp': answer.sdp, 'type': answer.type},
+    });
   }
 
-  // Check if session is active
-  Future<bool> isSessionActive() async {
-    try {
-      final snapshot = await _sessionDoc.get();
-      if (snapshot.exists) {
-        final data = snapshot.data() as Map<String, dynamic>?;
-        return data?['status'] == 'active';
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error checking session status: $e');
-      }
-    }
-    return false;
-  }
-
-  // End session for all participants
-  Future<void> endSession() async {
-    if (!_isConnected || _sessionId == null) return;
+  Future<void> sendIceCandidate(
+    RTCIceCandidate candidate,
+    String targetId,
+  ) async {
+    developer.log('SignalingService: Preparing to send ICE candidate to $targetId');
+    developer.log('SignalingService: Candidate: ${candidate.candidate}');
     
-    try {
-      await _sessionDoc.update({
-        'status': 'ended',
-        'endedAt': FieldValue.serverTimestamp(),
-        'endedBy': _localId,
-      });
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error ending session: $e');
-      }
-    }
+    final message = {
+      'sessionId': _sessionId,
+      'targetId': targetId,
+      'candidate': {
+        'candidate': candidate.candidate,
+        'sdpMid': candidate.sdpMid,
+        'sdpMLineIndex': candidate.sdpMLineIndex,
+      },
+    };
+    
+    developer.log('SignalingService: Emitting ice-candidate event');
+    _socket!.emit('ice-candidate', message);
+    developer.log('SignalingService: ICE candidate emit completed');
   }
 
-  // Disconnect from signaling service
+  Future<void> sendSessionEnd(String targetId) async {
+    _socket!.emit('end-session', {'sessionId': _sessionId});
+  }
+
   Future<void> disconnect() async {
-    _heartbeatTimer?.cancel();
-    
-    // Remove self from participants
-    if (_isConnected && _sessionId != null && _localId != null) {
-      try {
-        await _sessionDoc.update({
-          'participants': FieldValue.arrayRemove([_localId]),
-          'lastActivity': FieldValue.serverTimestamp(),
-        });
-      } catch (e) {
-        if (kDebugMode) {
-          print('Error removing participant: $e');
-        }
-      }
-    }
-    
-    // Cancel subscriptions
-    await _sessionSubscription?.cancel();
-    await _messagesSubscription?.cancel();
-    
-    _sessionSubscription = null;
-    _messagesSubscription = null;
-    _isConnected = false;
-    _sessionId = null;
-    _localId = null;
-    
-    if (kDebugMode) {
-      print('Signaling service disconnected');
-    }
+    _socket?.disconnect();
+    _socket?.dispose();
+    _socket = null;
   }
-
-  // Additional getters
-  bool get isConnected => _isConnected;
-  String? get sessionId => _sessionId;
 }

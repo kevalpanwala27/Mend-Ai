@@ -1,0 +1,254 @@
+const express = require("express");
+const http = require("http");
+const socketIo = require("socket.io");
+const cors = require("cors");
+const helmet = require("helmet");
+require("dotenv").config();
+
+const app = express();
+const server = http.createServer(app);
+
+// Configure CORS for Socket.IO
+const io = socketIo(server, {
+  cors: {
+    origin: "*", // In production, specify your app's domain
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
+
+// Middleware
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({ status: "OK", timestamp: new Date().toISOString() });
+});
+
+// Store active sessions and participants
+const sessions = new Map();
+const participants = new Map();
+
+io.on("connection", (socket) => {
+  console.log(`Client connected: ${socket.id}`);
+
+  // Join a therapy session
+  socket.on("join-session", (data) => {
+    const { sessionId, participantId, participantName } = data;
+
+    console.log(
+      `${participantName} (${participantId}) joining session ${sessionId}`
+    );
+
+    // Store participant info
+    participants.set(socket.id, {
+      id: participantId,
+      name: participantName,
+      sessionId,
+      socketId: socket.id,
+    });
+
+    // Join socket room
+    socket.join(sessionId);
+
+    // Initialize session if doesn't exist
+    if (!sessions.has(sessionId)) {
+      sessions.set(sessionId, {
+        id: sessionId,
+        participants: new Map(),
+        createdAt: new Date(),
+      });
+    }
+
+    const session = sessions.get(sessionId);
+    session.participants.set(participantId, {
+      id: participantId,
+      name: participantName,
+      socketId: socket.id,
+      joinedAt: new Date(),
+    });
+
+    // Notify participant they joined successfully
+    socket.emit("session-joined", {
+      sessionId,
+      participantId,
+      participantCount: session.participants.size,
+    });
+
+    // If two participants, notify both that partner is available
+    if (session.participants.size === 2) {
+      const participantList = Array.from(session.participants.values());
+      const partner = participantList.find((p) => p.id !== participantId);
+
+      // Notify current participant about partner
+      socket.emit("partner-connected", {
+        partnerId: partner.id,
+        partnerName: partner.name,
+      });
+
+      // Notify partner about current participant
+      socket.to(partner.socketId).emit("partner-connected", {
+        partnerId: participantId,
+        partnerName: participantName,
+      });
+
+      console.log(`Session ${sessionId} is ready with both partners`);
+    }
+  });
+
+  // WebRTC signaling: offer
+  socket.on("offer", (data) => {
+    const { sessionId, targetId, offer } = data;
+    const participant = participants.get(socket.id);
+
+    if (!participant) return;
+
+    console.log(
+      `Offer from ${participant.id} to ${targetId} in session ${sessionId}`
+    );
+
+    // Find target participant's socket
+    const session = sessions.get(sessionId);
+    if (session) {
+      const target = session.participants.get(targetId);
+      if (target) {
+        socket.to(target.socketId).emit("offer", {
+          fromId: participant.id,
+          fromName: participant.name,
+          offer,
+        });
+      }
+    }
+  });
+
+  // WebRTC signaling: answer
+  socket.on("answer", (data) => {
+    const { sessionId, targetId, answer } = data;
+    const participant = participants.get(socket.id);
+
+    if (!participant) return;
+
+    console.log(
+      `Answer from ${participant.id} to ${targetId} in session ${sessionId}`
+    );
+
+    // Find target participant's socket
+    const session = sessions.get(sessionId);
+    if (session) {
+      const target = session.participants.get(targetId);
+      if (target) {
+        socket.to(target.socketId).emit("answer", {
+          fromId: participant.id,
+          fromName: participant.name,
+          answer,
+        });
+      }
+    }
+  });
+
+  // WebRTC signaling: ICE candidate
+  socket.on("ice-candidate", (data) => {
+    const { sessionId, targetId, candidate } = data;
+    const participant = participants.get(socket.id);
+
+    if (!participant) return;
+
+    // Find target participant's socket
+    const session = sessions.get(sessionId);
+    if (session) {
+      const target = session.participants.get(targetId);
+      if (target) {
+        socket.to(target.socketId).emit("ice-candidate", {
+          fromId: participant.id,
+          candidate,
+        });
+      }
+    }
+  });
+
+  // Session end
+  socket.on("end-session", (data) => {
+    const { sessionId } = data;
+    const participant = participants.get(socket.id);
+
+    if (!participant) return;
+
+    console.log(`${participant.name} ending session ${sessionId}`);
+
+    // Notify partner
+    socket.to(sessionId).emit("partner-disconnected", {
+      partnerId: participant.id,
+      partnerName: participant.name,
+    });
+
+    // Clean up
+    handleDisconnect(socket);
+  });
+
+  // Handle disconnection
+  socket.on("disconnect", () => {
+    console.log(`Client disconnected: ${socket.id}`);
+    handleDisconnect(socket);
+  });
+
+  function handleDisconnect(socket) {
+    const participant = participants.get(socket.id);
+
+    if (participant) {
+      const { sessionId, id: participantId, name } = participant;
+
+      // Remove from session
+      const session = sessions.get(sessionId);
+      if (session) {
+        session.participants.delete(participantId);
+
+        // Notify remaining participants
+        socket.to(sessionId).emit("partner-disconnected", {
+          partnerId: participantId,
+          partnerName: name,
+        });
+
+        // Clean up empty sessions
+        if (session.participants.size === 0) {
+          sessions.delete(sessionId);
+          console.log(
+            `Session ${sessionId} deleted - no participants remaining`
+          );
+        }
+      }
+
+      // Remove participant
+      participants.delete(socket.id);
+    }
+  }
+});
+
+// Cleanup old sessions (run every hour)
+setInterval(() => {
+  const now = new Date();
+  const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+  for (const [sessionId, session] of sessions.entries()) {
+    if (now - session.createdAt > maxAge && session.participants.size === 0) {
+      sessions.delete(sessionId);
+      console.log(`Cleaned up old session: ${sessionId}`);
+    }
+  }
+}, 60 * 60 * 1000);
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`Mend signaling server running on port ${PORT}`);
+  console.log(`Health check available at: http://localhost:${PORT}/health`);
+});
+
+// Graceful shutdown
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received, shutting down gracefully");
+  server.close(() => {
+    console.log("Server closed");
+    process.exit(0);
+  });
+});

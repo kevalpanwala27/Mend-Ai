@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../services/webrtc_service.dart';
 
@@ -30,6 +31,9 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
     with TickerProviderStateMixin {
   // WebRTC service
   late WebRTCService _webrtcService;
+  
+  // Audio renderers for WebRTC streams
+  final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
 
   // Session state
   bool _isConnected = false;
@@ -80,6 +84,7 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
   @override
   void initState() {
     super.initState();
+    _initializeRenderers();
     _initializeServices();
     _setupAnimations();
     _startSessionTimer();
@@ -87,6 +92,41 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _showMoodCheckinIfNeeded(),
     );
+  }
+
+  void _initializeRenderers() async {
+    await _remoteRenderer.initialize();
+    
+    // Configure renderer for audio playback on mobile
+    try {
+      _remoteRenderer.muted = false;
+      print('Audio renderer initialized for audio playback');
+    } catch (e) {
+      print('Error configuring audio renderer: $e');
+    }
+  }
+
+  // Attach remote stream to renderer for audio playback
+  void _attachRemoteStream() async {
+    try {
+      final remoteStream = _webrtcService.remoteStream;
+      if (remoteStream != null) {
+        _remoteRenderer.srcObject = remoteStream;
+        print('Remote stream attached to renderer: ${remoteStream.id}');
+        
+        // Enable audio tracks and ensure they're not muted
+        for (var track in remoteStream.getAudioTracks()) {
+          track.enabled = true;
+          print('Audio track ${track.id} enabled: ${track.enabled}, muted: ${track.muted}');
+        }
+        
+        // Force update the renderer
+        setState(() {});
+        print('Audio renderer updated with remote stream');
+      }
+    } catch (e) {
+      print('Error attaching remote stream: $e');
+    }
   }
 
   void _initializeServices() async {
@@ -99,8 +139,10 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
       // Initialize WebRTC connection
       final appState = Provider.of<FirebaseAppState>(context, listen: false);
       final currentUserId = appState.currentUserId ?? widget.userId;
+      final currentPartner = appState.getCurrentPartner();
+      final userName = currentPartner?.name ?? 'User';
 
-      await _webrtcService.initialize(widget.sessionCode, currentUserId);
+      await _webrtcService.initialize(widget.sessionCode, currentUserId, userName: userName);
 
       setState(() {
         _isInitializing = false;
@@ -171,6 +213,11 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
     setState(() {
       _isConnected = _webrtcService.isConnected;
     });
+
+    // Attach remote stream to renderer for audio playback (only once)
+    if (_webrtcService.remoteStream != null && _remoteRenderer.srcObject == null) {
+      _attachRemoteStream();
+    }
 
     // Handle interruption detection
     if (_webrtcService.isInterruption && !_showInterruptionWarning) {
@@ -260,6 +307,30 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
     });
   }
 
+  void _reconnect() async {
+    try {
+      print('Manual reconnect triggered');
+      
+      // Show loading indicator
+      setState(() {
+        _isInitializing = true;
+      });
+      
+      // Force reconnection
+      await _webrtcService.dispose();
+      
+      // Reinitialize WebRTC
+      _initializeServices();
+      
+      print('Manual reconnect completed');
+    } catch (e) {
+      print('Error during manual reconnect: $e');
+      setState(() {
+        _isInitializing = false;
+      });
+    }
+  }
+
   void _endSession() async {
     final result = await showDialog<bool>(
       context: context,
@@ -346,13 +417,27 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
     return Container(
       decoration: const BoxDecoration(color: Colors.black),
       child: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            _buildHeader(),
-            if (_showInterruptionWarning) _buildInterruptionWarning(),
-            _buildAIMessageCard(),
-            Expanded(child: _buildPartnerViews()),
-            _buildControlsFooter(),
+            // Hidden RTCVideoView for audio playback
+            Positioned(
+              left: -1000,
+              top: -1000,
+              child: SizedBox(
+                width: 1,
+                height: 1,
+                child: RTCVideoView(_remoteRenderer, mirror: false),
+              ),
+            ),
+            Column(
+              children: [
+                _buildHeader(),
+                if (_showInterruptionWarning) _buildInterruptionWarning(),
+                _buildAIMessageCard(),
+                Expanded(child: _buildPartnerViews()),
+                _buildControlsFooter(),
+              ],
+            ),
           ],
         ),
       ),
@@ -521,6 +606,8 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize:
+                            MainAxisSize.min, // Fix potential overflow
                         children: [
                           Row(
                             children: [
@@ -580,7 +667,6 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
   Widget _buildPartnerViews() {
     final appState = Provider.of<FirebaseAppState>(context);
     final currentPartner = appState.getCurrentPartner();
-    final otherPartner = appState.getOtherPartner();
 
     return Row(
       children: [
@@ -595,9 +681,9 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
           isLeft: true,
         ),
 
-        // Partner B (Remote Partner)
+        // Partner B (Remote Partner) - Use WebRTC partner name
         _buildPartnerView(
-          name: otherPartner?.name ?? 'Partner',
+          name: _webrtcService.partnerName ?? 'Partner',
           isLocal: false,
           isSpeaking: _webrtcService.isRemoteAudioActive,
           audioLevel: _webrtcService.remoteAudioLevel,
@@ -662,114 +748,118 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
             borderRadius: AppTheme.radiusXL,
           ),
           child: Padding(
-            padding: EdgeInsets.all(28.w),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Profile section with enhanced glow
-                AnimatedBuilder(
-                  animation: _pulseAnimation,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: isSpeaking ? _pulseAnimation.value : 1.0,
-                      child: Container(
-                        width: 120.w,
-                        height: 120.w,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: accentColor,
-                          boxShadow: [
-                            BoxShadow(
-                              color: accentColor.withValues(alpha: 0.5),
-                              blurRadius: isSpeaking ? 30 : 15,
-                              spreadRadius: isSpeaking ? 8 : 2,
-                              offset: const Offset(0, 6),
-                            ),
-                            if (isSpeaking)
+            padding: EdgeInsets.all(20.w), // Reduced padding
+            child: SingleChildScrollView(
+              // Added scrollable container
+              child: Column(
+                mainAxisSize: MainAxisSize.min, // Fix the overflow
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Profile section with enhanced glow
+                  AnimatedBuilder(
+                    animation: _pulseAnimation,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: isSpeaking ? _pulseAnimation.value : 1.0,
+                        child: Container(
+                          width: 100.w, // Reduced size
+                          height: 100.w, // Reduced size
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: accentColor,
+                            boxShadow: [
                               BoxShadow(
-                                color: accentColor.withValues(alpha: 0.3),
-                                blurRadius: 50,
-                                spreadRadius: 15,
-                                offset: const Offset(0, 12),
+                                color: accentColor.withValues(alpha: 0.5),
+                                blurRadius: isSpeaking ? 30 : 15,
+                                spreadRadius: isSpeaking ? 8 : 2,
+                                offset: const Offset(0, 6),
                               ),
-                          ],
+                              if (isSpeaking)
+                                BoxShadow(
+                                  color: accentColor.withValues(alpha: 0.3),
+                                  blurRadius: 50,
+                                  spreadRadius: 15,
+                                  offset: const Offset(0, 12),
+                                ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.person_rounded,
+                            size: 48.sp, // Reduced size
+                            color: Colors.white,
+                          ),
                         ),
-                        child: Icon(
-                          Icons.person_rounded,
-                          size: 56.sp,
-                          color: Colors.white,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-                SizedBox(height: 24.h),
-
-                // Name with enhanced typography
-                Text(
-                  name,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22.sp,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
+                      );
+                    },
                   ),
-                  textAlign: TextAlign.center,
-                ),
 
-                SizedBox(height: 8.h),
-
-                // Speaking indicator with glow effect
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 8.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSpeaking
-                        ? accentColor.withValues(alpha: 0.3)
-                        : null,
-                    borderRadius: BorderRadius.circular(20.r),
-                    boxShadow: isSpeaking
-                        ? [
-                            BoxShadow(
-                              color: accentColor.withValues(alpha: 0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: Text(
-                    isSpeaking
-                        ? 'Speaking...'
-                        : (isLocal && _isMuted)
-                        ? 'Muted'
-                        : 'Listening',
+                  SizedBox(height: 16.h), // Reduced spacing
+                  // Name with enhanced typography
+                  Text(
+                    name,
                     style: TextStyle(
-                      color: isSpeaking
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.8),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14.sp,
+                      color: Colors.white,
+                      fontSize: 18.sp, // Reduced font size
+                      fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
                     ),
                     textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
 
-                SizedBox(height: 32.h),
+                  SizedBox(height: 8.h),
 
-                // Enhanced audio level visualization
-                SizedBox(
-                  height: 90.h,
-                  child: isSpeaking
-                      ? _buildEnhancedWaveform(accentColor, audioLevel)
-                      : _buildInactiveWaveform(),
-                ),
-              ],
+                  // Speaking indicator with glow effect
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 6.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSpeaking
+                          ? accentColor.withValues(alpha: 0.3)
+                          : null,
+                      borderRadius: BorderRadius.circular(20.r),
+                      boxShadow: isSpeaking
+                          ? [
+                              BoxShadow(
+                                color: accentColor.withValues(alpha: 0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Text(
+                      isSpeaking
+                          ? 'Speaking...'
+                          : (isLocal && _isMuted)
+                          ? 'Muted'
+                          : 'Listening',
+                      style: TextStyle(
+                        color: isSpeaking
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12.sp, // Reduced font size
+                        letterSpacing: 0.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+
+                  SizedBox(height: 20.h), // Reduced spacing
+                  // Enhanced audio level visualization
+                  SizedBox(
+                    height: 60.h, // Reduced height
+                    child: isSpeaking
+                        ? _buildEnhancedWaveform(accentColor, audioLevel)
+                        : _buildInactiveWaveform(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -857,6 +947,14 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
             tooltip: 'New AI Prompt',
           ),
 
+          // Reconnect button (for connection issues)
+          _buildControlButton(
+            onTap: _reconnect,
+            icon: Icons.refresh_rounded,
+            isActive: false,
+            tooltip: 'Reconnect',
+          ),
+
           // End session button
           _buildControlButton(
             onTap: _endSession,
@@ -922,6 +1020,7 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
     _aiPromptTimer?.cancel();
     _webrtcService.removeListener(_onWebRTCStateChanged);
     _webrtcService.dispose();
+    _remoteRenderer.dispose();
     _pulseController.dispose();
     _waveformController.dispose();
     _aiMessageController.dispose();
