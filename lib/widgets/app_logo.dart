@@ -5,18 +5,13 @@ class AppLogo extends StatefulWidget {
   final double size;
   final bool animate;
 
-  const AppLogo({
-    super.key,
-    this.size = 120,
-    this.animate = true,
-  });
+  const AppLogo({super.key, this.size = 120, this.animate = true});
 
   @override
   State<AppLogo> createState() => _AppLogoState();
 }
 
-class _AppLogoState extends State<AppLogo>
-    with TickerProviderStateMixin {
+class _AppLogoState extends State<AppLogo> with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _rotationController;
   late Animation<double> _pulseAnimation;
@@ -25,32 +20,24 @@ class _AppLogoState extends State<AppLogo>
   @override
   void initState() {
     super.initState();
-    
+
     _pulseController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
     );
-    
+
     _rotationController = AnimationController(
       duration: const Duration(seconds: 10),
       vsync: this,
     );
 
-    _pulseAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
-    _rotationAnimation = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(CurvedAnimation(
-      parent: _rotationController,
-      curve: Curves.linear,
-    ));
+    _rotationAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _rotationController, curve: Curves.linear),
+    );
 
     if (widget.animate) {
       _pulseController.repeat(reverse: true);
@@ -98,10 +85,12 @@ class _AppLogoState extends State<AppLogo>
                 );
               },
             ),
-          
+
           // Main logo container
           AnimatedBuilder(
-            animation: widget.animate ? _pulseAnimation : const AlwaysStoppedAnimation(1.0),
+            animation: widget.animate
+                ? _pulseAnimation
+                : const AlwaysStoppedAnimation(1.0),
             builder: (context, child) {
               return Transform.scale(
                 scale: _pulseAnimation.value,
@@ -111,10 +100,7 @@ class _AppLogoState extends State<AppLogo>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: const LinearGradient(
-                      colors: [
-                        AppTheme.gradientStart,
-                        AppTheme.gradientEnd,
-                      ],
+                      colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -129,53 +115,103 @@ class _AppLogoState extends State<AppLogo>
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Heart icon
-                      Icon(
-                        Icons.favorite_rounded,
-                        size: widget.size * 0.35,
-                        color: Colors.white,
+                      // Heart icon with improved styling
+                      Container(
+                        padding: EdgeInsets.all(widget.size * 0.08),
+                        child: Icon(
+                          Icons.favorite_rounded,
+                          size: widget.size * 0.3,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
                       ),
-                      
-                      // Connecting lines (representing communication)
+
+                      // Enhanced connecting lines with better positioning
                       Positioned(
-                        top: widget.size * 0.15,
-                        left: widget.size * 0.25,
+                        top: widget.size * 0.18,
+                        left: widget.size * 0.28,
                         child: Container(
-                          width: widget.size * 0.3,
-                          height: 2,
+                          width: widget.size * 0.25,
+                          height: 2.5,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.6),
-                            borderRadius: BorderRadius.circular(1),
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withOpacity(0.8),
+                                Colors.white.withOpacity(0.4),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(1.25),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 2,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                       Positioned(
-                        bottom: widget.size * 0.15,
-                        right: widget.size * 0.25,
+                        bottom: widget.size * 0.18,
+                        right: widget.size * 0.28,
                         child: Container(
-                          width: widget.size * 0.3,
-                          height: 2,
+                          width: widget.size * 0.25,
+                          height: 2.5,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.6),
-                            borderRadius: BorderRadius.circular(1),
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withOpacity(0.4),
+                                Colors.white.withOpacity(0.8),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(1.25),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 2,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      
-                      // Small circles representing partners
+
+                      // Enhanced partner circles with better shadows
                       Positioned(
                         top: widget.size * 0.12,
                         left: widget.size * 0.12,
                         child: Container(
-                          width: widget.size * 0.1,
-                          height: widget.size * 0.1,
+                          width: widget.size * 0.12,
+                          height: widget.size * 0.12,
                           decoration: BoxDecoration(
-                            color: AppTheme.secondary,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white,
-                              width: 2,
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.secondary,
+                                AppTheme.secondary.withOpacity(0.8),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.secondary.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -183,15 +219,31 @@ class _AppLogoState extends State<AppLogo>
                         bottom: widget.size * 0.12,
                         right: widget.size * 0.12,
                         child: Container(
-                          width: widget.size * 0.1,
-                          height: widget.size * 0.1,
+                          width: widget.size * 0.12,
+                          height: widget.size * 0.12,
                           decoration: BoxDecoration(
-                            color: AppTheme.primary,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white,
-                              width: 2,
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.primary,
+                                AppTheme.primary.withOpacity(0.8),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primary.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
                           ),
                         ),
                       ),

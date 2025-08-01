@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../../providers/firebase_app_state.dart';
@@ -18,11 +17,12 @@ class ScoringScreen extends StatefulWidget {
   State<ScoringScreen> createState() => _ScoringScreenState();
 }
 
-class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateMixin {
+class _ScoringScreenState extends State<ScoringScreen>
+    with TickerProviderStateMixin {
   final AIService _aiService = AIService();
   CommunicationScores? _scores;
   bool _isLoading = true;
-  
+
   late ConfettiController _confettiController;
   late AnimationController _celebrationController;
   late AnimationController _scoreAnimationController;
@@ -32,35 +32,35 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
-    
-    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
-    
+
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 3),
+    );
+
     _celebrationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
+
     _scoreAnimationController = AnimationController(
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
-    
-    _celebrationAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _celebrationController,
-      curve: Curves.easeOutBack,
-    ));
-    
-    _scoreAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _scoreAnimationController,
-      curve: Curves.easeOutCubic,
-    ));
-    
+
+    _celebrationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _celebrationController,
+        curve: Curves.easeOutBack,
+      ),
+    );
+
+    _scoreAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _scoreAnimationController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
     _generateScores();
   }
 
@@ -104,7 +104,7 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
           _scores = scores;
           _isLoading = false;
         });
-        
+
         // Trigger celebratory animations
         Future.delayed(const Duration(milliseconds: 500), () {
           _celebrationController.forward();
@@ -166,9 +166,7 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
             Container(
               padding: const EdgeInsets.all(AppTheme.spacingL),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
-                ),
+                color: AppTheme.primary,
                 shape: BoxShape.circle,
               ),
               child: const CircularProgressIndicator(
@@ -181,16 +179,24 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
               'Analyzing Your Conversation',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: AppTheme.textPrimary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
+                fontSize: 24,
+                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: AppTheme.spacingM),
-            Text(
-              'Please wait while we generate your communication insights...',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
-                height: 1.4,
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacingL,
+              ),
+              child: Text(
+                'Please wait while we generate your communication insights...',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.textSecondary,
+                  height: 1.5,
+                  fontSize: 16,
+                ),
               ),
             ),
           ],
@@ -204,16 +210,10 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
       child: Container(
         margin: const EdgeInsets.all(AppTheme.spacingL),
         padding: const EdgeInsets.all(AppTheme.spacingXL),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppTheme.radiusL),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
+        decoration: AppTheme.glassmorphicDecoration(
+          borderRadius: AppTheme.radiusXL,
+          hasGlow: true,
+          glowColor: AppTheme.interruptionColor,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -221,12 +221,24 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
             Container(
               padding: const EdgeInsets.all(AppTheme.spacingL),
               decoration: BoxDecoration(
-                color: AppTheme.interruptionColor.withValues(alpha: 0.1),
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.interruptionColor.withValues(alpha: 0.2),
+                    AppTheme.interruptionColor.withValues(alpha: 0.1),
+                  ],
+                ),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppTheme.interruptionColor.withValues(alpha: 0.3),
+                  color: AppTheme.interruptionColor.withValues(alpha: 0.4),
                   width: 2,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.interruptionColor.withValues(alpha: 0.3),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Icon(
                 Icons.error_outline_rounded,
@@ -239,16 +251,24 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
               'Unable to Generate Scores',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: AppTheme.textPrimary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
+                fontSize: 22,
+                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: AppTheme.spacingM),
-            Text(
-              'We encountered an issue analyzing your conversation. Please try again later.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
-                height: 1.4,
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacingM,
+              ),
+              child: Text(
+                'We encountered an issue analyzing your conversation. Please try again later.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.textSecondary,
+                  height: 1.5,
+                  fontSize: 16,
+                ),
               ),
             ),
             const SizedBox(height: AppTheme.spacingL),
@@ -282,7 +302,7 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
         return Stack(
           children: [
             Scaffold(
-              backgroundColor: AppTheme.background,
+              backgroundColor: Colors.black,
               appBar: AppBar(
                 title: ShaderMask(
                   shaderCallback: (bounds) => const LinearGradient(
@@ -299,13 +319,7 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
                 ),
               ),
               body: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppTheme.background, Color(0xFFF8F9FA)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
+                decoration: const BoxDecoration(color: Colors.black),
                 child: SafeArea(
                   child: _isLoading
                       ? _buildLoadingState()
@@ -318,10 +332,11 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: AnimationConfiguration.toStaggeredList(
                                 duration: const Duration(milliseconds: 600),
-                                childAnimationBuilder: (widget) => SlideAnimation(
-                                  verticalOffset: 50.0,
-                                  child: FadeInAnimation(child: widget),
-                                ),
+                                childAnimationBuilder: (widget) =>
+                                    SlideAnimation(
+                                      verticalOffset: 50.0,
+                                      child: FadeInAnimation(child: widget),
+                                    ),
                                 children: [
                                   // Overall feedback
                                   _buildOverallFeedback(),
@@ -329,18 +344,22 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
                                   const SizedBox(height: AppTheme.spacingXL),
 
                                   // Current user's scores
-                                  if (_scores!.partnerScores[appState.currentUserId] != null)
+                                  if (_scores!.partnerScores[appState
+                                          .currentUserId] !=
+                                      null)
                                     _buildPartnerScore(
                                       appState.currentUserId ?? 'A',
                                       currentPartner?.name ?? 'You',
-                                      _scores!.partnerScores[appState.currentUserId]!,
+                                      _scores!.partnerScores[appState
+                                          .currentUserId]!,
                                     ),
 
                                   const SizedBox(height: AppTheme.spacingL),
 
                                   // Partner's scores (if available)
                                   if (otherPartner != null &&
-                                      _scores!.partnerScores[otherPartner.id] != null)
+                                      _scores!.partnerScores[otherPartner.id] !=
+                                          null)
                                     _buildPartnerScore(
                                       otherPartner.id,
                                       otherPartner.name,
@@ -364,7 +383,7 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
                 ),
               ),
             ),
-            
+
             // Confetti overlay
             Align(
               alignment: Alignment.topCenter,
@@ -409,9 +428,7 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
               Container(
                 padding: const EdgeInsets.all(AppTheme.spacingM),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
-                  ),
+                  color: AppTheme.primary,
                   borderRadius: BorderRadius.circular(AppTheme.radiusM),
                 ),
                 child: const Icon(
@@ -529,8 +546,12 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
                             child: CircularProgressIndicator(
                               value: score.averageScore * _scoreAnimation.value,
                               strokeWidth: 8.w,
-                              backgroundColor: partnerColor.withValues(alpha: 0.2),
-                              valueColor: AlwaysStoppedAnimation<Color>(partnerColor),
+                              backgroundColor: partnerColor.withValues(
+                                alpha: 0.2,
+                              ),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                partnerColor,
+                              ),
                               strokeCap: StrokeCap.round,
                             ),
                           );
@@ -543,7 +564,9 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
                           AnimatedBuilder(
                             animation: _scoreAnimation,
                             builder: (context, child) {
-                              final animatedScore = (overallScore * _scoreAnimation.value).round();
+                              final animatedScore =
+                                  (overallScore * _scoreAnimation.value)
+                                      .round();
                               return Text(
                                 '$animatedScore',
                                 style: TextStyle(
@@ -567,9 +590,9 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
                     ],
                   ),
                 ),
-                
+
                 SizedBox(width: AppTheme.spacingL.w),
-                
+
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -619,7 +642,7 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
                 ),
               ],
             ),
-            
+
             SizedBox(height: AppTheme.spacingL.h),
 
             // Enhanced radar chart for detailed scores
@@ -631,7 +654,7 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
             ),
 
             SizedBox(height: AppTheme.spacingL.h),
-            
+
             // Strengths and improvements with animations
             Row(
               children: [
@@ -783,119 +806,6 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildScoreRow(
-    String label,
-    double score,
-    IconData icon,
-    Color color, {
-    bool isLast = false,
-  }) {
-    final percentage = (score * 100).round();
-    return Column(
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppTheme.radiusXS),
-              ),
-              child: Icon(icon, size: 16, color: color),
-            ),
-            const SizedBox(width: AppTheme.spacingM),
-            Expanded(
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            Container(
-              width: 60,
-              height: 6,
-              decoration: BoxDecoration(
-                color: AppTheme.borderColor,
-                borderRadius: BorderRadius.circular(3),
-              ),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: score,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: AppTheme.spacingS),
-            SizedBox(
-              width: 35,
-              child: Text(
-                '$percentage%',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.end,
-              ),
-            ),
-          ],
-        ),
-        if (!isLast) const SizedBox(height: AppTheme.spacingM),
-      ],
-    );
-  }
-
-  Widget _buildInsightCard(
-    String title,
-    String content,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacingM),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
-        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 16),
-              const SizedBox(width: AppTheme.spacingS),
-              Text(
-                title,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spacingS),
-          Text(
-            content,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.textSecondary,
-              height: 1.3,
-              fontSize: 11,
-            ),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildActionButtons() {
     return Container(
       width: double.infinity,
@@ -1009,13 +919,13 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
 
   Widget _buildRadarChart(PartnerScore score, Color color) {
     final skills = [
-      ('Empathy', score.empathy),
-      ('Listening', score.listening),
-      ('Reception', score.reception),
-      ('Clarity', score.clarity),
-      ('Respect', score.respect),
-      ('Responsiveness', score.responsiveness),
-      ('Open-mindedness', score.openMindedness),
+      ('Empathy', score.empathy, Icons.favorite_rounded),
+      ('Listening', score.listening, Icons.hearing_rounded),
+      ('Reception', score.reception, Icons.visibility_rounded),
+      ('Clarity', score.clarity, Icons.lightbulb_rounded),
+      ('Respect', score.respect, Icons.handshake_rounded),
+      ('Responsiveness', score.responsiveness, Icons.chat_bubble_rounded),
+      ('Open-mindedness', score.openMindedness, Icons.psychology_rounded),
     ];
 
     return Column(
@@ -1036,51 +946,84 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
               return Column(
                 children: skills.map((skill) {
                   final animatedValue = skill.$2 * _scoreAnimation.value;
+                  final percentage = (animatedValue * 100).round();
+
                   return Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4.h),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 80.w,
-                          child: Text(
-                            skill.$1,
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Container(
-                            height: 8.h,
+                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                    child: Container(
+                      padding: EdgeInsets.all(16.w),
+                      decoration: AppTheme.glassmorphicDecoration(
+                        borderRadius: 16,
+                        hasGlow: animatedValue > 0.8,
+                        glowColor: color,
+                      ),
+                      child: Row(
+                        children: [
+                          // Skill icon with glow
+                          Container(
+                            padding: EdgeInsets.all(8.w),
                             decoration: BoxDecoration(
-                              color: AppTheme.borderColor,
-                              borderRadius: BorderRadius.circular(4.r),
+                              color: color.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            child: FractionallySizedBox(
-                              alignment: Alignment.centerLeft,
-                              widthFactor: animatedValue,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [color, color.withValues(alpha: 0.7)],
-                                  ),
-                                  borderRadius: BorderRadius.circular(4.r),
+                            child: Icon(skill.$3, color: color, size: 20.sp),
+                          ),
+
+                          SizedBox(width: 16.w),
+
+                          // Skill name and score
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      skill.$1,
+                                      style: TextStyle(
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.textPrimary,
+                                      ),
+                                    ),
+                                    Text(
+                                      '$percentage%',
+                                      style: TextStyle(
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w700,
+                                        color: color,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
+
+                                SizedBox(height: 8.h),
+
+                                // Radial progress bar
+                                Container(
+                                  height: 6.h,
+                                  decoration: BoxDecoration(
+                                    color: color.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                  child: FractionallySizedBox(
+                                    alignment: Alignment.centerLeft,
+                                    widthFactor: animatedValue,
+                                    child: Container(
+                                      decoration: AppTheme.waveformDecoration(
+                                        color,
+                                        animatedValue,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
-                        SizedBox(width: 8.w),
-                        Text(
-                          '${(skill.$2 * 100).round()}%',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                            color: color,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 }).toList(),
@@ -1122,11 +1065,7 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
                         ),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
-                      child: Icon(
-                        icon,
-                        color: Colors.white,
-                        size: 16.sp,
-                      ),
+                      child: Icon(icon, color: Colors.white, size: 16.sp),
                     ),
                     SizedBox(width: 8.w),
                     Text(
@@ -1140,33 +1079,37 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
                   ],
                 ),
                 SizedBox(height: 12.h),
-                ...items.take(3).map((item) => Padding(
-                  padding: EdgeInsets.only(bottom: 6.h),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 4.w,
-                        height: 4.w,
-                        margin: EdgeInsets.only(top: 6.h, right: 8.w),
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
+                ...items
+                    .take(3)
+                    .map(
+                      (item) => Padding(
+                        padding: EdgeInsets.only(bottom: 6.h),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 4.w,
+                              height: 4.w,
+                              margin: EdgeInsets.only(top: 6.h, right: 8.w),
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                item,
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: AppTheme.textSecondary,
+                                  height: 1.3,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      Expanded(
-                        child: Text(
-                          item,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: AppTheme.textSecondary,
-                            height: 1.3,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
+                    ),
               ],
             ),
           ),
@@ -1181,15 +1124,5 @@ class _ScoringScreenState extends State<ScoringScreen> with TickerProviderStateM
     _celebrationController.dispose();
     _scoreAnimationController.dispose();
     super.dispose();
-  }
-
-  Color _getScoreColor(double score) {
-    if (score >= 0.8) {
-      return AppTheme.successGreen;
-    } else if (score >= 0.6) {
-      return AppTheme.primary;
-    } else {
-      return Colors.orange;
-    }
   }
 }

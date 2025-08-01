@@ -22,7 +22,7 @@ class SessionWaitingRoomScreen extends StatefulWidget {
       _SessionWaitingRoomScreenState();
 }
 
-class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen> 
+class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
     with TickerProviderStateMixin {
   late Stream<DocumentSnapshot<Map<String, dynamic>>> _sessionStream;
   late AnimationController _pulseController;
@@ -37,7 +37,7 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
         .collection('sessions')
         .doc(widget.sessionCode)
         .snapshots();
-    
+
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -46,23 +46,16 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.1,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
-    
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    ));
-    
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
+
     _pulseController.repeat(reverse: true);
     _fadeController.forward();
     _joinSession();
@@ -149,6 +142,7 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
         }
       },
       child: Scaffold(
+        backgroundColor: Colors.black,
         appBar: AppBar(
           title: const Text('Waiting Room'),
           leading: IconButton(
@@ -163,13 +157,7 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
           ),
         ),
         body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppTheme.background, Color(0xFFF8F9FA)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
+          decoration: const BoxDecoration(color: Colors.black),
           child: SafeArea(
             child: FadeTransition(
               opacity: _fadeAnimation,
@@ -180,44 +168,45 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
                     return _buildLoadingState();
                   }
                   final data = snapshot.data!.data();
-                  final participants = (data?['participants'] as List?)?.cast<String>() ?? [];
+                  final participants =
+                      (data?['participants'] as List?)?.cast<String>() ?? [];
                   final isReady = participants.length >= 2;
 
                   return AnimationLimiter(
                     child: SingleChildScrollView(
                       child: Column(
                         children: AnimationConfiguration.toStaggeredList(
-                        duration: const Duration(milliseconds: 800),
-                        childAnimationBuilder: (widget) => SlideAnimation(
-                          verticalOffset: 50.0,
-                          child: FadeInAnimation(child: widget),
-                        ),
-                        children: [
-                          SizedBox(height: 40.h),
-                          
-                          // Enhanced header
-                          _buildHeaderSection(),
-                          
-                          SizedBox(height: 40.h),
-                          
-                          // Session code card
-                          _buildSessionCodeCard(),
-                          
-                          SizedBox(height: 40.h),
-                          
-                          // Status section
-                          if (!isReady) 
-                            _buildWaitingState(participants.length)
-                          else 
-                            _buildReadyState(),
-                          
-                          SizedBox(height: 40.h),
-                          
-                          // Tips section
-                          if (!isReady) _buildTipsSection(),
-                          
-                          SizedBox(height: 32.h),
-                        ],
+                          duration: const Duration(milliseconds: 800),
+                          childAnimationBuilder: (widget) => SlideAnimation(
+                            verticalOffset: 50.0,
+                            child: FadeInAnimation(child: widget),
+                          ),
+                          children: [
+                            SizedBox(height: 40.h),
+
+                            // Enhanced header
+                            _buildHeaderSection(),
+
+                            SizedBox(height: 40.h),
+
+                            // Session code card
+                            _buildSessionCodeCard(),
+
+                            SizedBox(height: 40.h),
+
+                            // Status section
+                            if (!isReady)
+                              _buildWaitingState(participants.length)
+                            else
+                              _buildReadyState(),
+
+                            SizedBox(height: 40.h),
+
+                            // Tips section
+                            if (!isReady) _buildTipsSection(),
+
+                            SizedBox(height: 32.h),
+                          ],
                         ),
                       ),
                     ),
@@ -244,13 +233,20 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primary.withValues(alpha: 0.3),
-                    blurRadius: 20,
+                    color: AppTheme.primary.withValues(alpha: 0.4),
+                    blurRadius: 24,
                     offset: const Offset(0, 8),
+                  ),
+                  BoxShadow(
+                    color: AppTheme.secondary.withValues(alpha: 0.2),
+                    blurRadius: 48,
+                    offset: const Offset(0, 0),
                   ),
                 ],
               ),
@@ -266,7 +262,9 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
             'Setting up your session...',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               color: AppTheme.textPrimary,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
+              fontSize: 20.sp,
+              letterSpacing: -0.5,
             ),
           ),
         ],
@@ -317,9 +315,9 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
           SizedBox(height: 8.h),
           Text(
             'Get ready for meaningful conversation',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppTheme.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -356,10 +354,11 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
                     children: [
                       Text(
                         'Session Code',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppTheme.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: AppTheme.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                       Text(
                         'Share with your partner',
@@ -438,9 +437,9 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
             SizedBox(height: 8.h),
             Text(
               '$participantCount of 2 participants joined',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
             ),
           ],
         ),
@@ -523,9 +522,14 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
               child: InkWell(
                 borderRadius: BorderRadius.circular(16.r),
                 onTap: () async {
-                  final appState = Provider.of<FirebaseAppState>(context, listen: false);
-                  await appState.startCommunicationSession(sessionCode: widget.sessionCode);
-                  
+                  final appState = Provider.of<FirebaseAppState>(
+                    context,
+                    listen: false,
+                  );
+                  await appState.startCommunicationSession(
+                    sessionCode: widget.sessionCode,
+                  );
+
                   if (mounted) {
                     Navigator.pushReplacement(
                       context,
@@ -569,9 +573,7 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
   Widget _buildTipsSection() {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 24.w),
-      decoration: AppTheme.glassmorphicDecoration(
-        borderRadius: 20.r,
-      ),
+      decoration: AppTheme.glassmorphicDecoration(borderRadius: 20.r),
       child: Padding(
         padding: EdgeInsets.all(20.w),
         child: Column(
@@ -625,18 +627,14 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
   Widget _buildTipItem(IconData icon, String text) {
     return Row(
       children: [
-        Icon(
-          icon,
-          color: AppTheme.textSecondary,
-          size: 18.w,
-        ),
+        Icon(icon, color: AppTheme.textSecondary, size: 18.w),
         SizedBox(width: 12.w),
         Expanded(
           child: Text(
             text,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
           ),
         ),
       ],

@@ -19,7 +19,8 @@ class WebRTCCallScreen extends StatefulWidget {
   State<WebRTCCallScreen> createState() => _WebRTCCallScreenState();
 }
 
-class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProviderStateMixin {
+class _WebRTCCallScreenState extends State<WebRTCCallScreen>
+    with TickerProviderStateMixin {
   final _firestore = FirebaseFirestore.instance;
   MediaStream? _localStream;
   RTCVideoRenderer _localRenderer = RTCVideoRenderer();
@@ -32,7 +33,7 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
   Map<String, MediaStream> _remoteStreams = {};
   Map<String, RTCVideoRenderer> _remoteRenderers = {};
   late final String _selfId;
-  
+
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   late AnimationController _fadeController;
@@ -43,7 +44,7 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
     super.initState();
     _selfId = widget.userId;
     _localRenderer.initialize();
-    
+
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -52,23 +53,16 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.05,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
-    
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    ));
-    
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
+
     _pulseController.repeat(reverse: true);
     _fadeController.forward();
     _initGroupCall();
@@ -257,7 +251,7 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: Row(
           children: [
@@ -293,7 +287,7 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
           children: [
             // Status indicator
             if (!_callActive) _buildConnectingIndicator(),
-            
+
             // Video grid
             Expanded(
               child: Padding(
@@ -301,17 +295,17 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
                 child: _buildVideoGrid(),
               ),
             ),
-            
+
             // Controls
             _buildControlPanel(),
-            
+
             SizedBox(height: 32.h),
           ],
         ),
       ),
     );
   }
-  
+
   Widget _buildConnectingIndicator() {
     return Container(
       margin: EdgeInsets.all(16.w),
@@ -319,9 +313,7 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
       decoration: BoxDecoration(
         color: AppTheme.secondary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(
-          color: AppTheme.secondary.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: AppTheme.secondary.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -350,21 +342,17 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
       ),
     );
   }
-  
+
   Widget _buildVideoGrid() {
     final remoteCount = _remoteRenderers.length;
-    
+
     if (remoteCount == 0) {
       // Only local video
       return Center(
-        child: _buildVideoTile(
-          _localRenderer,
-          'You',
-          isLocal: true,
-        ),
+        child: _buildVideoTile(_localRenderer, 'You', isLocal: true),
       );
     }
-    
+
     return Column(
       children: [
         // Local video (smaller, top-right)
@@ -382,7 +370,7 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
             ),
           ),
         ),
-        
+
         // Remote videos (main grid)
         Expanded(
           child: GridView.count(
@@ -391,18 +379,14 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
             mainAxisSpacing: 12.w,
             crossAxisSpacing: 12.w,
             children: _remoteRenderers.entries.map((entry) {
-              return _buildVideoTile(
-                entry.value,
-                'Partner',
-                isLocal: false,
-              );
+              return _buildVideoTile(entry.value, 'Partner', isLocal: false);
             }).toList(),
           ),
         ),
       ],
     );
   }
-  
+
   Widget _buildVideoTile(
     RTCVideoRenderer renderer,
     String label, {
@@ -435,7 +419,7 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
                 objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
               ),
             ),
-            
+
             // Overlay gradient
             Container(
               decoration: BoxDecoration(
@@ -449,7 +433,7 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
                 ),
               ),
             ),
-            
+
             // Label
             Positioned(
               bottom: isSmall ? 8.h : 16.h,
@@ -478,7 +462,7 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
       ),
     );
   }
-  
+
   Widget _buildControlPanel() {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 24.w),
@@ -486,9 +470,7 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -501,7 +483,9 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
             inactiveColor: Colors.red,
           ),
           _buildControlButton(
-            icon: _videoOn ? Icons.videocam_rounded : Icons.videocam_off_rounded,
+            icon: _videoOn
+                ? Icons.videocam_rounded
+                : Icons.videocam_off_rounded,
             isActive: _videoOn,
             onPressed: _toggleVideo,
             activeColor: AppTheme.primary,
@@ -519,7 +503,7 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
       ),
     );
   }
-  
+
   Widget _buildControlButton({
     required IconData icon,
     required bool isActive,
@@ -529,21 +513,18 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
     bool isEndCall = false,
   }) {
     final color = isActive ? activeColor : inactiveColor;
-    
+
     return GestureDetector(
       onTap: onPressed,
       child: Container(
         width: 56.w,
         height: 56.w,
         decoration: BoxDecoration(
-          color: isEndCall 
+          color: isEndCall
               ? Colors.red.withValues(alpha: 0.15)
               : color.withValues(alpha: 0.15),
           shape: BoxShape.circle,
-          border: Border.all(
-            color: color.withValues(alpha: 0.3),
-            width: 1.5,
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
           boxShadow: [
             if (isActive || isEndCall)
               BoxShadow(
@@ -553,11 +534,7 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProvider
               ),
           ],
         ),
-        child: Icon(
-          icon,
-          color: Colors.white,
-          size: 24.w,
-        ),
+        child: Icon(icon, color: Colors.white, size: 24.w),
       ),
     );
   }

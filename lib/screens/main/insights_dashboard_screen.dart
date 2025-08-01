@@ -12,7 +12,8 @@ class InsightsDashboardScreen extends StatefulWidget {
   const InsightsDashboardScreen({super.key});
 
   @override
-  State<InsightsDashboardScreen> createState() => _InsightsDashboardScreenState();
+  State<InsightsDashboardScreen> createState() =>
+      _InsightsDashboardScreenState();
 }
 
 class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
@@ -21,19 +22,19 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
   late AnimationController _slideController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  
+
   String _selectedTimeRange = 'Last 7 days';
   final List<String> _timeRanges = ['Last 7 days', 'Last 30 days', 'All Time'];
 
   @override
   void initState() {
     super.initState();
-    
+
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -42,18 +43,12 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
 
     _fadeController.forward();
     Future.delayed(const Duration(milliseconds: 200), () {
@@ -71,7 +66,7 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text(
           'Insights Dashboard',
@@ -127,16 +122,7 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppTheme.background,
-              Color(0xFFF8F9FA),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        decoration: const BoxDecoration(color: Colors.black),
         child: Consumer<FirebaseAppState>(
           builder: (context, appState, child) {
             return FadeTransition(
@@ -159,19 +145,19 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
                           // Weekly Summary Card
                           _buildWeeklySummaryCard(context, appState),
                           SizedBox(height: 32.h),
-                          
+
                           // Communication Trends Chart
                           _buildCommunicationTrendsCard(context, appState),
                           SizedBox(height: 32.h),
-                          
+
                           // Reflections & Exercises Panel
                           _buildReflectionsPanel(context, appState),
                           SizedBox(height: 32.h),
-                          
+
                           // Motivational Feedback Block
                           _buildMotivationalFeedback(context, appState),
                           SizedBox(height: 32.h),
-                          
+
                           // Action Buttons
                           _buildActionButtons(context),
                           SizedBox(height: 24.h),
@@ -188,9 +174,12 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
     );
   }
 
-  Widget _buildWeeklySummaryCard(BuildContext context, FirebaseAppState appState) {
+  Widget _buildWeeklySummaryCard(
+    BuildContext context,
+    FirebaseAppState appState,
+  ) {
     final weeklyStats = _calculateWeeklyStats(appState);
-    
+
     return AnimatedCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,12 +190,7 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppTheme.successGreen.withValues(alpha: 0.2),
-                      AppTheme.primary.withValues(alpha: 0.1),
-                    ],
-                  ),
+                  color: AppTheme.successGreen.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(AppTheme.radiusM),
                 ),
                 child: Icon(
@@ -242,9 +226,9 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
               ),
             ],
           ),
-          
+
           SizedBox(height: 24.h),
-          
+
           // Stats Grid
           if (weeklyStats['totalSessions'] > 0) ...[
             Row(
@@ -280,20 +264,20 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
                 ),
               ],
             ),
-            
+
             SizedBox(height: 16.h),
-            
+
             // Improvement indicator
-            if (weeklyStats['improvement'] != null) 
+            if (weeklyStats['improvement'] != null)
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: weeklyStats['improvement'] > 0 
+                  color: weeklyStats['improvement'] > 0
                       ? AppTheme.successGreen.withValues(alpha: 0.1)
                       : AppTheme.accent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppTheme.radiusM),
                   border: Border.all(
-                    color: weeklyStats['improvement'] > 0 
+                    color: weeklyStats['improvement'] > 0
                         ? AppTheme.successGreen.withValues(alpha: 0.3)
                         : AppTheme.accent.withValues(alpha: 0.3),
                     width: 1,
@@ -302,10 +286,10 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
                 child: Row(
                   children: [
                     Icon(
-                      weeklyStats['improvement'] > 0 
+                      weeklyStats['improvement'] > 0
                           ? Icons.trending_up_rounded
                           : Icons.trending_flat_rounded,
-                      color: weeklyStats['improvement'] > 0 
+                      color: weeklyStats['improvement'] > 0
                           ? AppTheme.successGreen
                           : AppTheme.accent,
                       size: 20.sp,
@@ -371,16 +355,19 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
     );
   }
 
-  Widget _buildStatCard(BuildContext context, String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppTheme.radiusM),
-        border: Border.all(
-          color: color.withValues(alpha: 0.2),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
       ),
       child: Column(
         children: [
@@ -390,11 +377,7 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
               color: color.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 20.sp,
-            ),
+            child: Icon(icon, color: color, size: 20.sp),
           ),
           SizedBox(height: 8.h),
           Text(
@@ -408,10 +391,7 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
           SizedBox(height: 2.h),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: AppTheme.textSecondary,
-            ),
+            style: TextStyle(fontSize: 12.sp, color: AppTheme.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -419,7 +399,10 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
     );
   }
 
-  Widget _buildCommunicationTrendsCard(BuildContext context, FirebaseAppState appState) {
+  Widget _buildCommunicationTrendsCard(
+    BuildContext context,
+    FirebaseAppState appState,
+  ) {
     return AnimatedCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -459,7 +442,10 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
               GestureDetector(
                 onTap: _showTimeRangeSelector,
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 6.h,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppTheme.radiusS),
@@ -491,9 +477,9 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
               ),
             ],
           ),
-          
+
           SizedBox(height: 24.h),
-          
+
           // Chart container
           Container(
             height: 220.h,
@@ -501,10 +487,7 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
             decoration: BoxDecoration(
               color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusL),
-              border: Border.all(
-                color: AppTheme.borderColor,
-                width: 1,
-              ),
+              border: Border.all(color: AppTheme.borderColor, width: 1),
             ),
             child: _buildEnhancedChart(context, appState),
           ),
@@ -513,10 +496,9 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
     );
   }
 
-
   Widget _buildEnhancedChart(BuildContext context, FirebaseAppState appState) {
     final sessions = _getFilteredSessions(appState);
-    
+
     if (sessions.isEmpty) {
       return _buildEmptyChartState();
     }
@@ -529,10 +511,7 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
             show: true,
             drawVerticalLine: false,
             getDrawingHorizontalLine: (value) {
-              return FlLine(
-                color: AppTheme.borderColor,
-                strokeWidth: 1,
-              );
+              return FlLine(color: AppTheme.borderColor, strokeWidth: 1);
             },
           ),
           titlesData: FlTitlesData(
@@ -645,20 +624,20 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
           SizedBox(height: 4.h),
           Text(
             'Complete sessions to see trends',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: AppTheme.textTertiary,
-            ),
+            style: TextStyle(fontSize: 14.sp, color: AppTheme.textTertiary),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildReflectionsPanel(BuildContext context, FirebaseAppState appState) {
+  Widget _buildReflectionsPanel(
+    BuildContext context,
+    FirebaseAppState appState,
+  ) {
     final reflections = _getRecentReflections(appState);
     final exercises = _getAIExercises();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -694,19 +673,21 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
                   ),
                 ],
               ),
-              
+
               SizedBox(height: 20.h),
-              
-              if (reflections.isEmpty) 
+
+              if (reflections.isEmpty)
                 _buildEmptyReflectionsState()
               else
-                ...reflections.map((reflection) => _buildReflectionCard(reflection)),
+                ...reflections.map(
+                  (reflection) => _buildReflectionCard(reflection),
+                ),
             ],
           ),
         ),
-        
+
         SizedBox(height: 20.h),
-        
+
         // AI Exercises section
         AnimatedCard(
           child: Column(
@@ -739,9 +720,9 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
                   ),
                 ],
               ),
-              
+
               SizedBox(height: 20.h),
-              
+
               ...exercises.map((exercise) => _buildExerciseCard(exercise)),
             ],
           ),
@@ -772,10 +753,7 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
           SizedBox(height: 4.h),
           Text(
             'Complete sessions and save your thoughts',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: AppTheme.textTertiary,
-            ),
+            style: TextStyle(fontSize: 14.sp, color: AppTheme.textTertiary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -790,10 +768,7 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusM),
-        border: Border.all(
-          color: AppTheme.borderColor,
-          width: 1,
-        ),
+        border: Border.all(color: AppTheme.borderColor, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -811,10 +786,7 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
               SizedBox(width: 8.w),
               Text(
                 reflection['date'],
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: AppTheme.textTertiary,
-                ),
+                style: TextStyle(fontSize: 12.sp, color: AppTheme.textTertiary),
               ),
               const Spacer(),
               GestureDetector(
@@ -863,11 +835,7 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
               color: AppTheme.accent.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              exercise['icon'],
-              color: AppTheme.accent,
-              size: 16.sp,
-            ),
+            child: Icon(exercise['icon'], color: AppTheme.accent, size: 16.sp),
           ),
           SizedBox(width: 12.w),
           Expanded(
@@ -904,10 +872,13 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
     );
   }
 
-  Widget _buildMotivationalFeedback(BuildContext context, FirebaseAppState appState) {
+  Widget _buildMotivationalFeedback(
+    BuildContext context,
+    FirebaseAppState appState,
+  ) {
     final weeklyStats = _calculateWeeklyStats(appState);
     final message = _getMotivationalMessage(weeklyStats);
-    
+
     return AnimatedCard(
       child: Container(
         padding: EdgeInsets.all(20.w),
@@ -1017,24 +988,23 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
             children: [
               Text(
                 'Select Time Range',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w600),
               ),
               SizedBox(height: 20.h),
-              ..._timeRanges.map((range) => ListTile(
-                title: Text(range),
-                trailing: _selectedTimeRange == range 
-                    ? Icon(Icons.check, color: AppTheme.primary)
-                    : null,
-                onTap: () {
-                  setState(() {
-                    _selectedTimeRange = range;
-                  });
-                  Navigator.pop(context);
-                },
-              )),
+              ..._timeRanges.map(
+                (range) => ListTile(
+                  title: Text(range),
+                  trailing: _selectedTimeRange == range
+                      ? Icon(Icons.check, color: AppTheme.primary)
+                      : null,
+                  onTap: () {
+                    setState(() {
+                      _selectedTimeRange = range;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
             ],
           ),
         );
@@ -1081,12 +1051,14 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
     // Mock reflections - in real app, get from Firebase
     return [
       {
-        'content': 'I learned that listening without interrupting really helps my partner feel heard...',
+        'content':
+            'I learned that listening without interrupting really helps my partner feel heard...',
         'date': 'Yesterday',
         'sessionId': '1',
       },
       {
-        'content': 'Today we practiced expressing gratitude and it brought us closer together.',
+        'content':
+            'Today we practiced expressing gratitude and it brought us closer together.',
         'date': '2 days ago',
         'sessionId': '2',
       },
@@ -1102,7 +1074,8 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
       },
       {
         'title': 'Share three gratitudes',
-        'description': 'Tell your partner three things you appreciate about them',
+        'description':
+            'Tell your partner three things you appreciate about them',
         'icon': Icons.favorite_rounded,
       },
       {
@@ -1128,7 +1101,7 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
   String _formatChartDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date).inDays;
-    
+
     if (difference == 0) return 'Today';
     if (difference == 1) return 'Yesterday';
     if (difference < 7) return '${date.day}/${date.month}';
@@ -1139,14 +1112,22 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
     final now = DateTime.now();
     final weekStart = now.subtract(Duration(days: now.weekday - 1));
     final weekEnd = weekStart.add(const Duration(days: 7));
-    
+
     final allSessions = appState.getRecentSessions(limit: 100);
-    final sessionsThisWeek = allSessions.where((session) =>
-        session.startTime.isAfter(weekStart) && session.startTime.isBefore(weekEnd)).toList();
-    
+    final sessionsThisWeek = allSessions
+        .where(
+          (session) =>
+              session.startTime.isAfter(weekStart) &&
+              session.startTime.isBefore(weekEnd),
+        )
+        .toList();
+
     final totalSessions = allSessions.length;
-    final totalMinutes = allSessions.fold<int>(0, (sum, session) => sum + session.duration.inMinutes);
-    
+    final totalMinutes = allSessions.fold<int>(
+      0,
+      (sum, session) => sum + session.duration.inMinutes,
+    );
+
     // Calculate streak
     int streak = 0;
     final today = DateTime(now.year, now.month, now.day);
@@ -1160,30 +1141,42 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
         );
         return sessionDate == checkDate;
       });
-      
+
       if (hasSessionOnDate) {
         streak++;
       } else {
         break;
       }
     }
-    
+
     double? improvement;
     if (allSessions.length >= 4) {
-      final recentScores = allSessions.take(2).map((s) => s.scores?.averageScore ?? 0.0).toList();
-      final olderScores = allSessions.skip(2).take(2).map((s) => s.scores?.averageScore ?? 0.0).toList();
-      
+      final recentScores = allSessions
+          .take(2)
+          .map((s) => s.scores?.averageScore ?? 0.0)
+          .toList();
+      final olderScores = allSessions
+          .skip(2)
+          .take(2)
+          .map((s) => s.scores?.averageScore ?? 0.0)
+          .toList();
+
       if (recentScores.isNotEmpty && olderScores.isNotEmpty) {
-        final recentAvg = recentScores.reduce((a, b) => a + b) / recentScores.length;
-        final olderAvg = olderScores.reduce((a, b) => a + b) / olderScores.length;
+        final recentAvg =
+            recentScores.reduce((a, b) => a + b) / recentScores.length;
+        final olderAvg =
+            olderScores.reduce((a, b) => a + b) / olderScores.length;
         improvement = ((recentAvg - olderAvg) / olderAvg * 100);
       }
     }
-    
+
     final averageScore = allSessions.isNotEmpty
-        ? allSessions.map((s) => s.scores?.averageScore ?? 0.0).reduce((a, b) => a + b) / allSessions.length
+        ? allSessions
+                  .map((s) => s.scores?.averageScore ?? 0.0)
+                  .reduce((a, b) => a + b) /
+              allSessions.length
         : 0.0;
-    
+
     return {
       'sessionsThisWeek': sessionsThisWeek.length,
       'totalSessions': totalSessions,

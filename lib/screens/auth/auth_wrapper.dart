@@ -19,17 +19,9 @@ class AuthWrapper extends StatelessWidget {
         // Show loading screen while initializing
         if (appState.isLoading) {
           return Scaffold(
+            backgroundColor: Colors.black,
             body: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFF667eea),
-                    Color(0xFF764ba2),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
+              decoration: const BoxDecoration(color: Colors.black),
               child: Center(
                 child: CircularProgressIndicator(
                   color: Colors.white,

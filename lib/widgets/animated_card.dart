@@ -40,22 +40,21 @@ class _AnimatedCardState extends State<AnimatedCard>
       duration: widget.animationDuration,
       vsync: this,
     );
-    
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.98,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
 
-    _elevationAnimation = Tween<double>(
-      begin: widget.elevation ?? 2,
-      end: (widget.elevation ?? 2) + 4,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.98).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    _elevationAnimation =
+        Tween<double>(
+          begin: widget.elevation ?? 2,
+          end: (widget.elevation ?? 2) + 4,
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeInOut,
+          ),
+        );
   }
 
   @override
@@ -98,7 +97,8 @@ class _AnimatedCardState extends State<AnimatedCard>
               margin: widget.margin ?? const EdgeInsets.all(AppTheme.spacingS),
               decoration: BoxDecoration(
                 color: widget.backgroundColor ?? AppTheme.surface,
-                borderRadius: widget.borderRadius ??
+                borderRadius:
+                    widget.borderRadius ??
                     BorderRadius.circular(AppTheme.radiusL),
                 boxShadow: [
                   BoxShadow(
@@ -120,8 +120,8 @@ class _AnimatedCardState extends State<AnimatedCard>
                 gradient: widget.backgroundColor == null
                     ? const LinearGradient(
                         colors: [
-                          AppTheme.surface,
-                          Color(0xFFFDFDFD),
+                          AppTheme.backgroundPrimary,
+                          AppTheme.backgroundPrimary,
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -129,8 +129,8 @@ class _AnimatedCardState extends State<AnimatedCard>
                     : null,
               ),
               child: Padding(
-                padding: widget.padding ??
-                    const EdgeInsets.all(AppTheme.spacingL),
+                padding:
+                    widget.padding ?? const EdgeInsets.all(AppTheme.spacingL),
                 child: widget.child,
               ),
             ),

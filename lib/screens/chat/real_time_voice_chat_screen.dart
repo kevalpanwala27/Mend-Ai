@@ -5,9 +5,9 @@ import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import '../../providers/firebase_app_state.dart';
 import '../../services/webrtc_service.dart';
-import '../../services/ai_service.dart';
+
 import '../../theme/app_theme.dart';
-import '../../widgets/gradient_button.dart';
+
 import '../resolution/post_resolution_screen.dart';
 import '../../widgets/mood_checkin_dialog.dart';
 
@@ -22,40 +22,40 @@ class RealTimeVoiceChatScreen extends StatefulWidget {
   });
 
   @override
-  State<RealTimeVoiceChatScreen> createState() => _RealTimeVoiceChatScreenState();
+  State<RealTimeVoiceChatScreen> createState() =>
+      _RealTimeVoiceChatScreenState();
 }
 
-class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with TickerProviderStateMixin {
+class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
+    with TickerProviderStateMixin {
   // WebRTC service
   late WebRTCService _webrtcService;
-  late AIService _aiService;
-  
+
   // Session state
   bool _isConnected = false;
   bool _isInitializing = true;
-  String? _partnerId;
-  String? _partnerName;
-  
+
   // Voice session state
   bool _isMuted = false;
   bool _showInterruptionWarning = false;
-  String _currentAIMessage = "What is the main concern you'd like to address today?";
+  String _currentAIMessage =
+      "What's something you've been wanting to say but haven't?";
   int _sessionMinutes = 0;
   int _sessionSeconds = 0;
   Timer? _sessionTimer;
   Timer? _aiPromptTimer;
-  
+
   // Mood check-in
   String? _selectedMood;
   bool _moodCheckedIn = false;
-  
+
   // Animation controllers
   late AnimationController _pulseController;
   late AnimationController _waveformController;
   late AnimationController _aiMessageController;
   late AnimationController _warningController;
   late AnimationController _connectionController;
-  
+
   // Animations
   late Animation<double> _pulseAnimation;
   late Animation<double> _waveformAnimation;
@@ -63,16 +63,18 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
   late Animation<double> _warningAnimation;
   late Animation<double> _connectionAnimation;
 
-  // AI message examples with context-aware responses
+  // AI message examples with context-aware responses - emotionally intelligent
   final List<String> _aiMessages = [
-    "What is the main concern you'd like to address today?",
-    "Can you reflect on what your partner just shared?",
-    "Let's take a deep breath together before moving forward.",
-    "How did that make you feel when your partner said that?",
-    "Can you both take a moment to appreciate something about each other?",
-    "What's one thing you could do differently in this situation?",
-    "How can you both work together to resolve this?",
-    "Take a moment to validate what your partner is experiencing.",
+    "What's something you've been wanting to say but haven't?",
+    "Can you reflect back what you just heard from your partner?",
+    "Let's pause and take a breath together — you're both doing great.",
+    "What feelings came up for you when you heard that?",
+    "Take a moment to appreciate something about your partner right now.",
+    "What's one small thing that could help you both feel more connected?",
+    "How might you approach this differently if you were your partner?",
+    "What would it feel like to really be heard in this moment?",
+    "Can you share what you need most from your partner right now?",
+    "What's one thing you're grateful for about your relationship?",
   ];
 
   @override
@@ -89,28 +91,28 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
 
   void _initializeServices() async {
     _webrtcService = WebRTCService();
-    _aiService = AIService();
-    
+
     // Set up WebRTC callbacks
     _webrtcService.addListener(_onWebRTCStateChanged);
-    
+
     try {
       // Initialize WebRTC connection
       final appState = Provider.of<FirebaseAppState>(context, listen: false);
       final currentUserId = appState.currentUserId ?? widget.userId;
-      
+
       await _webrtcService.initialize(widget.sessionCode, currentUserId);
-      
+
       setState(() {
         _isInitializing = false;
       });
-      
     } catch (e) {
       print('Error initializing WebRTC: $e');
       setState(() {
         _isInitializing = false;
       });
-      _showErrorDialog('Failed to initialize voice connection. Please try again.');
+      _showErrorDialog(
+        'Failed to initialize voice connection. Please try again.',
+      );
     }
   }
 
@@ -119,17 +121,17 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
+
     _waveformController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
+
     _aiMessageController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    
+
     _warningController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
@@ -140,52 +142,32 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
       vsync: this,
     );
 
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.1,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
-    _waveformAnimation = Tween<double>(
-      begin: 0.3,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _waveformController,
-      curve: Curves.easeOutQuart,
-    ));
+    _waveformAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(parent: _waveformController, curve: Curves.easeOutQuart),
+    );
 
-    _aiMessageAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _aiMessageController,
-      curve: Curves.easeOutCubic,
-    ));
+    _aiMessageAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _aiMessageController, curve: Curves.easeOutCubic),
+    );
 
-    _warningAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _warningController,
-      curve: Curves.easeOutQuart,
-    ));
+    _warningAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _warningController, curve: Curves.easeOutQuart),
+    );
 
-    _connectionAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _connectionController,
-      curve: Curves.easeInOut,
-    ));
+    _connectionAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _connectionController, curve: Curves.easeInOut),
+    );
 
     _aiMessageController.forward();
   }
 
   void _onWebRTCStateChanged() {
     if (!mounted) return;
-    
+
     setState(() {
       _isConnected = _webrtcService.isConnected;
     });
@@ -206,7 +188,8 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
     }
 
     // Handle audio visualization
-    if (_webrtcService.isLocalAudioActive || _webrtcService.isRemoteAudioActive) {
+    if (_webrtcService.isLocalAudioActive ||
+        _webrtcService.isRemoteAudioActive) {
       _pulseController.repeat(reverse: true);
       _waveformController.repeat(reverse: true);
     } else {
@@ -298,13 +281,11 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
 
     if (result == true && mounted) {
       await _webrtcService.endSession();
-      
+
       // Navigate to post-resolution with session data
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const PostResolutionScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const PostResolutionScreen()),
       );
     }
   }
@@ -331,20 +312,14 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Colors.black,
       body: _isInitializing ? _buildInitializingScreen() : _buildVoiceChatUI(),
     );
   }
 
   Widget _buildInitializingScreen() {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+      decoration: const BoxDecoration(color: Colors.black),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -369,13 +344,7 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
 
   Widget _buildVoiceChatUI() {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+      decoration: const BoxDecoration(color: Colors.black),
       child: SafeArea(
         child: Column(
           children: [
@@ -418,9 +387,9 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
               );
             },
           ),
-          
+
           SizedBox(width: 12.w),
-          
+
           // Session info
           Expanded(
             child: Column(
@@ -455,10 +424,7 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
                 color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(20.w),
               ),
-              child: Text(
-                _selectedMood!,
-                style: TextStyle(fontSize: 20.sp),
-              ),
+              child: Text(_selectedMood!, style: TextStyle(fontSize: 20.sp)),
             ),
         ],
       ),
@@ -487,15 +453,11 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.warning_rounded,
-                  color: Colors.white,
-                  size: 24.sp,
-                ),
+                Icon(Icons.warning_rounded, color: Colors.white, size: 24.sp),
                 SizedBox(width: 12.w),
                 Expanded(
                   child: Text(
-                    'Please take turns speaking for better communication',
+                    'Let\'s hold space — your partner was still sharing',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14.sp,
@@ -524,30 +486,35 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
               child: Container(
                 margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
                 padding: EdgeInsets.all(20.w),
-                decoration: AppTheme.glassmorphicDecoration(
-                  borderRadius: 24,
-                  blurRadius: 25,
-                ),
+                decoration: AppTheme.glassmorphicDecoration(borderRadius: 24),
                 child: Row(
                   children: [
                     Container(
-                      width: 48.w,
-                      height: 48.w,
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.primaryGradient(opacity: 0.8),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.primary.withValues(alpha: 0.3),
-                            blurRadius: 15,
-                            offset: const Offset(0, 4),
+                      width: 56.w,
+                      height: 56.w,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // AI Orb with pulsing glow
+                          AnimatedBuilder(
+                            animation: _aiMessageAnimation,
+                            builder: (context, child) {
+                              return Container(
+                                decoration: AppTheme.aiOrbDecoration(
+                                  color: AppTheme.aiActive,
+                                  isActive: true,
+                                  size: 56,
+                                ),
+                              );
+                            },
+                          ),
+                          // AI Icon
+                          Icon(
+                            Icons.psychology_rounded,
+                            color: AppTheme.textPrimary,
+                            size: 28.sp,
                           ),
                         ],
-                      ),
-                      child: Icon(
-                        Icons.psychology_rounded,
-                        color: Colors.white,
-                        size: 24.sp,
                       ),
                     ),
                     SizedBox(width: 16.w),
@@ -555,23 +522,46 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Mend AI',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.5,
-                            ),
+                          Row(
+                            children: [
+                              Container(
+                                width: 6.w,
+                                height: 6.w,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.aiActive,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppTheme.aiActive.withValues(
+                                        alpha: 0.6,
+                                      ),
+                                      blurRadius: 8,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(
+                                'Mend AI',
+                                style: TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ],
                           ),
                           SizedBox(height: 4.h),
                           Text(
                             _currentAIMessage,
                             style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 15.sp,
+                              color: AppTheme.textPrimary,
+                              fontSize: 16.sp,
                               fontWeight: FontWeight.w500,
-                              height: 1.4,
+                              height: 1.5,
+                              letterSpacing: 0.2,
                             ),
                           ),
                         ],
@@ -591,7 +581,7 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
     final appState = Provider.of<FirebaseAppState>(context);
     final currentPartner = appState.getCurrentPartner();
     final otherPartner = appState.getOtherPartner();
-    
+
     return Row(
       children: [
         // Partner A (Local User)
@@ -604,7 +594,7 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
           accentColor: AppTheme.partnerAColor,
           isLeft: true,
         ),
-        
+
         // Partner B (Remote Partner)
         _buildPartnerView(
           name: otherPartner?.name ?? 'Partner',
@@ -634,17 +624,9 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
         curve: Curves.easeInOut,
         margin: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
-          gradient: isSpeaking
-              ? LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    backgroundColor.withValues(alpha: 0.3),
-                    backgroundColor.withValues(alpha: 0.1),
-                  ],
-                )
-              : null,
-          color: isSpeaking ? null : backgroundColor.withValues(alpha: 0.2),
+          color: isSpeaking
+              ? backgroundColor.withValues(alpha: 0.3)
+              : backgroundColor.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(AppTheme.radiusXL),
           border: Border.all(
             color: isSpeaking
@@ -678,7 +660,6 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
         child: Container(
           decoration: AppTheme.glassmorphicDecoration(
             borderRadius: AppTheme.radiusXL,
-            blurRadius: 15,
           ),
           child: Padding(
             padding: EdgeInsets.all(28.w),
@@ -696,15 +677,7 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
                         height: 120.w,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [
-                              accentColor,
-                              accentColor.withValues(alpha: 0.8),
-                              accentColor.withValues(alpha: 0.6),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                          color: accentColor,
                           boxShadow: [
                             BoxShadow(
                               color: accentColor.withValues(alpha: 0.5),
@@ -730,9 +703,9 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
                     );
                   },
                 ),
-                
+
                 SizedBox(height: 24.h),
-                
+
                 // Name with enhanced typography
                 Text(
                   name,
@@ -744,9 +717,9 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 SizedBox(height: 8.h),
-                
+
                 // Speaking indicator with glow effect
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
@@ -755,13 +728,8 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
                     vertical: 8.h,
                   ),
                   decoration: BoxDecoration(
-                    gradient: isSpeaking
-                        ? LinearGradient(
-                            colors: [
-                              accentColor.withValues(alpha: 0.3),
-                              accentColor.withValues(alpha: 0.1),
-                            ],
-                          )
+                    color: isSpeaking
+                        ? accentColor.withValues(alpha: 0.3)
                         : null,
                     borderRadius: BorderRadius.circular(20.r),
                     boxShadow: isSpeaking
@@ -775,7 +743,11 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
                         : null,
                   ),
                   child: Text(
-                    isSpeaking ? 'Speaking...' : (isLocal && _isMuted) ? 'Muted' : 'Listening',
+                    isSpeaking
+                        ? 'Speaking...'
+                        : (isLocal && _isMuted)
+                        ? 'Muted'
+                        : 'Listening',
                     style: TextStyle(
                       color: isSpeaking
                           ? Colors.white
@@ -787,9 +759,9 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
                     textAlign: TextAlign.center,
                   ),
                 ),
-                
+
                 SizedBox(height: 32.h),
-                
+
                 // Enhanced audio level visualization
                 SizedBox(
                   height: 90.h,
@@ -805,30 +777,6 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
     );
   }
 
-  Widget _buildWaveform(Color color, double level) {
-    return AnimatedBuilder(
-      animation: _waveformAnimation,
-      builder: (context, child) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: List.generate(5, (index) {
-            final height = (20 + (level * 60) * _waveformAnimation.value * (0.5 + math.Random(index).nextDouble() * 0.5)).h;
-            return Container(
-              width: 4.w,
-              height: height,
-              margin: EdgeInsets.symmetric(horizontal: 2.w),
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(2.w),
-              ),
-            );
-          }),
-        );
-      },
-    );
-  }
-
   Widget _buildEnhancedWaveform(Color color, double level) {
     return AnimatedBuilder(
       animation: _waveformAnimation,
@@ -837,23 +785,20 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: List.generate(8, (index) {
-            final height = (15 + (level * 75) * _waveformAnimation.value * (0.3 + math.Random(index).nextDouble() * 0.7)).h;
+            final height =
+                (15 +
+                        (level * 75) *
+                            _waveformAnimation.value *
+                            (0.3 + math.Random(index).nextDouble() * 0.7))
+                    .h;
             final opacity = 0.6 + (_waveformAnimation.value * 0.4);
-            
+
             return Container(
               width: 6.w,
               height: height,
               margin: EdgeInsets.symmetric(horizontal: 3.w),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [
-                    color.withValues(alpha: opacity),
-                    color.withValues(alpha: opacity * 0.6),
-                    color.withValues(alpha: opacity * 0.3),
-                  ],
-                ),
+                color: color.withValues(alpha: opacity),
                 borderRadius: BorderRadius.circular(3.w),
                 boxShadow: [
                   BoxShadow(
@@ -891,10 +836,7 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
   Widget _buildControlsFooter() {
     return Container(
       padding: EdgeInsets.all(32.w),
-      decoration: AppTheme.glassmorphicDecoration(
-        borderRadius: 0,
-        blurRadius: 20,
-      ),
+      decoration: AppTheme.glassmorphicDecoration(borderRadius: 0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -945,16 +887,7 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
           width: 70.w,
           height: 70.w,
           decoration: BoxDecoration(
-            gradient: backgroundColor != null
-                ? LinearGradient(
-                    colors: [
-                      backgroundColor,
-                      backgroundColor.withValues(alpha: 0.8),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : AppTheme.primaryGradient(opacity: 0.2),
+            color: backgroundColor ?? AppTheme.primary.withValues(alpha: 0.2),
             shape: BoxShape.circle,
             border: Border.all(
               color: backgroundColor != null
@@ -977,11 +910,7 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
               ),
             ],
           ),
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: 32.sp,
-          ),
+          child: Icon(icon, color: Colors.white, size: 32.sp),
         ),
       ),
     );
