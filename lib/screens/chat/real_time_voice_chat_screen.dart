@@ -517,47 +517,68 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
       builder: (context, child) {
         return Transform.translate(
           offset: Offset(0, (1 - _aiMessageAnimation.value) * 50),
-          child: Opacity(
-            opacity: _aiMessageAnimation.value.clamp(0.0, 1.0),
-            child: Container(
-              margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(AppTheme.radiusL),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  width: 1,
+          child: Transform.scale(
+            scale: 0.8 + (_aiMessageAnimation.value * 0.2),
+            child: Opacity(
+              opacity: _aiMessageAnimation.value.clamp(0.0, 1.0),
+              child: Container(
+                margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                padding: EdgeInsets.all(20.w),
+                decoration: AppTheme.glassmorphicDecoration(
+                  borderRadius: 24,
+                  blurRadius: 25,
                 ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40.w,
-                    height: 40.w,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.psychology_rounded,
-                      color: Colors.white,
-                      size: 20.sp,
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Text(
-                      _currentAIMessage,
-                      style: TextStyle(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48.w,
+                      height: 48.w,
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.primaryGradient(opacity: 0.8),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primary.withValues(alpha: 0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.psychology_rounded,
                         color: Colors.white,
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w500,
-                        height: 1.3,
+                        size: 24.sp,
                       ),
                     ),
-                  ),
-                ],
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Mend AI',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            _currentAIMessage,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w500,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -608,107 +629,176 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
     required bool isLeft,
   }) {
     return Expanded(
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
         margin: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-          border: isSpeaking
-              ? Border.all(
-                  color: accentColor,
-                  width: 2,
+          gradient: isSpeaking
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    backgroundColor.withValues(alpha: 0.3),
+                    backgroundColor.withValues(alpha: 0.1),
+                  ],
                 )
               : null,
-          boxShadow: isSpeaking
-              ? [
-                  BoxShadow(
-                    color: accentColor.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    spreadRadius: 4,
-                  ),
-                ]
-              : null,
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(24.w),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Profile section
-              AnimatedBuilder(
-                animation: _pulseAnimation,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: isSpeaking ? _pulseAnimation.value : 1.0,
-                    child: Container(
-                      width: 100.w,
-                      height: 100.w,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [
-                            accentColor,
-                            accentColor.withValues(alpha: 0.7),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: accentColor.withValues(alpha: 0.4),
-                            blurRadius: isSpeaking ? 20 : 10,
-                            spreadRadius: isSpeaking ? 5 : 0,
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.person,
-                        size: 50.sp,
-                        color: Colors.white,
-                      ),
-                    ),
-                  );
-                },
+          color: isSpeaking ? null : backgroundColor.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+          border: Border.all(
+            color: isSpeaking
+                ? accentColor.withValues(alpha: 0.8)
+                : Colors.white.withValues(alpha: 0.2),
+            width: isSpeaking ? 3 : 1,
+          ),
+          boxShadow: [
+            if (isSpeaking) ...[
+              BoxShadow(
+                color: accentColor.withValues(alpha: 0.4),
+                blurRadius: 30,
+                spreadRadius: 6,
+                offset: const Offset(0, 8),
               ),
-              
-              SizedBox(height: 20.h),
-              
-              // Name
-              Text(
-                name,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
+              BoxShadow(
+                color: accentColor.withValues(alpha: 0.2),
+                blurRadius: 60,
+                spreadRadius: 12,
+                offset: const Offset(0, 16),
               ),
-              
-              SizedBox(height: 8.h),
-              
-              // Speaking indicator
-              Text(
-                isSpeaking ? 'Speaking...' : (isLocal && _isMuted) ? 'Muted' : 'Listening',
-                style: TextStyle(
-                  color: isSpeaking
-                      ? accentColor
-                      : Colors.white.withValues(alpha: 0.7),
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14.sp,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              
-              SizedBox(height: 24.h),
-              
-              // Audio level visualization
-              SizedBox(
-                height: 80.h,
-                child: isSpeaking
-                    ? _buildWaveform(accentColor, audioLevel)
-                    : _buildInactiveWaveform(),
+            ] else ...[
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
             ],
+          ],
+        ),
+        child: Container(
+          decoration: AppTheme.glassmorphicDecoration(
+            borderRadius: AppTheme.radiusXL,
+            blurRadius: 15,
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(28.w),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Profile section with enhanced glow
+                AnimatedBuilder(
+                  animation: _pulseAnimation,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: isSpeaking ? _pulseAnimation.value : 1.0,
+                      child: Container(
+                        width: 120.w,
+                        height: 120.w,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              accentColor,
+                              accentColor.withValues(alpha: 0.8),
+                              accentColor.withValues(alpha: 0.6),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: accentColor.withValues(alpha: 0.5),
+                              blurRadius: isSpeaking ? 30 : 15,
+                              spreadRadius: isSpeaking ? 8 : 2,
+                              offset: const Offset(0, 6),
+                            ),
+                            if (isSpeaking)
+                              BoxShadow(
+                                color: accentColor.withValues(alpha: 0.3),
+                                blurRadius: 50,
+                                spreadRadius: 15,
+                                offset: const Offset(0, 12),
+                              ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.person_rounded,
+                          size: 56.sp,
+                          color: Colors.white,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                
+                SizedBox(height: 24.h),
+                
+                // Name with enhanced typography
+                Text(
+                  name,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22.sp,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                
+                SizedBox(height: 8.h),
+                
+                // Speaking indicator with glow effect
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: isSpeaking
+                        ? LinearGradient(
+                            colors: [
+                              accentColor.withValues(alpha: 0.3),
+                              accentColor.withValues(alpha: 0.1),
+                            ],
+                          )
+                        : null,
+                    borderRadius: BorderRadius.circular(20.r),
+                    boxShadow: isSpeaking
+                        ? [
+                            BoxShadow(
+                              color: accentColor.withValues(alpha: 0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Text(
+                    isSpeaking ? 'Speaking...' : (isLocal && _isMuted) ? 'Muted' : 'Listening',
+                    style: TextStyle(
+                      color: isSpeaking
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.8),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14.sp,
+                      letterSpacing: 0.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                
+                SizedBox(height: 32.h),
+                
+                // Enhanced audio level visualization
+                SizedBox(
+                  height: 90.h,
+                  child: isSpeaking
+                      ? _buildEnhancedWaveform(accentColor, audioLevel)
+                      : _buildInactiveWaveform(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -739,6 +829,47 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
     );
   }
 
+  Widget _buildEnhancedWaveform(Color color, double level) {
+    return AnimatedBuilder(
+      animation: _waveformAnimation,
+      builder: (context, child) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: List.generate(8, (index) {
+            final height = (15 + (level * 75) * _waveformAnimation.value * (0.3 + math.Random(index).nextDouble() * 0.7)).h;
+            final opacity = 0.6 + (_waveformAnimation.value * 0.4);
+            
+            return Container(
+              width: 6.w,
+              height: height,
+              margin: EdgeInsets.symmetric(horizontal: 3.w),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    color.withValues(alpha: opacity),
+                    color.withValues(alpha: opacity * 0.6),
+                    color.withValues(alpha: opacity * 0.3),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(3.w),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+
   Widget _buildInactiveWaveform() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -759,81 +890,99 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen> with 
 
   Widget _buildControlsFooter() {
     return Container(
-      padding: EdgeInsets.all(24.w),
+      padding: EdgeInsets.all(32.w),
+      decoration: AppTheme.glassmorphicDecoration(
+        borderRadius: 0,
+        blurRadius: 20,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           // Mute/Unmute button
-          GestureDetector(
+          _buildControlButton(
             onTap: _toggleMute,
-            child: Container(
-              width: 60.w,
-              height: 60.w,
-              decoration: BoxDecoration(
-                color: _isMuted
-                    ? AppTheme.interruptionColor
-                    : Colors.white.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  width: 1,
-                ),
-              ),
-              child: Icon(
-                _isMuted ? Icons.mic_off : Icons.mic,
-                color: Colors.white,
-                size: 24.sp,
-              ),
-            ),
+            icon: _isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
+            isActive: !_isMuted,
+            backgroundColor: _isMuted ? AppTheme.interruptionColor : null,
+            tooltip: _isMuted ? 'Unmute' : 'Mute',
           ),
 
           // New AI Prompt button
-          GestureDetector(
+          _buildControlButton(
             onTap: _showNewAIMessage,
-            child: Container(
-              width: 60.w,
-              height: 60.w,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  width: 1,
-                ),
-              ),
-              child: Icon(
-                Icons.psychology_rounded,
-                color: Colors.white,
-                size: 24.sp,
-              ),
-            ),
+            icon: Icons.psychology_rounded,
+            isActive: false,
+            tooltip: 'New AI Prompt',
           ),
 
           // End session button
-          GestureDetector(
+          _buildControlButton(
             onTap: _endSession,
-            child: Container(
-              width: 60.w,
-              height: 60.w,
-              decoration: BoxDecoration(
-                color: AppTheme.interruptionColor,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.interruptionColor.withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Icon(
-                Icons.call_end,
-                color: Colors.white,
-                size: 24.sp,
-              ),
-            ),
+            icon: Icons.call_end_rounded,
+            isActive: false,
+            backgroundColor: AppTheme.interruptionColor,
+            tooltip: 'End Session',
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildControlButton({
+    required VoidCallback onTap,
+    required IconData icon,
+    required bool isActive,
+    Color? backgroundColor,
+    required String tooltip,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          width: 70.w,
+          height: 70.w,
+          decoration: BoxDecoration(
+            gradient: backgroundColor != null
+                ? LinearGradient(
+                    colors: [
+                      backgroundColor,
+                      backgroundColor.withValues(alpha: 0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : AppTheme.primaryGradient(opacity: 0.2),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: backgroundColor != null
+                  ? backgroundColor.withValues(alpha: 0.6)
+                  : Colors.white.withValues(alpha: 0.4),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: backgroundColor != null
+                    ? backgroundColor.withValues(alpha: 0.4)
+                    : AppTheme.primary.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: 32.sp,
+          ),
+        ),
       ),
     );
   }

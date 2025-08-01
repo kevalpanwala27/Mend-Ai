@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Emotionally soothing color palette
@@ -21,6 +22,12 @@ class AppTheme {
   static const Color textTertiary = Color(0xFF718096); // Muted gray
   static const Color gradientStart = Color(0xFF6A9BD1); // Matching primary
   static const Color gradientEnd = Color(0xFFB8A9E0); // Matching lavender
+  
+  // Enhanced gradients for premium feel
+  static const Color gradientLightStart = Color(0xFFF8FAFF);
+  static const Color gradientLightEnd = Color(0xFFFDF7FB);
+  static const Color glassmorphicBg = Color(0x1AFFFFFF);
+  static const Color glassmorphicBorder = Color(0x33FFFFFF);
 
   // Spacing constants
   static const double spacingXS = 4.0;
@@ -81,7 +88,7 @@ class AppTheme {
       outline: borderColor,
     ),
     scaffoldBackgroundColor: background,
-    fontFamily: 'SF Pro Display',
+    fontFamily: GoogleFonts.inter().fontFamily,
     textTheme: const TextTheme(
       displayLarge: TextStyle(
         fontSize: 57,
@@ -307,4 +314,90 @@ class AppTheme {
       ),
     ),
   );
+
+  // Helper methods for premium UI components
+  static BoxDecoration glassmorphicDecoration({
+    double borderRadius = 20,
+    double blurRadius = 20,
+  }) {
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          glassmorphicBg,
+          glassmorphicBg.withValues(alpha: 0.8),
+        ],
+      ),
+      borderRadius: BorderRadius.circular(borderRadius),
+      border: Border.all(
+        color: glassmorphicBorder,
+        width: 1,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.1),
+          blurRadius: blurRadius,
+          offset: const Offset(0, 8),
+        ),
+      ],
+    );
+  }
+
+  static BoxDecoration cardDecoration({
+    Color? color,
+    double borderRadius = 20,
+    bool hasGlow = false,
+    Color? glowColor,
+  }) {
+    return BoxDecoration(
+      color: color ?? surface,
+      borderRadius: BorderRadius.circular(borderRadius),
+      boxShadow: [
+        BoxShadow(
+          color: hasGlow && glowColor != null
+              ? glowColor.withValues(alpha: 0.2)
+              : Colors.black.withValues(alpha: 0.08),
+          blurRadius: hasGlow ? 30 : 20,
+          offset: Offset(0, hasGlow ? 12 : 8),
+          spreadRadius: hasGlow ? 2 : 0,
+        ),
+        if (!hasGlow)
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+      ],
+    );
+  }
+
+  static LinearGradient primaryGradient({
+    AlignmentGeometry begin = Alignment.topLeft,
+    AlignmentGeometry end = Alignment.bottomRight,
+    double opacity = 1.0,
+  }) {
+    return LinearGradient(
+      begin: begin,
+      end: end,
+      colors: [
+        gradientStart.withValues(alpha: opacity),
+        gradientEnd.withValues(alpha: opacity),
+      ],
+    );
+  }
+
+  static LinearGradient subtleGradient({
+    AlignmentGeometry begin = Alignment.topCenter,
+    AlignmentGeometry end = Alignment.bottomCenter,
+  }) {
+    return LinearGradient(
+      begin: begin,
+      end: end,
+      colors: [
+        gradientLightStart,
+        gradientLightEnd,
+      ],
+    );
+  }
 }

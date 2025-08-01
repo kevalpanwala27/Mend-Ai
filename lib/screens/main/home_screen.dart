@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/gradient_button.dart';
@@ -122,35 +123,44 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   child: FadeTransition(
                     opacity: _fadeAnimation,
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppTheme.spacingL),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Welcome Section
-                          Semantics(
-                            label: 'Welcome Section',
-                            child: _buildWelcomeSection(context, appState),
+                      padding: EdgeInsets.all(AppTheme.spacingL.w),
+                      child: AnimationLimiter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: AnimationConfiguration.toStaggeredList(
+                            duration: const Duration(milliseconds: 800),
+                            childAnimationBuilder: (widget) => SlideAnimation(
+                              verticalOffset: 50.0,
+                              child: FadeInAnimation(child: widget),
+                            ),
+                            children: [
+                              // Welcome Section
+                              Semantics(
+                                label: 'Welcome Section',
+                                child: _buildWelcomeSection(context, appState),
+                              ),
+                              SizedBox(height: AppTheme.spacingXL.h),
+                              // Quick Stats Card
+                              Semantics(
+                                label: 'Quick Stats',
+                                child: _buildQuickStatsCard(context, appState),
+                              ),
+                              SizedBox(height: AppTheme.spacingXL.h),
+                              // Session Actions
+                              Semantics(
+                                label: 'Session Actions',
+                                child: _buildSessionActions(context),
+                              ),
+                              SizedBox(height: AppTheme.spacingXL.h),
+                              // Features Overview
+                              Semantics(
+                                label: 'Features Overview',
+                                child: _buildFeaturesOverview(context),
+                              ),
+                              SizedBox(height: AppTheme.spacingXL.h),
+                            ],
                           ),
-                          const SizedBox(height: AppTheme.spacingXL),
-                          // Quick Stats Card
-                          Semantics(
-                            label: 'Quick Stats',
-                            child: _buildQuickStatsCard(context, appState),
-                          ),
-                          const SizedBox(height: AppTheme.spacingXL),
-                          // Session Actions
-                          Semantics(
-                            label: 'Session Actions',
-                            child: _buildSessionActions(context),
-                          ),
-                          const SizedBox(height: AppTheme.spacingXL),
-                          // Features Overview
-                          Semantics(
-                            label: 'Features Overview',
-                            child: _buildFeaturesOverview(context),
-                          ),
-                          const SizedBox(height: AppTheme.spacingXL),
-                        ],
+                        ),
                       ),
                     ),
                   ),

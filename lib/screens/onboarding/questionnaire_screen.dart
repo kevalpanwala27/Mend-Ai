@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../models/partner.dart';
 import '../../widgets/gradient_button.dart';
@@ -639,53 +640,221 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
   Widget _buildGoalsPage() {
     return SingleChildScrollView(
       padding: EdgeInsets.all(24.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'What do you want to improve?',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Select all that apply to your relationship goals',
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          SizedBox(height: 32.h),
-
-          // Goal options
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: _goalOptions.map((goal) {
-              return FilterChip(
-                label: Text(goal),
-                selected: _relationshipGoals.contains(goal),
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected) {
-                      _relationshipGoals.add(goal);
-                    } else {
-                      _relationshipGoals.remove(goal);
-                    }
-                  });
-                },
-              );
-            }).toList(),
-          ),
-
-          SizedBox(height: 24.h),
-
-          // Custom goal
-          TextFormField(
-            decoration: const InputDecoration(
-              labelText: 'Other (Optional)',
-              hintText: 'Describe any other goals...',
+      child: AnimationLimiter(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: AnimationConfiguration.toStaggeredList(
+            duration: const Duration(milliseconds: 600),
+            childAnimationBuilder: (widget) => SlideAnimation(
+              verticalOffset: 50.0,
+              child: FadeInAnimation(child: widget),
             ),
-            maxLines: 2,
-            onChanged: (value) => setState(() => _customGoal = value),
+            children: [
+              // Header with premium styling
+              Container(
+                padding: EdgeInsets.all(28.w),
+                decoration: AppTheme.cardDecoration(
+                  hasGlow: true,
+                  glowColor: AppTheme.primary.withValues(alpha: 0.3),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 60.w,
+                      height: 60.w,
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.primaryGradient(),
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      child: Icon(
+                        Icons.favorite_rounded,
+                        color: Colors.white,
+                        size: 28.sp,
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                    Text(
+                      'What do you want to improve?',
+                      style: TextStyle(
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                        height: 1.2,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'Select all that apply to your relationship goals',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        color: AppTheme.textSecondary,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 32.h),
+
+              // Goal options with enhanced styling
+              Container(
+                padding: EdgeInsets.all(24.w),
+                decoration: AppTheme.cardDecoration(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Relationship Goals',
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                    Wrap(
+                      spacing: 12.w,
+                      runSpacing: 12.h,
+                      children: _goalOptions.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final goal = entry.value;
+                        final isSelected = _relationshipGoals.contains(goal);
+                        
+                        return AnimationConfiguration.staggeredList(
+                          position: index,
+                          duration: const Duration(milliseconds: 400),
+                          child: SlideAnimation(
+                            horizontalOffset: 30.0,
+                            child: FadeInAnimation(
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    if (isSelected) {
+                                      _relationshipGoals.remove(goal);
+                                    } else {
+                                      _relationshipGoals.add(goal);
+                                    }
+                                  });
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 16.h,
+                                    horizontal: 20.w,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: isSelected
+                                        ? AppTheme.primaryGradient()
+                                        : null,
+                                    color: isSelected ? null : AppTheme.background,
+                                    borderRadius: BorderRadius.circular(16.r),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? AppTheme.primary
+                                          : AppTheme.borderColor,
+                                      width: isSelected ? 2 : 1,
+                                    ),
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: AppTheme.primary.withValues(alpha: 0.3),
+                                              blurRadius: 12,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (isSelected)
+                                        Icon(
+                                          Icons.check_circle_rounded,
+                                          color: Colors.white,
+                                          size: 18.sp,
+                                        ),
+                                      if (isSelected) SizedBox(width: 8.w),
+                                      Text(
+                                        goal,
+                                        style: TextStyle(
+                                          fontSize: 14.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : AppTheme.textPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 24.h),
+
+              // Custom goal with enhanced styling
+              Container(
+                padding: EdgeInsets.all(24.w),
+                decoration: AppTheme.cardDecoration(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Other Goals (Optional)',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.background,
+                        borderRadius: BorderRadius.circular(16.r),
+                        border: Border.all(
+                          color: _customGoal.isNotEmpty 
+                              ? AppTheme.primary.withValues(alpha: 0.3)
+                              : AppTheme.borderColor,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: TextField(
+                        controller: _customGoalController,
+                        onChanged: (value) => setState(() => _customGoal = value),
+                        maxLines: 3,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: AppTheme.textPrimary,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Describe any other relationship goals you have...',
+                          hintStyle: TextStyle(
+                            color: AppTheme.textTertiary,
+                            fontSize: 14.sp,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.all(20.w),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -693,53 +862,231 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
   Widget _buildChallengesPage() {
     return SingleChildScrollView(
       padding: EdgeInsets.all(24.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'What challenges are you facing?',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Understanding your challenges helps us provide better guidance',
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          SizedBox(height: 32.h),
-
-          // Challenge options
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: _challengeOptions.map((challenge) {
-              return FilterChip(
-                label: Text(challenge),
-                selected: _currentChallenges.contains(challenge),
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected) {
-                      _currentChallenges.add(challenge);
-                    } else {
-                      _currentChallenges.remove(challenge);
-                    }
-                  });
-                },
-              );
-            }).toList(),
-          ),
-
-          SizedBox(height: 24.h),
-
-          // Custom challenge
-          TextFormField(
-            decoration: const InputDecoration(
-              labelText: 'Other (Optional)',
-              hintText: 'Describe any other challenges...',
+      child: AnimationLimiter(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: AnimationConfiguration.toStaggeredList(
+            duration: const Duration(milliseconds: 600),
+            childAnimationBuilder: (widget) => SlideAnimation(
+              verticalOffset: 50.0,
+              child: FadeInAnimation(child: widget),
             ),
-            maxLines: 2,
-            onChanged: (value) => setState(() => _customChallenge = value),
+            children: [
+              // Header with premium styling
+              Container(
+                padding: EdgeInsets.all(28.w),
+                decoration: AppTheme.cardDecoration(
+                  hasGlow: true,
+                  glowColor: AppTheme.secondary.withValues(alpha: 0.3),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 60.w,
+                      height: 60.w,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppTheme.secondary, AppTheme.accent],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      child: Icon(
+                        Icons.psychology_alt_rounded,
+                        color: Colors.white,
+                        size: 28.sp,
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                    Text(
+                      'What challenges are you facing?',
+                      style: TextStyle(
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                        height: 1.2,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'Understanding your challenges helps us provide better guidance',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        color: AppTheme.textSecondary,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 32.h),
+
+              // Challenge options with enhanced styling
+              Container(
+                padding: EdgeInsets.all(24.w),
+                decoration: AppTheme.cardDecoration(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Current Challenges',
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                    Wrap(
+                      spacing: 12.w,
+                      runSpacing: 12.h,
+                      children: _challengeOptions.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final challenge = entry.value;
+                        final isSelected = _currentChallenges.contains(challenge);
+                        
+                        return AnimationConfiguration.staggeredList(
+                          position: index,
+                          duration: const Duration(milliseconds: 400),
+                          child: SlideAnimation(
+                            horizontalOffset: 30.0,
+                            child: FadeInAnimation(
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    if (isSelected) {
+                                      _currentChallenges.remove(challenge);
+                                    } else {
+                                      _currentChallenges.add(challenge);
+                                    }
+                                  });
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 16.h,
+                                    horizontal: 20.w,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: isSelected
+                                        ? LinearGradient(
+                                            colors: [AppTheme.secondary, AppTheme.accent],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          )
+                                        : null,
+                                    color: isSelected ? null : AppTheme.background,
+                                    borderRadius: BorderRadius.circular(16.r),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? AppTheme.secondary
+                                          : AppTheme.borderColor,
+                                      width: isSelected ? 2 : 1,
+                                    ),
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: AppTheme.secondary.withValues(alpha: 0.3),
+                                              blurRadius: 12,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (isSelected)
+                                        Icon(
+                                          Icons.check_circle_rounded,
+                                          color: Colors.white,
+                                          size: 18.sp,
+                                        ),
+                                      if (isSelected) SizedBox(width: 8.w),
+                                      Flexible(
+                                        child: Text(
+                                          challenge,
+                                          style: TextStyle(
+                                            fontSize: 14.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color: isSelected
+                                                ? Colors.white
+                                                : AppTheme.textPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 24.h),
+
+              // Custom challenge with enhanced styling
+              Container(
+                padding: EdgeInsets.all(24.w),
+                decoration: AppTheme.cardDecoration(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Other Challenges (Optional)',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.background,
+                        borderRadius: BorderRadius.circular(16.r),
+                        border: Border.all(
+                          color: _customChallenge.isNotEmpty 
+                              ? AppTheme.secondary.withValues(alpha: 0.3)
+                              : AppTheme.borderColor,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: TextField(
+                        controller: _customChallengeController,
+                        onChanged: (value) => setState(() => _customChallenge = value),
+                        maxLines: 3,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: AppTheme.textPrimary,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Describe any other challenges you\'re facing...',
+                          hintStyle: TextStyle(
+                            color: AppTheme.textTertiary,
+                            fontSize: 14.sp,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.all(20.w),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -780,7 +1127,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Column(

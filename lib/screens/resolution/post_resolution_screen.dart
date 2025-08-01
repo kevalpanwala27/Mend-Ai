@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
+import 'package:confetti/confetti.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../services/ai_service.dart';
 import '../../theme/app_theme.dart';
@@ -27,6 +28,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
   late Animation<double> _heartAnimation;
   late Animation<double> _sparkleAnimation;
   late Animation<double> _fadeAnimation;
+  late ConfettiController _confettiController;
 
   int _currentPage = 0;
   String _gratitudeResponse = '';
@@ -43,6 +45,8 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
   }
 
   void _setupAnimations() {
+    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
+    
     _heartAnimationController = AnimationController(
       duration: const Duration(milliseconds: 2000),
       vsync: this,
@@ -87,6 +91,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
     _heartAnimationController.repeat(reverse: true);
     _sparkleController.forward();
     _fadeController.forward();
+    _confettiController.play();
 
     showDialog(
       context: context,
@@ -265,11 +270,13 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
         final currentPartner = appState.getCurrentPartner();
         final otherPartner = appState.getOtherPartner();
 
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Resolution Complete'),
-            automaticallyImplyLeading: false,
-          ),
+        return Stack(
+          children: [
+            Scaffold(
+              appBar: AppBar(
+                title: const Text('Resolution Complete'),
+                automaticallyImplyLeading: false,
+              ),
           body: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -389,6 +396,24 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
               ),
             ),
           ),
+            ),
+            
+            // Confetti overlay
+            Align(
+              alignment: Alignment.topCenter,
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirectionality: BlastDirectionality.explosive,
+                shouldLoop: false,
+                colors: const [
+                  AppTheme.primary,
+                  AppTheme.secondary,
+                  AppTheme.accent,
+                  Colors.pink,
+                ],
+              ),
+            ),
+          ],
         );
       },
     );
@@ -1388,6 +1413,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
 
   @override
   void dispose() {
+    _confettiController.dispose();
     _heartAnimationController.dispose();
     _sparkleController.dispose();
     _fadeController.dispose();

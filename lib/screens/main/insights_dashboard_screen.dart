@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/gradient_button.dart';
@@ -145,29 +146,38 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   padding: EdgeInsets.all(24.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Weekly Summary Card
-                      _buildWeeklySummaryCard(context, appState),
-                      SizedBox(height: 32.h),
-                      
-                      // Communication Trends Chart
-                      _buildCommunicationTrendsCard(context, appState),
-                      SizedBox(height: 32.h),
-                      
-                      // Reflections & Exercises Panel
-                      _buildReflectionsPanel(context, appState),
-                      SizedBox(height: 32.h),
-                      
-                      // Motivational Feedback Block
-                      _buildMotivationalFeedback(context, appState),
-                      SizedBox(height: 32.h),
-                      
-                      // Action Buttons
-                      _buildActionButtons(context),
-                      SizedBox(height: 24.h),
-                    ],
+                  child: AnimationLimiter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: AnimationConfiguration.toStaggeredList(
+                        duration: const Duration(milliseconds: 800),
+                        childAnimationBuilder: (widget) => SlideAnimation(
+                          verticalOffset: 80.0,
+                          child: FadeInAnimation(child: widget),
+                        ),
+                        children: [
+                          // Weekly Summary Card
+                          _buildWeeklySummaryCard(context, appState),
+                          SizedBox(height: 32.h),
+                          
+                          // Communication Trends Chart
+                          _buildCommunicationTrendsCard(context, appState),
+                          SizedBox(height: 32.h),
+                          
+                          // Reflections & Exercises Panel
+                          _buildReflectionsPanel(context, appState),
+                          SizedBox(height: 32.h),
+                          
+                          // Motivational Feedback Block
+                          _buildMotivationalFeedback(context, appState),
+                          SizedBox(height: 32.h),
+                          
+                          // Action Buttons
+                          _buildActionButtons(context),
+                          SizedBox(height: 24.h),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

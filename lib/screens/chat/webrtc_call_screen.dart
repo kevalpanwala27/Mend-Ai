@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../theme/app_theme.dart';
 
 class WebRTCCallScreen extends StatefulWidget {
   final String sessionCode;
@@ -18,7 +19,7 @@ class WebRTCCallScreen extends StatefulWidget {
   State<WebRTCCallScreen> createState() => _WebRTCCallScreenState();
 }
 
-class _WebRTCCallScreenState extends State<WebRTCCallScreen> {
+class _WebRTCCallScreenState extends State<WebRTCCallScreen> with TickerProviderStateMixin {
   final _firestore = FirebaseFirestore.instance;
   MediaStream? _localStream;
   RTCVideoRenderer _localRenderer = RTCVideoRenderer();
@@ -31,12 +32,45 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> {
   Map<String, MediaStream> _remoteStreams = {};
   Map<String, RTCVideoRenderer> _remoteRenderers = {};
   late final String _selfId;
+  
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
     _selfId = widget.userId;
     _localRenderer.initialize();
+    
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    
+    _pulseAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.05,
+    ).animate(CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    ));
+    
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeOut,
+    ));
+    
+    _pulseController.repeat(reverse: true);
+    _fadeController.forward();
     _initGroupCall();
   }
 
@@ -172,6 +206,8 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> {
 
   @override
   void dispose() {
+    _pulseController.dispose();
+    _fadeController.dispose();
     _localRenderer.dispose();
     _localStream?.dispose();
     for (final pc in _peerConnections.values) {
@@ -213,63 +249,315 @@ class _WebRTCCallScreenState extends State<WebRTCCallScreen> {
   }
 
   void _hangUp() {
-    Navigator.pop(context);
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Group Video Call')),
-      body: Column(
+      backgroundColor: const Color(0xFF1A1A1A),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.videocam_rounded,
+                color: AppTheme.primary,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Video Call',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Column(
+          children: [
+            // Status indicator
+            if (!_callActive) _buildConnectingIndicator(),
+            
+            // Video grid
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(16.w),
+                child: _buildVideoGrid(),
+              ),
+            ),
+            
+            // Controls
+            _buildControlPanel(),
+            
+            SizedBox(height: 32.h),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildConnectingIndicator() {
+    return Container(
+      margin: EdgeInsets.all(16.w),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: AppTheme.secondary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(
+          color: AppTheme.secondary.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Local video
-          Padding(
-            padding: EdgeInsets.all(8.w),
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: RTCVideoView(_localRenderer, mirror: true),
+          ScaleTransition(
+            scale: _pulseAnimation,
+            child: Container(
+              width: 8.w,
+              height: 8.w,
+              decoration: const BoxDecoration(
+                color: AppTheme.secondary,
+                shape: BoxShape.circle,
+              ),
             ),
           ),
-          // Remote videos
-          Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              children: [
-                for (final id in _remoteRenderers.keys)
-                  Padding(
-                    padding: EdgeInsets.all(8.w),
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: RTCVideoView(_remoteRenderers[id]!),
-                    ),
-                  ),
-              ],
+          SizedBox(width: 8.w),
+          Text(
+            'Connecting...',
+            style: TextStyle(
+              color: AppTheme.secondary,
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w500,
             ),
-          ),
-          // Controls
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                icon: Icon(_micOn ? Icons.mic : Icons.mic_off),
-                onPressed: _toggleMic,
-                iconSize: 36.sp,
-              ),
-              SizedBox(width: 24.w),
-              IconButton(
-                icon: Icon(_videoOn ? Icons.videocam : Icons.videocam_off),
-                onPressed: _toggleVideo,
-                iconSize: 36.sp,
-              ),
-              SizedBox(width: 24.w),
-              IconButton(
-                icon: const Icon(Icons.call_end, color: Colors.red),
-                onPressed: _hangUp,
-                iconSize: 36.sp,
-              ),
-            ],
           ),
         ],
+      ),
+    );
+  }
+  
+  Widget _buildVideoGrid() {
+    final remoteCount = _remoteRenderers.length;
+    
+    if (remoteCount == 0) {
+      // Only local video
+      return Center(
+        child: _buildVideoTile(
+          _localRenderer,
+          'You',
+          isLocal: true,
+        ),
+      );
+    }
+    
+    return Column(
+      children: [
+        // Local video (smaller, top-right)
+        Align(
+          alignment: Alignment.topRight,
+          child: Container(
+            width: 120.w,
+            height: 160.h,
+            margin: EdgeInsets.only(bottom: 16.h),
+            child: _buildVideoTile(
+              _localRenderer,
+              'You',
+              isLocal: true,
+              isSmall: true,
+            ),
+          ),
+        ),
+        
+        // Remote videos (main grid)
+        Expanded(
+          child: GridView.count(
+            crossAxisCount: remoteCount > 1 ? 2 : 1,
+            childAspectRatio: 0.75,
+            mainAxisSpacing: 12.w,
+            crossAxisSpacing: 12.w,
+            children: _remoteRenderers.entries.map((entry) {
+              return _buildVideoTile(
+                entry.value,
+                'Partner',
+                isLocal: false,
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildVideoTile(
+    RTCVideoRenderer renderer,
+    String label, {
+    bool isLocal = false,
+    bool isSmall = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(isSmall ? 12.r : 20.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(isSmall ? 12.r : 20.r),
+        child: Stack(
+          children: [
+            // Video view
+            Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: const Color(0xFF2A2A2A),
+              child: RTCVideoView(
+                renderer,
+                mirror: isLocal,
+                objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+              ),
+            ),
+            
+            // Overlay gradient
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.3),
+                  ],
+                ),
+              ),
+            ),
+            
+            // Label
+            Positioned(
+              bottom: isSmall ? 8.h : 16.h,
+              left: isSmall ? 8.w : 16.w,
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSmall ? 8.w : 12.w,
+                  vertical: isSmall ? 4.h : 6.h,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(isSmall ? 8.r : 12.r),
+                ),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmall ? 10.sp : 12.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildControlPanel() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 24.w),
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(24.r),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildControlButton(
+            icon: _micOn ? Icons.mic_rounded : Icons.mic_off_rounded,
+            isActive: _micOn,
+            onPressed: _toggleMic,
+            activeColor: AppTheme.primary,
+            inactiveColor: Colors.red,
+          ),
+          _buildControlButton(
+            icon: _videoOn ? Icons.videocam_rounded : Icons.videocam_off_rounded,
+            isActive: _videoOn,
+            onPressed: _toggleVideo,
+            activeColor: AppTheme.primary,
+            inactiveColor: Colors.red,
+          ),
+          _buildControlButton(
+            icon: Icons.call_end_rounded,
+            isActive: false,
+            onPressed: _hangUp,
+            activeColor: Colors.red,
+            inactiveColor: Colors.red,
+            isEndCall: true,
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildControlButton({
+    required IconData icon,
+    required bool isActive,
+    required VoidCallback onPressed,
+    required Color activeColor,
+    required Color inactiveColor,
+    bool isEndCall = false,
+  }) {
+    final color = isActive ? activeColor : inactiveColor;
+    
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 56.w,
+        height: 56.w,
+        decoration: BoxDecoration(
+          color: isEndCall 
+              ? Colors.red.withValues(alpha: 0.15)
+              : color.withValues(alpha: 0.15),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: color.withValues(alpha: 0.3),
+            width: 1.5,
+          ),
+          boxShadow: [
+            if (isActive || isEndCall)
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+          ],
+        ),
+        child: Icon(
+          icon,
+          color: Colors.white,
+          size: 24.w,
+        ),
       ),
     );
   }
