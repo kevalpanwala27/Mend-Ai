@@ -3,8 +3,66 @@ const http = require("http");
 const socketIo = require("socket.io");
 const cors = require("cors");
 const helmet = require("helmet");
-const { generateToken, validateToken } = require("./zego-token-generator");
+const crypto = require('crypto');
 require("dotenv").config();
+
+// ZEGOCLOUD App credentials
+const APP_ID = 1390967091;
+const SERVER_SECRET = "c47a44d5ff4b82d828282ff1d4d510af";
+
+// ZEGOCLOUD Token Generator Functions
+function generateToken(userID, effectiveTimeInSeconds = 86400) {
+  if (!userID) {
+    throw new Error('userID is required');
+  }
+
+  const payload = {
+    iss: APP_ID,
+    exp: Math.floor(Date.now() / 1000) + effectiveTimeInSeconds,
+    userId: userID,
+    iat: Math.floor(Date.now() / 1000),
+  };
+
+  const header = {
+    alg: 'HS256',
+    typ: 'JWT'
+  };
+
+  const encodedHeader = base64UrlEncode(JSON.stringify(header));
+  const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+
+  const signature = crypto
+    .createHmac('sha256', SERVER_SECRET)
+    .update(`${encodedHeader}.${encodedPayload}`)
+    .digest('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+
+  return `${encodedHeader}.${encodedPayload}.${signature}`;
+}
+
+function base64UrlEncode(str) {
+  return Buffer.from(str)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+}
+
+function validateToken(token) {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+    const now = Math.floor(Date.now() / 1000);
+    
+    return payload.exp > now && payload.iss === APP_ID;
+  } catch (error) {
+    return false;
+  }
+}
 
 const app = express();
 const server = http.createServer(app);

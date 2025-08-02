@@ -93,12 +93,13 @@ class ZegoVoiceService extends ChangeNotifier {
   /// Configure audio settings for optimal voice calling
   Future<void> _configureAudioSettings() async {
     try {
-      // Set audio config for voice calling
+      // Set audio config for voice calling with echo cancellation
       ZegoAudioConfig audioConfig = ZegoAudioConfig.preset(ZegoAudioConfigPreset.HighQuality);
       await ZegoExpressEngine.instance.setAudioConfig(audioConfig);
 
-      // Enable speaker by default for mobile
-      await ZegoExpressEngine.instance.setAudioRouteToSpeaker(true);
+      // CRITICAL: Force disable speaker to prevent echo - use earpiece
+      await ZegoExpressEngine.instance.setAudioRouteToSpeaker(false);
+      _isSpeakerOn = false;
 
       // Enable microphone
       await ZegoExpressEngine.instance.muteMicrophone(false);
@@ -106,13 +107,25 @@ class ZegoVoiceService extends ChangeNotifier {
       // CRITICAL: Enable audio capture device
       await ZegoExpressEngine.instance.enableAudioCaptureDevice(true);
       
-      // CRITICAL: Enable headphone monitor for better audio experience
-      await ZegoExpressEngine.instance.enableHeadphoneMonitor(true);
+      // DISABLE headphone monitor to prevent echo feedback
+      await ZegoExpressEngine.instance.enableHeadphoneMonitor(false);
+      
+      // Enable echo cancellation (AEC) with maximum strength
+      await ZegoExpressEngine.instance.enableAEC(true);
+      
+      // Enable automatic gain control (AGC) to normalize audio levels
+      await ZegoExpressEngine.instance.enableAGC(true);
+      
+      // Enable noise suppression (ANS) for cleaner audio
+      await ZegoExpressEngine.instance.enableANS(true);
       
       // Enable sound level monitoring for real audio visualization
       await ZegoExpressEngine.instance.startSoundLevelMonitor();
 
-      developer.log('Audio settings configured for voice calling');
+      // Set audio capture volume (lower to reduce echo)
+      await ZegoExpressEngine.instance.setCaptureVolume(80);
+
+      developer.log('Audio settings configured for voice calling with enhanced echo prevention');
     } catch (e) {
       developer.log('Error configuring audio settings: $e');
     }
@@ -310,6 +323,36 @@ class ZegoVoiceService extends ChangeNotifier {
       await toggleMute();
     }
   }
+
+  /// Toggle speaker mode (for echo control) - WARNING: May cause echo
+  Future<void> toggleSpeaker() async {
+    try {
+      // SAFETY: Only allow speaker if user explicitly wants it (may cause echo)
+      if (!_isSpeakerOn) {
+        // Warning: enabling speaker can cause echo
+        developer.log('WARNING: Enabling speaker may cause echo. Use headphones!');
+      }
+      
+      await ZegoExpressEngine.instance.setAudioRouteToSpeaker(!_isSpeakerOn);
+      _isSpeakerOn = !_isSpeakerOn;
+      
+      // If speaker is enabled, reduce capture volume more to minimize echo
+      if (_isSpeakerOn) {
+        await ZegoExpressEngine.instance.setCaptureVolume(60);
+      } else {
+        await ZegoExpressEngine.instance.setCaptureVolume(80);
+      }
+      
+      developer.log('Speaker ${_isSpeakerOn ? 'enabled (echo risk)' : 'disabled (recommended)'}');
+      notifyListeners();
+    } catch (e) {
+      developer.log('Error toggling speaker: $e');
+    }
+  }
+
+  // Speaker state
+  bool _isSpeakerOn = false;
+  bool get isSpeakerOn => _isSpeakerOn;
 
   /// Start real audio monitoring for UI visualization
   void _startRealAudioMonitoring() {

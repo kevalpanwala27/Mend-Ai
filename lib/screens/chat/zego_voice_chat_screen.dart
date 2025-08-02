@@ -62,6 +62,7 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
   late Animation<double> _warningAnimation;
   late Animation<double> _connectionAnimation;
 
+
   // AI message examples with context-aware responses - emotionally intelligent
   final List<String> _aiMessages = [
     "What's something you've been wanting to say but haven't?",
@@ -112,17 +113,25 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
       // Get user info
       if (!mounted) return;
       final appState = Provider.of<FirebaseAppState>(context, listen: false);
-      final currentUserId = appState.currentUserId ?? widget.userId;
+      
+      // Generate unique user ID for this session to avoid conflicts
+      // Use Firebase UID + timestamp to ensure uniqueness
+      final firebaseUid = appState.user?.uid ?? widget.userId;
+      final sessionUserId = '${firebaseUid}_${DateTime.now().millisecondsSinceEpoch}';
+      
       final currentPartner = appState.getCurrentPartner();
       final userName = currentPartner?.name ?? 'User';
 
-      developer.log('=== STARTING ZEGO VOICE CALL ===');
-      developer.log('Room ID: ${widget.sessionCode}');
-      developer.log('User ID: $currentUserId');
-      developer.log('User Name: $userName');
+      print('=== STARTING ZEGO VOICE CALL ===');
+      print('Room ID: ${widget.sessionCode}');
+      print('User ID: $sessionUserId');
+      print('User Name: $userName');
+      print('DEBUG: appState.user?.uid = ${appState.user?.uid}');
+      print('DEBUG: widget.userId = ${widget.userId}');
+      print('DEBUG: appState.currentUserId = ${appState.currentUserId}');
 
       // Get secure token from your backend
-      String? token = await ZegoTokenService.generateToken(currentUserId, widget.sessionCode);
+      String? token = await ZegoTokenService.generateToken(sessionUserId, widget.sessionCode);
       
       if (token == null) {
         developer.log('WARNING: Could not get token from backend, joining without token');
@@ -131,7 +140,7 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
       }
 
       // Join voice room with token
-      await _zegoService.joinRoom(widget.sessionCode, currentUserId, userName, token: token);
+      await _zegoService.joinRoom(widget.sessionCode, sessionUserId, userName, token: token);
 
       setState(() {
         _isInitializing = false;
@@ -237,6 +246,7 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
     } else {
       _connectionController.reverse();
     }
+
   }
 
   void _startSessionTimer() {
@@ -294,87 +304,7 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
     });
   }
 
-  void _reconnect() async {
-    try {
-      developer.log('Manual reconnect triggered');
 
-      // Show loading indicator
-      setState(() {
-        _isInitializing = true;
-      });
-
-      // Force reconnection
-      await _zegoService.dispose();
-
-      // Reinitialize ZEGO
-      if (mounted) {
-        _initializeServices();
-      }
-
-      developer.log('Manual reconnect completed');
-    } catch (e) {
-      developer.log('Error during manual reconnect: $e');
-      setState(() {
-        _isInitializing = false;
-      });
-    }
-  }
-
-  void _debugAudio() async {
-    developer.log('=== MANUAL AUDIO DEBUG TRIGGERED ===');
-
-    // Run comprehensive diagnostics
-    await _zegoService.diagnoseAudioPipeline();
-    
-    // Check server health
-    final serverHealthy = await ZegoTokenService.checkServerHealth();
-
-    // Show debug info dialog
-    if (mounted) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Audio Debug'),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('🔗 Connected: ${_zegoService.isConnected}'),
-                Text('🏠 In Room: ${_zegoService.getAudioStats()['isInRoom']}'),
-                Text('🎤 Muted: ${_zegoService.isMuted}'),
-                Text('📢 Local Audio Active: ${_zegoService.isLocalAudioActive}'),
-                Text('📡 Remote Audio Active: ${_zegoService.isRemoteAudioActive}'),
-                Text('👥 Remote User Online: ${_zegoService.isRemoteUserOnline}'),
-                Text('💬 Partner Name: ${_zegoService.partnerName ?? 'None'}'),
-                Text('🔊 Local Level: ${(_zegoService.localAudioLevel * 100).toInt()}%'),
-                Text('📻 Remote Level: ${(_zegoService.remoteAudioLevel * 100).toInt()}%'),
-                Text('🌐 Server Health: ${serverHealthy ? "✅ OK" : "❌ Down"}'),
-                const SizedBox(height: 16),
-                const Text('Check console logs for detailed diagnostics.'),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                // Re-initialize if needed
-                if (!_zegoService.isConnected) {
-                  _reconnect();
-                }
-              },
-              child: const Text('Reconnect'),
-            ),
-          ],
-        ),
-      );
-    }
-  }
 
   void _endSession() async {
     final result = await showDialog<bool>(
@@ -462,13 +392,25 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
 
   Widget _buildVoiceChatUI() {
     return Container(
-      decoration: const BoxDecoration(color: Colors.black),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF1a1a2e),
+            Color(0xFF16213e),
+            Color(0xFF0f3460),
+          ],
+        ),
+      ),
       child: SafeArea(
         child: Column(
           children: [
             _buildHeader(),
             if (_showInterruptionWarning) _buildInterruptionWarning(),
+            SizedBox(height: 20.h),
             _buildAIMessageCard(),
+            SizedBox(height: 24.h),
             Expanded(child: _buildPartnerViews()),
             _buildControlsFooter(),
           ],
@@ -477,73 +419,116 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
     );
   }
 
+  // ========== OLD UI METHODS (RESTORED WITH WORKING LOGIC) ==========
+
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Connection status indicator
+          // Connection status with enhanced styling
           AnimatedBuilder(
             animation: _connectionAnimation,
             builder: (context, child) {
-              return Container(
-                width: 12.w,
-                height: 12.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _isConnected ? Colors.green : Colors.red,
-                  boxShadow: _isConnected
-                      ? [
-                          BoxShadow(
-                            color: Colors.green.withValues(alpha: 0.6),
-                            blurRadius: 8 * _connectionAnimation.value,
-                            spreadRadius: 2 * _connectionAnimation.value,
-                          ),
-                        ]
-                      : null,
+              return Transform.scale(
+                scale: 0.9 + (_connectionAnimation.value * 0.1),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  decoration: BoxDecoration(
+                    color: _isConnected
+                        ? AppTheme.successGreen.withValues(alpha: 0.2)
+                        : AppTheme.interruptionColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20.r),
+                    border: Border.all(
+                      color: _isConnected ? AppTheme.successGreen : AppTheme.interruptionColor,
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (_isConnected ? AppTheme.successGreen : AppTheme.interruptionColor)
+                            .withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 10.w,
+                        height: 10.w,
+                        decoration: BoxDecoration(
+                          color: _isConnected ? AppTheme.successGreen : AppTheme.interruptionColor,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: (_isConnected ? AppTheme.successGreen : AppTheme.interruptionColor)
+                                  .withValues(alpha: 0.6),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        _isConnected ? 'Connected' : 'Connecting...',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
           ),
 
-          SizedBox(width: 12.w),
-
-          // Session info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // Enhanced session timer with glow
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20.r),
+              border: Border.all(
+                color: AppTheme.primary.withValues(alpha: 0.4),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primary.withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
+                Icon(
+                  Icons.access_time_rounded,
+                  color: AppTheme.primary,
+                  size: 16.sp,
+                ),
+                SizedBox(width: 6.w),
                 Text(
-                  'Mend Session',
+                  '${_sessionMinutes.toString().padLeft(2, '0')}:${_sessionSeconds.toString().padLeft(2, '0')}',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  _isConnected
-                      ? '${_sessionMinutes.toString().padLeft(2, '0')}:${_sessionSeconds.toString().padLeft(2, '0')}'
-                      : 'Connecting...',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 14.sp,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'monospace',
+                    letterSpacing: 1.2,
                   ),
                 ),
               ],
             ),
           ),
-
-          // Mood indicator
-          if (_selectedMood != null)
-            Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(20.w),
-              ),
-              child: Text(_selectedMood!, style: TextStyle(fontSize: 20.sp)),
-            ),
         ],
       ),
     );
@@ -961,7 +946,7 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           // Mute/Unmute button
-          _buildControlButton(
+          _buildOldControlButton(
             onTap: _toggleMute,
             icon: _isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
             isActive: !_isMuted,
@@ -969,32 +954,25 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
             tooltip: _isMuted ? 'Unmute' : 'Mute',
           ),
 
+          // Speaker toggle button (echo warning)
+          _buildOldControlButton(
+            onTap: () => _zegoService.toggleSpeaker(),
+            icon: _zegoService.isSpeakerOn ? Icons.volume_up_rounded : Icons.volume_down_rounded,
+            isActive: _zegoService.isSpeakerOn,
+            backgroundColor: _zegoService.isSpeakerOn ? AppTheme.interruptionColor : null,
+            tooltip: _zegoService.isSpeakerOn ? 'Speaker On (Use Headphones!)' : 'Enable Speaker (May Echo)',
+          ),
+
           // New AI Prompt button
-          _buildControlButton(
+          _buildOldControlButton(
             onTap: _showNewAIMessage,
             icon: Icons.psychology_rounded,
             isActive: false,
             tooltip: 'New AI Prompt',
           ),
 
-          // Reconnect button (for connection issues)
-          _buildControlButton(
-            onTap: _reconnect,
-            icon: Icons.refresh_rounded,
-            isActive: false,
-            tooltip: 'Reconnect',
-          ),
-
-          // Debug Audio button
-          _buildControlButton(
-            onTap: _debugAudio,
-            icon: Icons.bug_report_rounded,
-            isActive: false,
-            tooltip: 'Debug Audio',
-          ),
-
           // End session button
-          _buildControlButton(
+          _buildOldControlButton(
             onTap: _endSession,
             icon: Icons.call_end_rounded,
             isActive: false,
@@ -1006,7 +984,7 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
     );
   }
 
-  Widget _buildControlButton({
+  Widget _buildOldControlButton({
     required VoidCallback onTap,
     required IconData icon,
     required bool isActive,
@@ -1051,6 +1029,15 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
       ),
     );
   }
+
+
+
+
+
+
+
+
+
 
   @override
   void dispose() {
