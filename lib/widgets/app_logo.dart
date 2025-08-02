@@ -74,9 +74,9 @@ class _AppLogoState extends State<AppLogo> with TickerProviderStateMixin {
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
                         colors: [
-                          AppTheme.primary.withOpacity(0.1),
-                          AppTheme.secondary.withOpacity(0.1),
-                          AppTheme.accent.withOpacity(0.1),
+                          AppTheme.primary.withValues(alpha: 0.1),
+                          AppTheme.secondary.withValues(alpha: 0.1),
+                          AppTheme.accent.withValues(alpha: 0.1),
                         ],
                         stops: const [0.0, 0.5, 1.0],
                       ),
@@ -106,7 +106,7 @@ class _AppLogoState extends State<AppLogo> with TickerProviderStateMixin {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primary.withOpacity(0.3),
+                        color: AppTheme.primary.withValues(alpha: 0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -124,7 +124,7 @@ class _AppLogoState extends State<AppLogo> with TickerProviderStateMixin {
                           color: Colors.white,
                           shadows: [
                             Shadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -142,14 +142,14 @@ class _AppLogoState extends State<AppLogo> with TickerProviderStateMixin {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                Colors.white.withOpacity(0.8),
-                                Colors.white.withOpacity(0.4),
+                                Colors.white.withValues(alpha: 0.8),
+                                Colors.white.withValues(alpha: 0.4),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(1.25),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 2,
                                 offset: const Offset(0, 1),
                               ),
@@ -166,14 +166,14 @@ class _AppLogoState extends State<AppLogo> with TickerProviderStateMixin {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                Colors.white.withOpacity(0.4),
-                                Colors.white.withOpacity(0.8),
+                                Colors.white.withValues(alpha: 0.4),
+                                Colors.white.withValues(alpha: 0.8),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(1.25),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 2,
                                 offset: const Offset(0, 1),
                               ),
@@ -193,7 +193,7 @@ class _AppLogoState extends State<AppLogo> with TickerProviderStateMixin {
                             gradient: LinearGradient(
                               colors: [
                                 AppTheme.secondary,
-                                AppTheme.secondary.withOpacity(0.8),
+                                AppTheme.secondary.withValues(alpha: 0.8),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -202,12 +202,12 @@ class _AppLogoState extends State<AppLogo> with TickerProviderStateMixin {
                             border: Border.all(color: Colors.white, width: 2.5),
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.secondary.withOpacity(0.3),
+                                color: AppTheme.secondary.withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 4,
                                 offset: const Offset(0, 1),
                               ),
@@ -225,7 +225,7 @@ class _AppLogoState extends State<AppLogo> with TickerProviderStateMixin {
                             gradient: LinearGradient(
                               colors: [
                                 AppTheme.primary,
-                                AppTheme.primary.withOpacity(0.8),
+                                AppTheme.primary.withValues(alpha: 0.8),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -234,12 +234,12 @@ class _AppLogoState extends State<AppLogo> with TickerProviderStateMixin {
                             border: Border.all(color: Colors.white, width: 2.5),
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.primary.withOpacity(0.3),
+                                color: AppTheme.primary.withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 4,
                                 offset: const Offset(0, 1),
                               ),

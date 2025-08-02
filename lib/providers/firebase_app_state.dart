@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:developer' as developer;
 import '../models/partner.dart';
 import '../models/communication_session.dart';
 import '../services/firebase_auth_service.dart';
@@ -55,7 +56,7 @@ class FirebaseAppState extends ChangeNotifier {
   Future<void> initialize() async {
     // Listen to auth state changes
     _authService.authStateChanges.listen((user) async {
-      print('Auth state changed: $user');
+      developer.log('Auth state changed: $user');
       _user = user;
       if (user != null) {
         await _loadUserData();
@@ -77,11 +78,11 @@ class FirebaseAppState extends ChangeNotifier {
 
   // Load user data from Firestore
   Future<void> _loadUserData() async {
-    print('Loading user data...');
+    developer.log('Loading user data...');
     try {
       // Load relationship data
       _relationshipData = await _relationshipService.getUserRelationship();
-      print('User data loaded:  [32m [1m [4m [7m$_relationshipData [0m');
+      developer.log('User data loaded:  [32m [1m [4m [7m$_relationshipData [0m');
       if (_relationshipData != null) {
         _isOnboardingComplete = true;
         // Determine current user ID based on relationship data
@@ -99,7 +100,7 @@ class FirebaseAppState extends ChangeNotifier {
           _relationshipData!['id'],
         );
       }
-      print(
+      developer.log(
         'Finished loading user data. Onboarding complete: $_isOnboardingComplete',
       );
     } catch (e) {
@@ -120,7 +121,7 @@ class FirebaseAppState extends ChangeNotifier {
   // Sign in with Google
   Future<String?> signInWithGoogle() async {
     final result = await _authService.signInWithGoogle();
-    print(
+    developer.log(
       'Current Firebase user after sign-in: ${FirebaseAuth.instance.currentUser}',
     );
     if (result.userCredential != null) {

@@ -5,7 +5,6 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../models/partner.dart';
 import '../../widgets/gradient_button.dart';
-import '../../widgets/animated_card.dart';
 import '../../widgets/loading_overlay.dart';
 import '../../theme/app_theme.dart';
 import '../main/home_screen.dart';
@@ -161,8 +160,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
       );
 
       await context.read<FirebaseAppState>().completeOnboarding(partner);
-      final appState = context.read<FirebaseAppState>();
-      final relationshipData = appState.relationshipData;
 
       if (mounted) {
         Navigator.pushReplacement(
@@ -352,15 +349,15 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                   width: double.infinity,
                   padding: EdgeInsets.all(32.w),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.12),
+                    color: AppTheme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(24.r),
                     border: Border.all(
-                      color: AppTheme.primary.withOpacity(0.15),
+                      color: AppTheme.primary.withValues(alpha: 0.15),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primary.withOpacity(0.1),
+                        color: AppTheme.primary.withValues(alpha: 0.1),
                         blurRadius: 24,
                         offset: const Offset(0, 8),
                       ),
@@ -373,7 +370,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                         width: 80.w,
                         height: 80.w,
                         decoration: BoxDecoration(
-                          color: AppTheme.primary.withOpacity(0.2),
+                          color: AppTheme.primary.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20.r),
                         ),
                         child: Icon(
@@ -430,12 +427,12 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                   borderRadius: BorderRadius.circular(20.r),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primary.withOpacity(0.08),
+                      color: AppTheme.primary.withValues(alpha: 0.08),
                       blurRadius: 20,
                       offset: const Offset(0, 4),
                     ),
                     BoxShadow(
-                      color: AppTheme.secondary.withOpacity(0.04),
+                      color: AppTheme.secondary.withValues(alpha: 0.04),
                       blurRadius: 40,
                       offset: const Offset(0, 8),
                     ),
@@ -547,12 +544,12 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                   borderRadius: BorderRadius.circular(20.r),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primary.withOpacity(0.08),
+                      color: AppTheme.primary.withValues(alpha: 0.08),
                       blurRadius: 20,
                       offset: const Offset(0, 4),
                     ),
                     BoxShadow(
-                      color: AppTheme.secondary.withOpacity(0.04),
+                      color: AppTheme.secondary.withValues(alpha: 0.04),
                       blurRadius: 40,
                       offset: const Offset(0, 8),
                     ),
@@ -598,7 +595,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                                           end: Alignment.bottomRight,
                                           colors: [
                                             AppTheme.primary,
-                                            AppTheme.primary.withOpacity(0.8),
+                                            AppTheme.primary.withValues(alpha: 0.8),
                                           ],
                                         )
                                       : null,
@@ -657,15 +654,15 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
               Container(
                 padding: EdgeInsets.all(28.w),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.12),
+                  color: AppTheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(24.r),
                   border: Border.all(
-                    color: AppTheme.primary.withOpacity(0.15),
+                    color: AppTheme.primary.withValues(alpha: 0.15),
                     width: 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primary.withOpacity(0.1),
+                      color: AppTheme.primary.withValues(alpha: 0.1),
                       blurRadius: 24,
                       offset: const Offset(0, 8),
                     ),
@@ -677,7 +674,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                       width: 60.w,
                       height: 60.w,
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withOpacity(0.2),
+                        color: AppTheme.primary.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(16.r),
                       ),
                       child: Icon(
@@ -721,12 +718,12 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                   borderRadius: BorderRadius.circular(20.r),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primary.withOpacity(0.08),
+                      color: AppTheme.primary.withValues(alpha: 0.08),
                       blurRadius: 20,
                       offset: const Offset(0, 4),
                     ),
                     BoxShadow(
-                      color: AppTheme.secondary.withOpacity(0.04),
+                      color: AppTheme.secondary.withValues(alpha: 0.04),
                       blurRadius: 40,
                       offset: const Offset(0, 8),
                     ),
@@ -782,7 +779,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                                             end: Alignment.bottomRight,
                                             colors: [
                                               AppTheme.primary,
-                                              AppTheme.primary.withOpacity(0.8),
+                                              AppTheme.primary.withValues(alpha: 0.8),
                                             ],
                                           )
                                         : null,
@@ -850,12 +847,12 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                   borderRadius: BorderRadius.circular(20.r),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primary.withOpacity(0.08),
+                      color: AppTheme.primary.withValues(alpha: 0.08),
                       blurRadius: 20,
                       offset: const Offset(0, 4),
                     ),
                     BoxShadow(
-                      color: AppTheme.secondary.withOpacity(0.04),
+                      color: AppTheme.secondary.withValues(alpha: 0.04),
                       blurRadius: 40,
                       offset: const Offset(0, 8),
                     ),
@@ -927,15 +924,15 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
               Container(
                 padding: EdgeInsets.all(28.w),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.12),
+                  color: AppTheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(24.r),
                   border: Border.all(
-                    color: AppTheme.primary.withOpacity(0.15),
+                    color: AppTheme.primary.withValues(alpha: 0.15),
                     width: 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primary.withOpacity(0.1),
+                      color: AppTheme.primary.withValues(alpha: 0.1),
                       blurRadius: 24,
                       offset: const Offset(0, 8),
                     ),
@@ -947,7 +944,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                       width: 60.w,
                       height: 60.w,
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withOpacity(0.2),
+                        color: AppTheme.primary.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(16.r),
                       ),
                       child: Icon(
@@ -991,12 +988,12 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                   borderRadius: BorderRadius.circular(20.r),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primary.withOpacity(0.08),
+                      color: AppTheme.primary.withValues(alpha: 0.08),
                       blurRadius: 20,
                       offset: const Offset(0, 4),
                     ),
                     BoxShadow(
-                      color: AppTheme.secondary.withOpacity(0.04),
+                      color: AppTheme.secondary.withValues(alpha: 0.04),
                       blurRadius: 40,
                       offset: const Offset(0, 8),
                     ),
@@ -1052,7 +1049,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                                         ? LinearGradient(
                                             colors: [
                                               AppTheme.primary,
-                                              AppTheme.primary.withOpacity(0.8),
+                                              AppTheme.primary.withValues(alpha: 0.8),
                                             ],
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
@@ -1124,12 +1121,12 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                   borderRadius: BorderRadius.circular(20.r),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primary.withOpacity(0.08),
+                      color: AppTheme.primary.withValues(alpha: 0.08),
                       blurRadius: 20,
                       offset: const Offset(0, 4),
                     ),
                     BoxShadow(
-                      color: AppTheme.secondary.withOpacity(0.04),
+                      color: AppTheme.secondary.withValues(alpha: 0.04),
                       blurRadius: 40,
                       offset: const Offset(0, 8),
                     ),
@@ -1194,15 +1191,15 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
           Container(
             padding: EdgeInsets.all(28.w),
             decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.12),
+              color: AppTheme.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(24.r),
               border: Border.all(
-                color: AppTheme.primary.withOpacity(0.15),
+                color: AppTheme.primary.withValues(alpha: 0.15),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primary.withOpacity(0.1),
+                  color: AppTheme.primary.withValues(alpha: 0.1),
                   blurRadius: 24,
                   offset: const Offset(0, 8),
                 ),
@@ -1214,7 +1211,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                   width: 60.w,
                   height: 60.w,
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.2),
+                    color: AppTheme.primary.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(16.r),
                   ),
                   child: Icon(
@@ -1274,12 +1271,12 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
               borderRadius: BorderRadius.circular(20.r),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primary.withOpacity(0.08),
+                  color: AppTheme.primary.withValues(alpha: 0.08),
                   blurRadius: 20,
                   offset: const Offset(0, 4),
                 ),
                 BoxShadow(
-                  color: AppTheme.secondary.withOpacity(0.04),
+                  color: AppTheme.secondary.withValues(alpha: 0.04),
                   blurRadius: 40,
                   offset: const Offset(0, 8),
                 ),
@@ -1290,7 +1287,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                 Container(
                   padding: EdgeInsets.all(12.w),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.1),
+                    color: AppTheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Icon(
@@ -1327,12 +1324,12 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
         borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primary.withOpacity(0.08),
+            color: AppTheme.primary.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
           BoxShadow(
-            color: AppTheme.secondary.withOpacity(0.04),
+            color: AppTheme.secondary.withValues(alpha: 0.04),
             blurRadius: 40,
             offset: const Offset(0, 8),
           ),

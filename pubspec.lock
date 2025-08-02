@@ -9,14 +9,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.58"
-  agora_rtc_engine:
-    dependency: "direct main"
-    description:
-      name: agora_rtc_engine
-      sha256: f3b2cf4292692a4de45272adae79554f4942624af5049d222ac0dbe981944070
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.5.2"
   archive:
     dependency: transitive
     description:
@@ -209,14 +201,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.8"
-  dart_webrtc:
-    dependency: transitive
-    description:
-      name: dart_webrtc
-      sha256: "5b76fd85ac95d6f5dee3e7d7de8d4b51bfbec1dc73804647c6aebb52d6297116"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.5.3+hotfix.2"
   equatable:
     dependency: transitive
     description:
@@ -376,14 +360,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_webrtc:
-    dependency: "direct main"
-    description:
-      name: flutter_webrtc
-      sha256: "792aa1e5838a719f29ae52c0773dbb5dd781fc33b1bf87c321b274e55ab51ad1"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.14.2"
   google_fonts:
     dependency: "direct main"
     description:
@@ -464,14 +440,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.5.4"
-  iris_method_channel:
-    dependency: transitive
-    description:
-      name: iris_method_channel
-      sha256: "62e02acf04621796bc92b5a0dbcb3346733ce3c38988254c05e05cd05e397914"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.3"
   js:
     dependency: transitive
     description:
@@ -520,14 +488,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.1.1"
-  logging:
-    dependency: transitive
-    description:
-      name: logging
-      sha256: c8245ada5f1717ed44271ed1c26b8ce85ca3228fd2ffdb75468ab01979309d61
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.3.0"
   lottie:
     dependency: "direct main"
     description:
@@ -877,22 +837,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  socket_io_client:
-    dependency: "direct main"
-    description:
-      name: socket_io_client
-      sha256: c8471c2c6843cf308a5532ff653f2bcdb7fa9ae79d84d1179920578a06624f0d
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.1.2"
-  socket_io_common:
-    dependency: transitive
-    description:
-      name: socket_io_common
-      sha256: "162fbaecbf4bf9a9372a62a341b3550b51dcef2f02f3e5830a297fd48203d45b"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.1.1"
   source_span:
     dependency: transitive
     description:
@@ -1101,14 +1045,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
-  webrtc_interface:
-    dependency: transitive
-    description:
-      name: webrtc_interface
-      sha256: "86fe3afc81a08481dfb25cf14a5a94e27062ecef25544783f352c914e0bbc1ca"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.2.2+hotfix.2"
   win32:
     dependency: transitive
     description:
@@ -1141,6 +1077,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.3"
+  zego_express_engine:
+    dependency: "direct main"
+    description:
+      name: zego_express_engine
+      sha256: "5d7e446196b5836e395765cd298b96265d9f04c56f6da8a21dc60bbfef721e32"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.21.0"
 sdks:
   dart: ">=3.8.1 <4.0.0"
   flutter: ">=3.27.0"

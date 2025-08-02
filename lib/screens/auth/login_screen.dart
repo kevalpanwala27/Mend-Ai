@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_logo.dart';
@@ -20,7 +19,6 @@ class _LoginScreenState extends State<LoginScreen>
     with TickerProviderStateMixin {
   bool _isLoading = false;
   late AnimationController _bounceController;
-  late Animation<double> _bounceAnimation;
 
   @override
   void initState() {
@@ -28,9 +26,6 @@ class _LoginScreenState extends State<LoginScreen>
     _bounceController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
-    );
-    _bounceAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _bounceController, curve: Curves.elasticOut),
     );
     _bounceController.forward();
   }
@@ -284,41 +279,4 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildEnhancedFeatureItem(IconData icon, String label, Color color) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 56.w,
-          height: 56.w,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [color, color.withValues(alpha: 0.7)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16.r),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Icon(icon, color: Colors.white, size: 24.sp),
-        ),
-        SizedBox(height: 8.h),
-        Text(
-          label,
-          style: TextStyle(
-            color: AppTheme.textPrimary,
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w600,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
 }

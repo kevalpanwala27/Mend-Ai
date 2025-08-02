@@ -24,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late Animation<double> _fadeAnimation;
 
   // Font scale for accessibility
-  double _fontScale = 1.0;
+  final double _fontScale = 1.0;
 
   @override
   void initState() {
@@ -50,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaleFactor: _fontScale),
+          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(_fontScale)),
           child: Scaffold(
             backgroundColor: Colors.black, // Set solid black background
             appBar: AppBar(
@@ -173,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Container(
                 padding: const EdgeInsets.all(AppTheme.spacingM),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.2),
+                  color: AppTheme.primary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(AppTheme.radiusM),
                 ),
                 child: const Icon(

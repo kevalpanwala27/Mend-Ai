@@ -3,6 +3,7 @@ const http = require("http");
 const socketIo = require("socket.io");
 const cors = require("cors");
 const helmet = require("helmet");
+const { generateToken, validateToken } = require("./zego-token-generator");
 require("dotenv").config();
 
 const app = express();
@@ -25,6 +26,63 @@ app.use(express.json());
 // Health check endpoint
 app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
+});
+
+// ZEGOCLOUD token generation endpoint
+app.post("/zego-token", (req, res) => {
+  try {
+    const { userId, roomId } = req.body;
+
+    // Validate input
+    if (!userId || !roomId) {
+      return res.status(400).json({
+        error: "userId and roomId are required",
+      });
+    }
+
+    // Generate token (valid for 24 hours)
+    const token = generateToken(userId, 86400);
+
+    console.log(`Generated ZEGO token for user ${userId} in room ${roomId}`);
+
+    res.json({
+      token,
+      userId,
+      roomId,
+      expiresIn: 86400, // 24 hours in seconds
+    });
+  } catch (error) {
+    console.error("Error generating ZEGO token:", error);
+    res.status(500).json({
+      error: "Failed to generate token",
+      message: error.message,
+    });
+  }
+});
+
+// Token validation endpoint
+app.post("/zego-token/validate", (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        error: "token is required",
+      });
+    }
+
+    const isValid = validateToken(token);
+
+    res.json({
+      valid: isValid,
+    });
+  } catch (error) {
+    console.error("Error validating ZEGO token:", error);
+    res.status(500).json({
+      error: "Failed to validate token",
+      message: error.message,
+    });
+  }
 });
 
 // Store active sessions and participants

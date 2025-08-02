@@ -4,11 +4,9 @@ import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import 'package:confetti/confetti.dart';
 import '../../providers/firebase_app_state.dart';
-import '../../services/ai_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/gradient_button.dart';
 import 'scoring_screen.dart';
-import 'package:lottie/lottie.dart';
 
 class PostResolutionScreen extends StatefulWidget {
   const PostResolutionScreen({super.key});
@@ -20,7 +18,6 @@ class PostResolutionScreen extends StatefulWidget {
 class _PostResolutionScreenState extends State<PostResolutionScreen>
     with TickerProviderStateMixin {
   final PageController _pageController = PageController();
-  final AIService _aiService = AIService();
 
   late AnimationController _heartAnimationController;
   late AnimationController _sparkleController;

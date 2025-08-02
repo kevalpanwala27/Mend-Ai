@@ -1188,18 +1188,4 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
     };
   }
 
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final sessionDate = DateTime(date.year, date.month, date.day);
-
-    if (sessionDate == today) {
-      return 'Today';
-    } else if (sessionDate == yesterday) {
-      return 'Yesterday';
-    } else {
-      return '${date.month}/${date.day}/${date.year}';
-    }
-  }
 }

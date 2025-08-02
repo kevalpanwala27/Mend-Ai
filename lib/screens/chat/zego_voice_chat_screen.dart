@@ -1,39 +1,34 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../providers/firebase_app_state.dart';
-import '../../services/webrtc_service.dart';
-
+import '../../services/zego_voice_service.dart';
+import '../../services/zego_token_service.dart';
 import '../../theme/app_theme.dart';
-
 import '../resolution/post_resolution_screen.dart';
 import '../../widgets/mood_checkin_dialog.dart';
 
-class RealTimeVoiceChatScreen extends StatefulWidget {
+class ZegoVoiceChatScreen extends StatefulWidget {
   final String sessionCode;
   final String userId;
 
-  const RealTimeVoiceChatScreen({
+  const ZegoVoiceChatScreen({
     super.key,
     required this.sessionCode,
     required this.userId,
   });
 
   @override
-  State<RealTimeVoiceChatScreen> createState() =>
-      _RealTimeVoiceChatScreenState();
+  State<ZegoVoiceChatScreen> createState() => _ZegoVoiceChatScreenState();
 }
 
-class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
+class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
     with TickerProviderStateMixin {
-  // WebRTC service
-  late WebRTCService _webrtcService;
-  
-  // Audio renderers for WebRTC streams
-  final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
+  // ZEGO Voice service
+  late ZegoVoiceService _zegoService;
 
   // Session state
   bool _isConnected = false;
@@ -84,7 +79,6 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
   @override
   void initState() {
     super.initState();
-    _initializeRenderers();
     _initializeServices();
     _setupAnimations();
     _startSessionTimer();
@@ -94,69 +88,68 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
     );
   }
 
-  void _initializeRenderers() async {
-    await _remoteRenderer.initialize();
-    
-    // Configure renderer for audio playback on mobile
-    try {
-      _remoteRenderer.muted = false;
-      print('Audio renderer initialized for audio playback');
-    } catch (e) {
-      print('Error configuring audio renderer: $e');
-    }
-  }
-
-  // Attach remote stream to renderer for audio playback
-  void _attachRemoteStream() async {
-    try {
-      final remoteStream = _webrtcService.remoteStream;
-      if (remoteStream != null) {
-        _remoteRenderer.srcObject = remoteStream;
-        print('Remote stream attached to renderer: ${remoteStream.id}');
-        
-        // Enable audio tracks and ensure they're not muted
-        for (var track in remoteStream.getAudioTracks()) {
-          track.enabled = true;
-          print('Audio track ${track.id} enabled: ${track.enabled}, muted: ${track.muted}');
-        }
-        
-        // Force update the renderer
-        setState(() {});
-        print('Audio renderer updated with remote stream');
-      }
-    } catch (e) {
-      print('Error attaching remote stream: $e');
-    }
-  }
-
   void _initializeServices() async {
-    _webrtcService = WebRTCService();
+    _zegoService = ZegoVoiceService();
 
-    // Set up WebRTC callbacks
-    _webrtcService.addListener(_onWebRTCStateChanged);
+    // Set up ZEGO callbacks
+    _zegoService.addListener(_onZegoStateChanged);
+    _zegoService.onError = (error) {
+      if (mounted) {
+        _showErrorDialog(error);
+      }
+    };
+    _zegoService.onPartnerConnected = () {
+      developer.log('Partner connected via ZEGO');
+    };
+    _zegoService.onPartnerDisconnected = () {
+      developer.log('Partner disconnected via ZEGO');
+    };
 
     try {
-      // Initialize WebRTC connection
+      // Initialize ZEGO engine
+      await _zegoService.initializeEngine();
+
+      // Get user info
+      if (!mounted) return;
       final appState = Provider.of<FirebaseAppState>(context, listen: false);
       final currentUserId = appState.currentUserId ?? widget.userId;
       final currentPartner = appState.getCurrentPartner();
       final userName = currentPartner?.name ?? 'User';
 
-      await _webrtcService.initialize(widget.sessionCode, currentUserId, userName: userName);
+      developer.log('=== STARTING ZEGO VOICE CALL ===');
+      developer.log('Room ID: ${widget.sessionCode}');
+      developer.log('User ID: $currentUserId');
+      developer.log('User Name: $userName');
+
+      // Get secure token from your backend
+      String? token = await ZegoTokenService.generateToken(currentUserId, widget.sessionCode);
+      
+      if (token == null) {
+        developer.log('WARNING: Could not get token from backend, joining without token');
+      } else {
+        developer.log('Successfully obtained token from backend');
+      }
+
+      // Join voice room with token
+      await _zegoService.joinRoom(widget.sessionCode, currentUserId, userName, token: token);
 
       setState(() {
         _isInitializing = false;
       });
+
+      developer.log('=== ZEGO VOICE CALL INITIALIZED ===');
     } catch (e) {
-      print('Error initializing WebRTC: $e');
+      developer.log('CRITICAL ERROR initializing ZEGO: $e');
       setState(() {
         _isInitializing = false;
       });
       _showErrorDialog(
-        'Failed to initialize voice connection. Please try again.',
+        'Failed to initialize voice connection. Please check your internet connection and try again.',
       );
     }
   }
+
+  // Token fetching is now handled by ZegoTokenService
 
   void _setupAnimations() {
     _pulseController = AnimationController(
@@ -207,20 +200,15 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
     _aiMessageController.forward();
   }
 
-  void _onWebRTCStateChanged() {
+  void _onZegoStateChanged() {
     if (!mounted) return;
 
     setState(() {
-      _isConnected = _webrtcService.isConnected;
+      _isConnected = _zegoService.isConnected;
     });
 
-    // Attach remote stream to renderer for audio playback (only once)
-    if (_webrtcService.remoteStream != null && _remoteRenderer.srcObject == null) {
-      _attachRemoteStream();
-    }
-
     // Handle interruption detection
-    if (_webrtcService.isInterruption && !_showInterruptionWarning) {
+    if (_zegoService.isInterruption && !_showInterruptionWarning) {
       _showInterruptionWarning = true;
       _warningController.forward().then((_) {
         Future.delayed(const Duration(seconds: 2), () {
@@ -235,8 +223,7 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
     }
 
     // Handle audio visualization
-    if (_webrtcService.isLocalAudioActive ||
-        _webrtcService.isRemoteAudioActive) {
+    if (_zegoService.isLocalAudioActive || _zegoService.isRemoteAudioActive) {
       _pulseController.repeat(reverse: true);
       _waveformController.repeat(reverse: true);
     } else {
@@ -301,33 +288,91 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
   }
 
   void _toggleMute() async {
-    await _webrtcService.toggleMute();
+    await _zegoService.toggleMute();
     setState(() {
-      _isMuted = _webrtcService.isMuted;
+      _isMuted = _zegoService.isMuted;
     });
   }
 
   void _reconnect() async {
     try {
-      print('Manual reconnect triggered');
-      
+      developer.log('Manual reconnect triggered');
+
       // Show loading indicator
       setState(() {
         _isInitializing = true;
       });
-      
+
       // Force reconnection
-      await _webrtcService.dispose();
-      
-      // Reinitialize WebRTC
-      _initializeServices();
-      
-      print('Manual reconnect completed');
+      await _zegoService.dispose();
+
+      // Reinitialize ZEGO
+      if (mounted) {
+        _initializeServices();
+      }
+
+      developer.log('Manual reconnect completed');
     } catch (e) {
-      print('Error during manual reconnect: $e');
+      developer.log('Error during manual reconnect: $e');
       setState(() {
         _isInitializing = false;
       });
+    }
+  }
+
+  void _debugAudio() async {
+    developer.log('=== MANUAL AUDIO DEBUG TRIGGERED ===');
+
+    // Run comprehensive diagnostics
+    await _zegoService.diagnoseAudioPipeline();
+    
+    // Check server health
+    final serverHealthy = await ZegoTokenService.checkServerHealth();
+
+    // Show debug info dialog
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Audio Debug'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('🔗 Connected: ${_zegoService.isConnected}'),
+                Text('🏠 In Room: ${_zegoService.getAudioStats()['isInRoom']}'),
+                Text('🎤 Muted: ${_zegoService.isMuted}'),
+                Text('📢 Local Audio Active: ${_zegoService.isLocalAudioActive}'),
+                Text('📡 Remote Audio Active: ${_zegoService.isRemoteAudioActive}'),
+                Text('👥 Remote User Online: ${_zegoService.isRemoteUserOnline}'),
+                Text('💬 Partner Name: ${_zegoService.partnerName ?? 'None'}'),
+                Text('🔊 Local Level: ${(_zegoService.localAudioLevel * 100).toInt()}%'),
+                Text('📻 Remote Level: ${(_zegoService.remoteAudioLevel * 100).toInt()}%'),
+                Text('🌐 Server Health: ${serverHealthy ? "✅ OK" : "❌ Down"}'),
+                const SizedBox(height: 16),
+                const Text('Check console logs for detailed diagnostics.'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                // Re-initialize if needed
+                if (!_zegoService.isConnected) {
+                  _reconnect();
+                }
+              },
+              child: const Text('Reconnect'),
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -351,13 +396,15 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
     );
 
     if (result == true && mounted) {
-      await _webrtcService.endSession();
+      await _zegoService.endSession();
 
       // Navigate to post-resolution with session data
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const PostResolutionScreen()),
-      );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const PostResolutionScreen()),
+        );
+      }
     }
   }
 
@@ -417,27 +464,13 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
     return Container(
       decoration: const BoxDecoration(color: Colors.black),
       child: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            // Hidden RTCVideoView for audio playback
-            Positioned(
-              left: -1000,
-              top: -1000,
-              child: SizedBox(
-                width: 1,
-                height: 1,
-                child: RTCVideoView(_remoteRenderer, mirror: false),
-              ),
-            ),
-            Column(
-              children: [
-                _buildHeader(),
-                if (_showInterruptionWarning) _buildInterruptionWarning(),
-                _buildAIMessageCard(),
-                Expanded(child: _buildPartnerViews()),
-                _buildControlsFooter(),
-              ],
-            ),
+            _buildHeader(),
+            if (_showInterruptionWarning) _buildInterruptionWarning(),
+            _buildAIMessageCard(),
+            Expanded(child: _buildPartnerViews()),
+            _buildControlsFooter(),
           ],
         ),
       ),
@@ -574,7 +607,7 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
                 decoration: AppTheme.glassmorphicDecoration(borderRadius: 24),
                 child: Row(
                   children: [
-                    Container(
+                    SizedBox(
                       width: 56.w,
                       height: 56.w,
                       child: Stack(
@@ -606,8 +639,7 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize:
-                            MainAxisSize.min, // Fix potential overflow
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Row(
                             children: [
@@ -674,19 +706,19 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
         _buildPartnerView(
           name: currentPartner?.name ?? 'You',
           isLocal: true,
-          isSpeaking: _webrtcService.isLocalAudioActive,
-          audioLevel: _webrtcService.localAudioLevel,
+          isSpeaking: _zegoService.isLocalAudioActive,
+          audioLevel: _zegoService.localAudioLevel,
           backgroundColor: AppTheme.partnerAColor.withValues(alpha: 0.1),
           accentColor: AppTheme.partnerAColor,
           isLeft: true,
         ),
 
-        // Partner B (Remote Partner) - Use WebRTC partner name
+        // Partner B (Remote Partner) - Use ZEGO partner name
         _buildPartnerView(
-          name: _webrtcService.partnerName ?? 'Partner',
+          name: _zegoService.partnerName ?? 'Partner',
           isLocal: false,
-          isSpeaking: _webrtcService.isRemoteAudioActive,
-          audioLevel: _webrtcService.remoteAudioLevel,
+          isSpeaking: _zegoService.isRemoteAudioActive,
+          audioLevel: _zegoService.remoteAudioLevel,
           backgroundColor: AppTheme.partnerBColor.withValues(alpha: 0.1),
           accentColor: AppTheme.partnerBColor,
           isLeft: false,
@@ -748,11 +780,10 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
             borderRadius: AppTheme.radiusXL,
           ),
           child: Padding(
-            padding: EdgeInsets.all(20.w), // Reduced padding
+            padding: EdgeInsets.all(20.w),
             child: SingleChildScrollView(
-              // Added scrollable container
               child: Column(
-                mainAxisSize: MainAxisSize.min, // Fix the overflow
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Profile section with enhanced glow
@@ -762,8 +793,8 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
                       return Transform.scale(
                         scale: isSpeaking ? _pulseAnimation.value : 1.0,
                         child: Container(
-                          width: 100.w, // Reduced size
-                          height: 100.w, // Reduced size
+                          width: 100.w,
+                          height: 100.w,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: accentColor,
@@ -785,7 +816,7 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
                           ),
                           child: Icon(
                             Icons.person_rounded,
-                            size: 48.sp, // Reduced size
+                            size: 48.sp,
                             color: Colors.white,
                           ),
                         ),
@@ -793,13 +824,13 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
                     },
                   ),
 
-                  SizedBox(height: 16.h), // Reduced spacing
+                  SizedBox(height: 16.h),
                   // Name with enhanced typography
                   Text(
                     name,
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18.sp, // Reduced font size
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
                     ),
@@ -836,24 +867,24 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
                       isSpeaking
                           ? 'Speaking...'
                           : (isLocal && _isMuted)
-                          ? 'Muted'
-                          : 'Listening',
+                              ? 'Muted'
+                              : 'Listening',
                       style: TextStyle(
                         color: isSpeaking
                             ? Colors.white
                             : Colors.white.withValues(alpha: 0.8),
                         fontWeight: FontWeight.w600,
-                        fontSize: 12.sp, // Reduced font size
+                        fontSize: 12.sp,
                         letterSpacing: 0.5,
                       ),
                       textAlign: TextAlign.center,
                     ),
                   ),
 
-                  SizedBox(height: 20.h), // Reduced spacing
+                  SizedBox(height: 20.h),
                   // Enhanced audio level visualization
                   SizedBox(
-                    height: 60.h, // Reduced height
+                    height: 60.h,
                     child: isSpeaking
                         ? _buildEnhancedWaveform(accentColor, audioLevel)
                         : _buildInactiveWaveform(),
@@ -875,12 +906,11 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: List.generate(8, (index) {
-            final height =
-                (15 +
-                        (level * 75) *
-                            _waveformAnimation.value *
-                            (0.3 + math.Random(index).nextDouble() * 0.7))
-                    .h;
+            final height = (15 +
+                    (level * 75) *
+                        _waveformAnimation.value *
+                        (0.3 + math.Random(index).nextDouble() * 0.7))
+                .h;
             final opacity = 0.6 + (_waveformAnimation.value * 0.4);
 
             return Container(
@@ -955,6 +985,14 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
             tooltip: 'Reconnect',
           ),
 
+          // Debug Audio button
+          _buildControlButton(
+            onTap: _debugAudio,
+            icon: Icons.bug_report_rounded,
+            isActive: false,
+            tooltip: 'Debug Audio',
+          ),
+
           // End session button
           _buildControlButton(
             onTap: _endSession,
@@ -982,8 +1020,8 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
-          width: 70.w,
-          height: 70.w,
+          width: 60.w,
+          height: 60.w,
           decoration: BoxDecoration(
             color: backgroundColor ?? AppTheme.primary.withValues(alpha: 0.2),
             shape: BoxShape.circle,
@@ -1008,7 +1046,7 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
               ),
             ],
           ),
-          child: Icon(icon, color: Colors.white, size: 32.sp),
+          child: Icon(icon, color: Colors.white, size: 28.sp),
         ),
       ),
     );
@@ -1018,9 +1056,8 @@ class _RealTimeVoiceChatScreenState extends State<RealTimeVoiceChatScreen>
   void dispose() {
     _sessionTimer?.cancel();
     _aiPromptTimer?.cancel();
-    _webrtcService.removeListener(_onWebRTCStateChanged);
-    _webrtcService.dispose();
-    _remoteRenderer.dispose();
+    _zegoService.removeListener(_onZegoStateChanged);
+    _zegoService.dispose();
     _pulseController.dispose();
     _waveformController.dispose();
     _aiMessageController.dispose();

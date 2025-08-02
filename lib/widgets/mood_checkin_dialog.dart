@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
 class MoodCheckinDialog extends StatelessWidget {
-  final List<_MoodOption> moods = const [
-    _MoodOption('😊', 'Happy'),
-    _MoodOption('😐', 'Neutral'),
-    _MoodOption('😔', 'Sad'),
-    _MoodOption('😡', 'Angry'),
-    _MoodOption('😰', 'Anxious'),
-    _MoodOption('🥰', 'Loved'),
-    _MoodOption('🤔', 'Thoughtful'),
+  final List<MoodOption> moods = const [
+    MoodOption('😊', 'Happy'),
+    MoodOption('😐', 'Neutral'),
+    MoodOption('😔', 'Sad'),
+    MoodOption('😡', 'Angry'),
+    MoodOption('😰', 'Anxious'),
+    MoodOption('🥰', 'Loved'),
+    MoodOption('🤔', 'Thoughtful'),
   ];
 
   const MoodCheckinDialog({super.key});
@@ -29,7 +29,7 @@ class MoodCheckinDialog extends StatelessWidget {
           borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
@@ -58,7 +58,7 @@ class MoodCheckinDialog extends StatelessWidget {
                 Text(
                   'Select the emotion that best describes your current state',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
                     height: 1.4,
@@ -87,18 +87,18 @@ class MoodCheckinDialog extends StatelessWidget {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              Colors.white.withOpacity(0.2),
-                              Colors.white.withOpacity(0.1),
+                              Colors.white.withValues(alpha: 0.2),
+                              Colors.white.withValues(alpha: 0.1),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
+                            color: Colors.white.withValues(alpha: 0.3),
                             width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -111,7 +111,7 @@ class MoodCheckinDialog extends StatelessWidget {
                               width: 64,
                               height: 64,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
+                                color: Colors.white.withValues(alpha: 0.15),
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
@@ -147,8 +147,8 @@ class MoodCheckinDialog extends StatelessWidget {
   }
 }
 
-class _MoodOption {
+class MoodOption {
   final String emoji;
   final String label;
-  const _MoodOption(this.emoji, this.label);
+  const MoodOption(this.emoji, this.label);
 }
