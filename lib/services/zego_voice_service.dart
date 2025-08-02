@@ -10,8 +10,8 @@ class ZegoVoiceService extends ChangeNotifier {
   ZegoVoiceService._internal();
 
   // ZEGOCLOUD configuration - REPLACE WITH YOUR ACTUAL VALUES
-  static const int appID = 123456789; // Replace with your ZEGOCLOUD App ID
-  static const String appSign = "your_app_sign_here"; // Replace with your App Sign
+  static const int appID = 1390967091; // Replace with your ZEGOCLOUD App ID
+  static const String appSign = "11552a1db7c26772508de5585c686f49ab126eb5f1713d3c82c442391483a734"; // Replace with your App Sign
 
   // Connection state
   bool _isEngineInitialized = false;
