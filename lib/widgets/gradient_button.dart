@@ -41,13 +41,9 @@ class _GradientButtonState extends State<GradientButton>
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -83,7 +79,8 @@ class _GradientButtonState extends State<GradientButton>
             child: Container(
               width: widget.width,
               height: widget.height ?? 56,
-              padding: widget.padding ??
+              padding:
+                  widget.padding ??
                   const EdgeInsets.symmetric(
                     horizontal: AppTheme.spacingL,
                     vertical: AppTheme.spacingM,
@@ -92,19 +89,13 @@ class _GradientButtonState extends State<GradientButton>
                 gradient: widget.isSecondary
                     ? null
                     : const LinearGradient(
-                        colors: [
-                          AppTheme.gradientStart,
-                          AppTheme.gradientEnd,
-                        ],
+                        colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                 color: widget.isSecondary ? Colors.transparent : null,
                 border: widget.isSecondary
-                    ? Border.all(
-                        color: AppTheme.primary,
-                        width: 2,
-                      )
+                    ? Border.all(color: AppTheme.primary, width: 2)
                     : null,
                 borderRadius: BorderRadius.circular(AppTheme.radiusM),
                 boxShadow: widget.isSecondary
@@ -123,7 +114,7 @@ class _GradientButtonState extends State<GradientButton>
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                          strokeWidth: 2,
+                          strokeWidth: 2.5,
                           valueColor: AlwaysStoppedAnimation<Color>(
                             widget.isSecondary
                                 ? AppTheme.primary
@@ -138,12 +129,15 @@ class _GradientButtonState extends State<GradientButton>
                               mainAxisAlignment: MainAxisAlignment.center,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
-                                  widget.icon,
-                                  color: widget.isSecondary
-                                      ? AppTheme.primary
-                                      : Colors.white,
-                                  size: 20,
+                                Container(
+                                  padding: const EdgeInsets.all(2),
+                                  child: Icon(
+                                    widget.icon,
+                                    color: widget.isSecondary
+                                        ? AppTheme.primary
+                                        : Colors.white,
+                                    size: 20,
+                                  ),
                                 ),
                                 const SizedBox(width: AppTheme.spacingS),
                                 Flexible(
@@ -156,6 +150,7 @@ class _GradientButtonState extends State<GradientButton>
                                       fontWeight: FontWeight.w600,
                                       fontSize: widget.fontSize ?? 16,
                                       letterSpacing: 0.5,
+                                      height: 1.2,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.center,
@@ -165,27 +160,31 @@ class _GradientButtonState extends State<GradientButton>
                               ],
                             )
                           : widget.icon != null
-                              ? Icon(
-                                  widget.icon,
-                                  color: widget.isSecondary
-                                      ? AppTheme.primary
-                                      : Colors.white,
-                                  size: 20,
-                                )
-                              : Text(
-                                  widget.text,
-                                  style: TextStyle(
-                                    color: widget.isSecondary
-                                        ? AppTheme.primary
-                                        : Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: widget.fontSize ?? 16,
-                                    letterSpacing: 0.5,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                ),
+                          ? Container(
+                              padding: const EdgeInsets.all(4),
+                              child: Icon(
+                                widget.icon,
+                                color: widget.isSecondary
+                                    ? AppTheme.primary
+                                    : Colors.white,
+                                size: 22,
+                              ),
+                            )
+                          : Text(
+                              widget.text,
+                              style: TextStyle(
+                                color: widget.isSecondary
+                                    ? AppTheme.primary
+                                    : Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: widget.fontSize ?? 16,
+                                letterSpacing: 0.5,
+                                height: 1.2,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                            ),
                     ),
             ),
           );

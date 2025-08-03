@@ -15,8 +15,26 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with TickerProviderStateMixin {
   bool _isLoading = false;
+  late AnimationController _bounceController;
+
+  @override
+  void initState() {
+    super.initState();
+    _bounceController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    _bounceController.forward();
+  }
+
+  @override
+  void dispose() {
+    _bounceController.dispose();
+    super.dispose();
+  }
 
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
@@ -57,181 +75,172 @@ class _LoginScreenState extends State<LoginScreen> {
       isLoading: _isLoading,
       loadingText: 'Signing you in...',
       child: Scaffold(
-        backgroundColor: AppTheme.background,
+        backgroundColor: Colors.black,
         body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppTheme.background, Color(0xFFF8F9FA)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
+          decoration: const BoxDecoration(color: Colors.black),
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppTheme.spacingL),
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                  SizedBox(height: 40.h),
+                    SizedBox(height: 40.h),
 
-                  // App Logo with animation
-                  const AppLogo(size: 140, animate: true),
+                    // App Logo with animation
+                    const AppLogo(size: 140, animate: true),
 
-                  SizedBox(height: AppTheme.spacingXL),
+                    SizedBox(height: AppTheme.spacingXL),
 
-                  // App Name with gradient
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
-                    ).createShader(bounds),
-                    child: Text(
-                      'Mend',
-                      style: Theme.of(context).textTheme.headlineLarge
-                          ?.copyWith(
-                            fontSize: 48.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: -1,
-                          ),
-                      textAlign: TextAlign.center,
+                    // App Name with gradient
+                    ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
+                      ).createShader(bounds),
+                      child: Text(
+                        'Mend',
+                        style: Theme.of(context).textTheme.headlineLarge
+                            ?.copyWith(
+                              fontSize: 48.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: -1,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: AppTheme.spacingM),
+                    const SizedBox(height: AppTheme.spacingM),
 
-                  Text(
-                    'Your AI-powered relationship companion',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppTheme.textSecondary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: AppTheme.spacingM),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacingM,
-                    ),
-                    child: Text(
-                      'Start your journey to better communication and stronger relationships',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppTheme.textTertiary,
-                        height: 1.5,
+                    Text(
+                      'Your AI-powered relationship companion',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w500,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                  ),
 
-                  SizedBox(height: 60.h),
+                    const SizedBox(height: AppTheme.spacingM),
 
-                  // Features showcase
-                  AnimatedCard(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingS),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Flexible(
-                            child: _buildFeatureItem(
-                              Icons.record_voice_over_rounded,
-                              'Voice Chat',
-                            ),
-                          ),
-                          Flexible(
-                            child: _buildFeatureItem(
-                              Icons.psychology_rounded,
-                              'AI Guidance',
-                            ),
-                          ),
-                          Flexible(
-                            child: _buildFeatureItem(
-                              Icons.analytics_rounded,
-                              'Progress Tracking',
-                            ),
-                          ),
-                        ],
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacingM,
+                      ),
+                      child: Text(
+                        'Start your journey to better communication and stronger relationships',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppTheme.textTertiary,
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                  ),
 
-                  SizedBox(height: 60.h),
+                    SizedBox(height: 60.h),
 
-                  // Google Sign In button
-                  SizedBox(
-                    width: double.infinity,
-                    child: GestureDetector(
-                      onTap: _isLoading ? null : _signInWithGoogle,
-                      child: Container(
-                        height: 56,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              AppTheme.gradientStart,
-                              AppTheme.gradientEnd,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.primary.withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                    // Features showcase
+                    AnimatedCard(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacingS,
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            if (_isLoading)
-                              const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
-                                ),
-                              )
-                            else ...[
-                              SvgPicture.asset(
-                                'assets/google_logo.svg',
-                                width: 20,
-                                height: 20,
+                            Flexible(
+                              child: _buildFeatureItem(
+                                Icons.record_voice_over_rounded,
+                                'Voice Chat',
                               ),
-                              const SizedBox(width: AppTheme.spacingS),
-                              const Text(
-                                'Continue with Google',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                  letterSpacing: 0.5,
-                                ),
+                            ),
+                            Flexible(
+                              child: _buildFeatureItem(
+                                Icons.psychology_rounded,
+                                'AI Guidance',
                               ),
-                            ],
+                            ),
+                            Flexible(
+                              child: _buildFeatureItem(
+                                Icons.analytics_rounded,
+                                'Progress Tracking',
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: AppTheme.spacingL),
+                    SizedBox(height: 60.h),
 
-                  // Privacy notice
-                  Text(
-                    'By continuing, you agree to our Terms of Service and Privacy Policy. Your conversations are private and secure.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textTertiary,
+                    // Google Sign In button
+                    SizedBox(
+                      width: double.infinity,
+                      child: GestureDetector(
+                        onTap: _isLoading ? null : _signInWithGoogle,
+                        child: Container(
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: AppTheme.primary,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusM,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primary.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (_isLoading)
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              else ...[
+                                SvgPicture.asset(
+                                  'assets/google_logo.svg',
+                                  width: 20,
+                                  height: 20,
+                                ),
+                                const SizedBox(width: AppTheme.spacingS),
+                                const Text(
+                                  'Continue with Google',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
 
-                  const SizedBox(height: AppTheme.spacingXL),
+                    const SizedBox(height: AppTheme.spacingL),
+
+                    // Privacy notice
+                    Text(
+                      'By continuing, you agree to our Terms of Service and Privacy Policy. Your conversations are private and secure.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textTertiary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: AppTheme.spacingXL),
                   ],
                 ),
               ),
@@ -269,4 +278,5 @@ class _LoginScreenState extends State<LoginScreen> {
       ],
     );
   }
+
 }

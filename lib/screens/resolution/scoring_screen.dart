@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:confetti/confetti.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../services/ai_service.dart';
 import '../../models/communication_session.dart';
@@ -15,14 +17,50 @@ class ScoringScreen extends StatefulWidget {
   State<ScoringScreen> createState() => _ScoringScreenState();
 }
 
-class _ScoringScreenState extends State<ScoringScreen> {
+class _ScoringScreenState extends State<ScoringScreen>
+    with TickerProviderStateMixin {
   final AIService _aiService = AIService();
   CommunicationScores? _scores;
   bool _isLoading = true;
 
+  late ConfettiController _confettiController;
+  late AnimationController _celebrationController;
+  late AnimationController _scoreAnimationController;
+  late Animation<double> _celebrationAnimation;
+  late Animation<double> _scoreAnimation;
+
   @override
   void initState() {
     super.initState();
+
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 3),
+    );
+
+    _celebrationController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+
+    _scoreAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+
+    _celebrationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _celebrationController,
+        curve: Curves.easeOutBack,
+      ),
+    );
+
+    _scoreAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _scoreAnimationController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
     _generateScores();
   }
 
@@ -65,6 +103,13 @@ class _ScoringScreenState extends State<ScoringScreen> {
         setState(() {
           _scores = scores;
           _isLoading = false;
+        });
+
+        // Trigger celebratory animations
+        Future.delayed(const Duration(milliseconds: 500), () {
+          _celebrationController.forward();
+          _scoreAnimationController.forward();
+          _confettiController.play();
         });
       } catch (e) {
         setState(() {
@@ -121,9 +166,7 @@ class _ScoringScreenState extends State<ScoringScreen> {
             Container(
               padding: const EdgeInsets.all(AppTheme.spacingL),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
-                ),
+                color: AppTheme.primary,
                 shape: BoxShape.circle,
               ),
               child: const CircularProgressIndicator(
@@ -136,16 +179,24 @@ class _ScoringScreenState extends State<ScoringScreen> {
               'Analyzing Your Conversation',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: AppTheme.textPrimary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
+                fontSize: 24,
+                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: AppTheme.spacingM),
-            Text(
-              'Please wait while we generate your communication insights...',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
-                height: 1.4,
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacingL,
+              ),
+              child: Text(
+                'Please wait while we generate your communication insights...',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.textSecondary,
+                  height: 1.5,
+                  fontSize: 16,
+                ),
               ),
             ),
           ],
@@ -159,16 +210,10 @@ class _ScoringScreenState extends State<ScoringScreen> {
       child: Container(
         margin: const EdgeInsets.all(AppTheme.spacingL),
         padding: const EdgeInsets.all(AppTheme.spacingXL),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppTheme.radiusL),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
+        decoration: AppTheme.glassmorphicDecoration(
+          borderRadius: AppTheme.radiusXL,
+          hasGlow: true,
+          glowColor: AppTheme.interruptionColor,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -176,12 +221,24 @@ class _ScoringScreenState extends State<ScoringScreen> {
             Container(
               padding: const EdgeInsets.all(AppTheme.spacingL),
               decoration: BoxDecoration(
-                color: AppTheme.interruptionColor.withValues(alpha: 0.1),
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.interruptionColor.withValues(alpha: 0.2),
+                    AppTheme.interruptionColor.withValues(alpha: 0.1),
+                  ],
+                ),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppTheme.interruptionColor.withValues(alpha: 0.3),
+                  color: AppTheme.interruptionColor.withValues(alpha: 0.4),
                   width: 2,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.interruptionColor.withValues(alpha: 0.3),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Icon(
                 Icons.error_outline_rounded,
@@ -194,16 +251,24 @@ class _ScoringScreenState extends State<ScoringScreen> {
               'Unable to Generate Scores',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: AppTheme.textPrimary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
+                fontSize: 22,
+                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: AppTheme.spacingM),
-            Text(
-              'We encountered an issue analyzing your conversation. Please try again later.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
-                height: 1.4,
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacingM,
+              ),
+              child: Text(
+                'We encountered an issue analyzing your conversation. Please try again later.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.textSecondary,
+                  height: 1.5,
+                  fontSize: 16,
+                ),
               ),
             ),
             const SizedBox(height: AppTheme.spacingL),
@@ -234,80 +299,107 @@ class _ScoringScreenState extends State<ScoringScreen> {
         final currentPartner = appState.getCurrentPartner();
         final otherPartner = appState.getOtherPartner();
 
-        return Scaffold(
-          backgroundColor: AppTheme.background,
-          appBar: AppBar(
-            title: ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
-              ).createShader(bounds),
-              child: const Text(
-                'Communication Scores',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
+        return Stack(
+          children: [
+            Scaffold(
+              backgroundColor: Colors.black,
+              appBar: AppBar(
+                title: ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
+                  ).createShader(bounds),
+                  child: const Text(
+                    'Communication Scores',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                    ),
+                  ),
+                ),
+              ),
+              body: Container(
+                decoration: const BoxDecoration(color: Colors.black),
+                child: SafeArea(
+                  child: _isLoading
+                      ? _buildLoadingState()
+                      : _scores == null
+                      ? _buildErrorState()
+                      : SingleChildScrollView(
+                          padding: const EdgeInsets.all(AppTheme.spacingL),
+                          child: AnimationLimiter(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: AnimationConfiguration.toStaggeredList(
+                                duration: const Duration(milliseconds: 600),
+                                childAnimationBuilder: (widget) =>
+                                    SlideAnimation(
+                                      verticalOffset: 50.0,
+                                      child: FadeInAnimation(child: widget),
+                                    ),
+                                children: [
+                                  // Overall feedback
+                                  _buildOverallFeedback(),
+
+                                  const SizedBox(height: AppTheme.spacingXL),
+
+                                  // Current user's scores
+                                  if (_scores!.partnerScores[appState
+                                          .currentUserId] !=
+                                      null)
+                                    _buildPartnerScore(
+                                      appState.currentUserId ?? 'A',
+                                      currentPartner?.name ?? 'You',
+                                      _scores!.partnerScores[appState
+                                          .currentUserId]!,
+                                    ),
+
+                                  const SizedBox(height: AppTheme.spacingL),
+
+                                  // Partner's scores (if available)
+                                  if (otherPartner != null &&
+                                      _scores!.partnerScores[otherPartner.id] !=
+                                          null)
+                                    _buildPartnerScore(
+                                      otherPartner.id,
+                                      otherPartner.name,
+                                      _scores!.partnerScores[otherPartner.id]!,
+                                    ),
+
+                                  const SizedBox(height: AppTheme.spacingXL),
+
+                                  // Improvement suggestions
+                                  _buildImprovementSuggestions(),
+
+                                  const SizedBox(height: AppTheme.spacingXL),
+
+                                  // Action buttons
+                                  _buildActionButtons(),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                 ),
               ),
             ),
-          ),
-          body: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppTheme.background, Color(0xFFF8F9FA)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+
+            // Confetti overlay
+            Align(
+              alignment: Alignment.topCenter,
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirectionality: BlastDirectionality.explosive,
+                shouldLoop: false,
+                colors: const [
+                  AppTheme.primary,
+                  AppTheme.secondary,
+                  AppTheme.accent,
+                  AppTheme.successGreen,
+                ],
               ),
             ),
-            child: SafeArea(
-              child: _isLoading
-                  ? _buildLoadingState()
-                  : _scores == null
-                  ? _buildErrorState()
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppTheme.spacingL),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Overall feedback
-                          _buildOverallFeedback(),
-
-                          const SizedBox(height: AppTheme.spacingXL),
-
-                          // Current user's scores
-                          if (_scores!.partnerScores[appState.currentUserId] !=
-                              null)
-                            _buildPartnerScore(
-                              appState.currentUserId ?? 'A',
-                              currentPartner?.name ?? 'You',
-                              _scores!.partnerScores[appState.currentUserId]!,
-                            ),
-
-                          const SizedBox(height: AppTheme.spacingL),
-
-                          // Partner's scores (if available)
-                          if (otherPartner != null &&
-                              _scores!.partnerScores[otherPartner.id] != null)
-                            _buildPartnerScore(
-                              otherPartner.id,
-                              otherPartner.name,
-                              _scores!.partnerScores[otherPartner.id]!,
-                            ),
-
-                          const SizedBox(height: AppTheme.spacingXL),
-
-                          // Improvement suggestions
-                          _buildImprovementSuggestions(),
-
-                          const SizedBox(height: AppTheme.spacingXL),
-
-                          // Action buttons
-                          _buildActionButtons(),
-                        ],
-                      ),
-                    ),
-            ),
-          ),
+          ],
         );
       },
     );
@@ -336,9 +428,7 @@ class _ScoringScreenState extends State<ScoringScreen> {
               Container(
                 padding: const EdgeInsets.all(AppTheme.spacingM),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
-                  ),
+                  color: AppTheme.primary,
                   borderRadius: BorderRadius.circular(AppTheme.radiusM),
                 ),
                 child: const Icon(
@@ -411,166 +501,184 @@ class _ScoringScreenState extends State<ScoringScreen> {
     final partnerColor = AppTheme.getPartnerColor(partnerId);
     final overallScore = (score.averageScore * 100).round();
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppTheme.spacingL),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusL),
-        border: Border.all(
-          color: partnerColor.withValues(alpha: 0.2),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+    return AnimatedBuilder(
+      animation: _celebrationAnimation,
+      builder: (context, child) => Transform.scale(
+        scale: 0.8 + (_celebrationAnimation.value * 0.2),
+        child: child,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppTheme.spacingM),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [partnerColor, partnerColor.withValues(alpha: 0.8)],
-                  ),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                ),
-                child: Icon(
-                  Icons.person_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: AppTheme.spacingM),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.spacingXS),
-                    Text(
-                      'Communication Score',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacingM,
-                  vertical: AppTheme.spacingS,
-                ),
-                decoration: BoxDecoration(
-                  color: partnerColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                ),
-                child: Text(
-                  '$overallScore/100',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: partnerColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spacingL),
-          // Score breakdown
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spacingM),
-            decoration: BoxDecoration(
-              color: AppTheme.cardBackground,
-              borderRadius: BorderRadius.circular(AppTheme.radiusM),
-              border: Border.all(color: AppTheme.borderColor, width: 1),
-            ),
-            child: Column(
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(AppTheme.spacingL.w),
+        decoration: AppTheme.cardDecoration(
+          hasGlow: overallScore >= 80,
+          glowColor: partnerColor,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with radial progress
+            Row(
               children: [
-                _buildScoreRow(
-                  'Empathy',
-                  score.empathy,
-                  Icons.favorite_rounded,
-                  partnerColor,
+                // Radial progress chart
+                SizedBox(
+                  width: 100.w,
+                  height: 100.w,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Background circle
+                      Container(
+                        width: 100.w,
+                        height: 100.w,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: partnerColor.withValues(alpha: 0.1),
+                        ),
+                      ),
+                      // Animated progress
+                      AnimatedBuilder(
+                        animation: _scoreAnimation,
+                        builder: (context, child) {
+                          return SizedBox(
+                            width: 100.w,
+                            height: 100.w,
+                            child: CircularProgressIndicator(
+                              value: score.averageScore * _scoreAnimation.value,
+                              strokeWidth: 8.w,
+                              backgroundColor: partnerColor.withValues(
+                                alpha: 0.2,
+                              ),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                partnerColor,
+                              ),
+                              strokeCap: StrokeCap.round,
+                            ),
+                          );
+                        },
+                      ),
+                      // Score in center
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          AnimatedBuilder(
+                            animation: _scoreAnimation,
+                            builder: (context, child) {
+                              final animatedScore =
+                                  (overallScore * _scoreAnimation.value)
+                                      .round();
+                              return Text(
+                                '$animatedScore',
+                                style: TextStyle(
+                                  fontSize: 28.sp,
+                                  fontWeight: FontWeight.w800,
+                                  color: partnerColor,
+                                ),
+                              );
+                            },
+                          ),
+                          Text(
+                            '/100',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                _buildScoreRow(
-                  'Listening',
-                  score.listening,
-                  Icons.hearing_rounded,
-                  partnerColor,
-                ),
-                _buildScoreRow(
-                  'Reception',
-                  score.reception,
-                  Icons.psychology_rounded,
-                  partnerColor,
-                ),
-                _buildScoreRow(
-                  'Clarity',
-                  score.clarity,
-                  Icons.record_voice_over_rounded,
-                  partnerColor,
-                ),
-                _buildScoreRow(
-                  'Respect',
-                  score.respect,
-                  Icons.handshake_rounded,
-                  partnerColor,
-                ),
-                _buildScoreRow(
-                  'Responsiveness',
-                  score.responsiveness,
-                  Icons.reply_rounded,
-                  partnerColor,
-                ),
-                _buildScoreRow(
-                  'Open-mindedness',
-                  score.openMindedness,
-                  Icons.lightbulb_rounded,
-                  partnerColor,
-                  isLast: true,
+
+                SizedBox(width: AppTheme.spacingL.w),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: 24.sp,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        'Communication Score',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 6.h,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              partnerColor.withValues(alpha: 0.2),
+                              partnerColor.withValues(alpha: 0.1),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                        child: Text(
+                          _getScoreLabel(score.averageScore),
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                            color: partnerColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: AppTheme.spacingL),
-          // Strengths and improvements
-          Row(
-            children: [
-              Expanded(
-                child: _buildInsightCard(
-                  'Strengths',
-                  score.strengths.join(', '),
-                  Icons.thumb_up_rounded,
-                  AppTheme.successGreen,
+
+            SizedBox(height: AppTheme.spacingL.h),
+
+            // Enhanced radar chart for detailed scores
+            Container(
+              height: 200.h,
+              padding: EdgeInsets.all(16.w),
+              decoration: AppTheme.cardDecoration(borderRadius: 16),
+              child: _buildRadarChart(score, partnerColor),
+            ),
+
+            SizedBox(height: AppTheme.spacingL.h),
+
+            // Strengths and improvements with animations
+            Row(
+              children: [
+                Expanded(
+                  child: _buildEnhancedInsightCard(
+                    'Strengths',
+                    score.strengths,
+                    Icons.star_rounded,
+                    AppTheme.successGreen,
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppTheme.spacingM),
-              Expanded(
-                child: _buildInsightCard(
-                  'Growth Areas',
-                  score.improvements.join(', '),
-                  Icons.trending_up_rounded,
-                  AppTheme.accent,
+                SizedBox(width: AppTheme.spacingM.w),
+                Expanded(
+                  child: _buildEnhancedInsightCard(
+                    'Growth Areas',
+                    score.improvements,
+                    Icons.trending_up_rounded,
+                    AppTheme.accent,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -698,119 +806,6 @@ class _ScoringScreenState extends State<ScoringScreen> {
     );
   }
 
-  Widget _buildScoreRow(
-    String label,
-    double score,
-    IconData icon,
-    Color color, {
-    bool isLast = false,
-  }) {
-    final percentage = (score * 100).round();
-    return Column(
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppTheme.radiusXS),
-              ),
-              child: Icon(icon, size: 16, color: color),
-            ),
-            const SizedBox(width: AppTheme.spacingM),
-            Expanded(
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            Container(
-              width: 60,
-              height: 6,
-              decoration: BoxDecoration(
-                color: AppTheme.borderColor,
-                borderRadius: BorderRadius.circular(3),
-              ),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: score,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: AppTheme.spacingS),
-            SizedBox(
-              width: 35,
-              child: Text(
-                '$percentage%',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.end,
-              ),
-            ),
-          ],
-        ),
-        if (!isLast) const SizedBox(height: AppTheme.spacingM),
-      ],
-    );
-  }
-
-  Widget _buildInsightCard(
-    String title,
-    String content,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacingM),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
-        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 16),
-              const SizedBox(width: AppTheme.spacingS),
-              Text(
-                title,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spacingS),
-          Text(
-            content,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.textSecondary,
-              height: 1.3,
-              fontSize: 11,
-            ),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildActionButtons() {
     return Container(
       width: double.infinity,
@@ -914,13 +909,220 @@ class _ScoringScreenState extends State<ScoringScreen> {
     );
   }
 
-  Color _getScoreColor(double score) {
-    if (score >= 0.8) {
-      return AppTheme.successGreen;
-    } else if (score >= 0.6) {
-      return AppTheme.primary;
-    } else {
-      return Colors.orange;
-    }
+  String _getScoreLabel(double score) {
+    if (score >= 0.9) return 'Excellent';
+    if (score >= 0.8) return 'Great';
+    if (score >= 0.7) return 'Good';
+    if (score >= 0.6) return 'Fair';
+    return 'Needs Work';
+  }
+
+  Widget _buildRadarChart(PartnerScore score, Color color) {
+    final skills = [
+      ('Empathy', score.empathy, Icons.favorite_rounded),
+      ('Listening', score.listening, Icons.hearing_rounded),
+      ('Reception', score.reception, Icons.visibility_rounded),
+      ('Clarity', score.clarity, Icons.lightbulb_rounded),
+      ('Respect', score.respect, Icons.handshake_rounded),
+      ('Responsiveness', score.responsiveness, Icons.chat_bubble_rounded),
+      ('Open-mindedness', score.openMindedness, Icons.psychology_rounded),
+    ];
+
+    return Column(
+      children: [
+        Text(
+          'Communication Skills Breakdown',
+          style: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        SizedBox(height: 16.h),
+        Expanded(
+          child: AnimatedBuilder(
+            animation: _scoreAnimation,
+            builder: (context, child) {
+              return Column(
+                children: skills.map((skill) {
+                  final animatedValue = skill.$2 * _scoreAnimation.value;
+                  final percentage = (animatedValue * 100).round();
+
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                    child: Container(
+                      padding: EdgeInsets.all(16.w),
+                      decoration: AppTheme.glassmorphicDecoration(
+                        borderRadius: 16,
+                        hasGlow: animatedValue > 0.8,
+                        glowColor: color,
+                      ),
+                      child: Row(
+                        children: [
+                          // Skill icon with glow
+                          Container(
+                            padding: EdgeInsets.all(8.w),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(skill.$3, color: color, size: 20.sp),
+                          ),
+
+                          SizedBox(width: 16.w),
+
+                          // Skill name and score
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      skill.$1,
+                                      style: TextStyle(
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.textPrimary,
+                                      ),
+                                    ),
+                                    Text(
+                                      '$percentage%',
+                                      style: TextStyle(
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w700,
+                                        color: color,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                SizedBox(height: 8.h),
+
+                                // Radial progress bar
+                                Container(
+                                  height: 6.h,
+                                  decoration: BoxDecoration(
+                                    color: color.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                  child: FractionallySizedBox(
+                                    alignment: Alignment.centerLeft,
+                                    widthFactor: animatedValue,
+                                    child: Container(
+                                      decoration: AppTheme.waveformDecoration(
+                                        color,
+                                        animatedValue,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEnhancedInsightCard(
+    String title,
+    List<String> items,
+    IconData icon,
+    Color color,
+  ) {
+    return AnimatedBuilder(
+      animation: _celebrationAnimation,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, (1 - _celebrationAnimation.value) * 30),
+          child: Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: AppTheme.cardDecoration(
+              color: color.withValues(alpha: 0.05),
+              borderRadius: 16,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(8.w),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [color, color.withValues(alpha: 0.8)],
+                        ),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Icon(icon, color: Colors.white, size: 16.sp),
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w700,
+                        color: color,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+                ...items
+                    .take(3)
+                    .map(
+                      (item) => Padding(
+                        padding: EdgeInsets.only(bottom: 6.h),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 4.w,
+                              height: 4.w,
+                              margin: EdgeInsets.only(top: 6.h, right: 8.w),
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                item,
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: AppTheme.textSecondary,
+                                  height: 1.3,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    _celebrationController.dispose();
+    _scoreAnimationController.dispose();
+    super.dispose();
   }
 }

@@ -4,9 +4,9 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_linux
-  flutter_webrtc
   record_linux
   url_launcher_linux
+  zego_express_engine
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

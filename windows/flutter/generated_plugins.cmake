@@ -3,18 +3,16 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  agora_rtc_engine
   audioplayers_windows
   cloud_firestore
   firebase_auth
   firebase_core
   flutter_tts
-  flutter_webrtc
-  iris_method_channel
   permission_handler_windows
   record_windows
   share_plus
   url_launcher_windows
+  zego_express_engine
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

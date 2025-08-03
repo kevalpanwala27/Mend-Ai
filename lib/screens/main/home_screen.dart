@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/gradient_button.dart';
@@ -22,9 +23,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
-  // Accessibility settings (for demo, use local state)
-  bool _highContrast = false;
-  double _fontScale = 1.0;
+  // Font scale for accessibility
+  final double _fontScale = 1.0;
 
   @override
   void initState() {
@@ -50,107 +50,98 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaleFactor: _fontScale),
-          child: Theme(
-            data: _highContrast
-                ? Theme.of(context).copyWith(
-                    colorScheme: Theme.of(context).colorScheme.copyWith(
-                      primary: Colors.black,
-                      secondary: Colors.yellow,
-                      background: Colors.white,
-                      surface: Colors.white,
-                      onPrimary: Colors.white,
-                      onSecondary: Colors.black,
-                    ),
-                    scaffoldBackgroundColor: Colors.white,
-                  )
-                : Theme.of(context),
-            child: Scaffold(
-              backgroundColor: AppTheme.background,
-              appBar: AppBar(
-                title: ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
-                  ).createShader(bounds),
-                  child: const Text(
-                    'Mend',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
-                    ),
+          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(_fontScale)),
+          child: Scaffold(
+            backgroundColor: Colors.black, // Set solid black background
+            appBar: AppBar(
+              title: ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
+                ).createShader(bounds),
+                child: const Text(
+                  'Mend',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
                   ),
                 ),
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                actions: [
-                  IconButton(
-                    icon: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                      ),
-                      child: const Icon(
-                        Icons.insights_rounded,
-                        color: AppTheme.primary,
-                        size: 20,
-                        semanticLabel: 'Insights Dashboard',
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const InsightsDashboardScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: AppTheme.spacingM),
-                ],
               ),
-              body: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppTheme.background, Color(0xFFF8F9FA)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              actions: [
+                IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                    ),
+                    child: const Icon(
+                      Icons.insights_rounded,
+                      color: AppTheme.primary,
+                      size: 20,
+                      semanticLabel: 'Insights Dashboard',
+                    ),
                   ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const InsightsDashboardScreen(),
+                      ),
+                    );
+                  },
                 ),
-                child: SafeArea(
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppTheme.spacingL),
+                const SizedBox(width: AppTheme.spacingM),
+              ],
+            ),
+            body: Container(
+              decoration: const BoxDecoration(
+                color:
+                    Colors.black, // Solid black background instead of gradient
+              ),
+              child: SafeArea(
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(AppTheme.spacingL.w),
+                    child: AnimationLimiter(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Welcome Section
-                          Semantics(
-                            label: 'Welcome Section',
-                            child: _buildWelcomeSection(context, appState),
+                        children: AnimationConfiguration.toStaggeredList(
+                          duration: const Duration(milliseconds: 800),
+                          childAnimationBuilder: (widget) => SlideAnimation(
+                            verticalOffset: 50.0,
+                            child: FadeInAnimation(child: widget),
                           ),
-                          const SizedBox(height: AppTheme.spacingXL),
-                          // Quick Stats Card
-                          Semantics(
-                            label: 'Quick Stats',
-                            child: _buildQuickStatsCard(context, appState),
-                          ),
-                          const SizedBox(height: AppTheme.spacingXL),
-                          // Session Actions
-                          Semantics(
-                            label: 'Session Actions',
-                            child: _buildSessionActions(context),
-                          ),
-                          const SizedBox(height: AppTheme.spacingXL),
-                          // Features Overview
-                          Semantics(
-                            label: 'Features Overview',
-                            child: _buildFeaturesOverview(context),
-                          ),
-                          const SizedBox(height: AppTheme.spacingXL),
-                        ],
+                          children: [
+                            // Welcome Section
+                            Semantics(
+                              label: 'Welcome Section',
+                              child: _buildWelcomeSection(context, appState),
+                            ),
+                            SizedBox(height: AppTheme.spacingXL.h),
+                            // Quick Stats Card
+                            Semantics(
+                              label: 'Quick Stats',
+                              child: _buildQuickStatsCard(context, appState),
+                            ),
+                            SizedBox(height: AppTheme.spacingXL.h),
+                            // Session Actions
+                            Semantics(
+                              label: 'Session Actions',
+                              child: _buildSessionActions(context),
+                            ),
+                            SizedBox(height: AppTheme.spacingXL.h),
+                            // Features Overview
+                            Semantics(
+                              label: 'Features Overview',
+                              child: _buildFeaturesOverview(context),
+                            ),
+                            SizedBox(height: AppTheme.spacingXL.h),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -182,9 +173,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Container(
                 padding: const EdgeInsets.all(AppTheme.spacingM),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
-                  ),
+                  color: AppTheme.primary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(AppTheme.radiusM),
                 ),
                 child: const Icon(
@@ -398,40 +387,59 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildFeatureItem(IconData icon, String title, String description) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(AppTheme.spacingM),
-          decoration: BoxDecoration(
-            color: AppTheme.secondary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(AppTheme.radiusM),
-          ),
-          child: Icon(icon, color: AppTheme.secondary, size: 24),
-        ),
-        const SizedBox(width: AppTheme.spacingM),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacingL),
+      decoration: AppTheme.glassmorphicDecoration(
+        borderRadius: AppTheme.radiusL,
+        hasGlow: false,
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppTheme.spacingM),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.secondary.withValues(alpha: 0.2),
+                  AppTheme.secondary.withValues(alpha: 0.1),
+                ],
               ),
-              const SizedBox(height: AppTheme.spacingXS),
-              Text(
-                description,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondary,
-                  height: 1.4,
-                ),
+              borderRadius: BorderRadius.circular(AppTheme.radiusM),
+              border: Border.all(
+                color: AppTheme.secondary.withValues(alpha: 0.3),
+                width: 1,
               ),
-            ],
+            ),
+            child: Icon(icon, color: AppTheme.secondary, size: 24),
           ),
-        ),
-      ],
+          const SizedBox(width: AppTheme.spacingL),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacingS),
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.textSecondary,
+                    height: 1.5,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
