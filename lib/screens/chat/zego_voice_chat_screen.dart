@@ -45,7 +45,6 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
   Timer? _aiPromptTimer;
 
   // Mood check-in
-  String? _selectedMood;
   bool _moodCheckedIn = false;
 
   // Animation controllers
@@ -62,20 +61,56 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
   late Animation<double> _warningAnimation;
   late Animation<double> _connectionAnimation;
 
+  // AI Therapy Suggestion System
+  String _currentTherapyCategory = 'general';
+  int _conversationTurnCount = 0;
+  bool _emotionalEscalationDetected = false;
+  DateTime _lastSuggestionTime = DateTime.now();
 
-  // AI message examples with context-aware responses - emotionally intelligent
-  final List<String> _aiMessages = [
-    "What's something you've been wanting to say but haven't?",
-    "Can you reflect back what you just heard from your partner?",
-    "Let's pause and take a breath together — you're both doing great.",
-    "What feelings came up for you when you heard that?",
-    "Take a moment to appreciate something about your partner right now.",
-    "What's one small thing that could help you both feel more connected?",
-    "How might you approach this differently if you were your partner?",
-    "What would it feel like to really be heard in this moment?",
-    "Can you share what you need most from your partner right now?",
-    "What's one thing you're grateful for about your relationship?",
-  ];
+  // Categorized therapy prompts for different situations
+  final Map<String, List<String>> _therapySuggestions = {
+    'general': [
+      "What's something you've been wanting to say but haven't?",
+      "Can you share what you need most from your partner right now?",
+      "What's one thing you're grateful for about your relationship?",
+      "How are you feeling in this moment?",
+    ],
+    'conflict_resolution': [
+      "Let's take a step back. What's the core issue you're both facing?",
+      "Can you each share your perspective without interrupting?",
+      "What would a solution look like that works for both of you?",
+      "Let's focus on 'I' statements. How does this situation make you feel?",
+      "What's one thing your partner could do to help you feel heard?",
+    ],
+    'emotional_regulation': [
+      "Let's pause and take three deep breaths together.",
+      "What feelings came up for you when you heard that?",
+      "Can you help your partner understand what you're experiencing?",
+      "It's okay to feel upset. Let's slow down and process this together.",
+      "What do you need right now to feel safe in this conversation?",
+    ],
+    'empathy_building': [
+      "Can you reflect back what you just heard from your partner?",
+      "How might you approach this differently if you were your partner?",
+      "What would it feel like to really be heard in this moment?",
+      "Try to imagine your partner's perspective. What might they be feeling?",
+      "Can you find something to appreciate about your partner's viewpoint?",
+    ],
+    'connection_deepening': [
+      "Take a moment to appreciate something about your partner right now.",
+      "What's one small thing that could help you both feel more connected?",
+      "Share a memory that makes you feel close to each other.",
+      "What drew you to your partner when you first met?",
+      "How can you show love in a way your partner will feel it?",
+    ],
+    'de_escalation': [
+      "Let's pause here. You're both important and your feelings matter.",
+      "I notice the energy is getting intense. Let's slow down together.",
+      "Can we agree to take a short break and come back to this?",
+      "Remember, you're on the same team working through this together.",
+      "What would help you both feel safer to continue this conversation?",
+    ],
+  };
 
   @override
   void initState() {
@@ -113,34 +148,47 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
       // Get user info
       if (!mounted) return;
       final appState = Provider.of<FirebaseAppState>(context, listen: false);
-      
+
       // Generate unique user ID for this session to avoid conflicts
       // Use Firebase UID + timestamp to ensure uniqueness
       final firebaseUid = appState.user?.uid ?? widget.userId;
-      final sessionUserId = '${firebaseUid}_${DateTime.now().millisecondsSinceEpoch}';
-      
+      final sessionUserId =
+          '${firebaseUid}_${DateTime.now().millisecondsSinceEpoch}';
+
       final currentPartner = appState.getCurrentPartner();
       final userName = currentPartner?.name ?? 'User';
 
-      print('=== STARTING ZEGO VOICE CALL ===');
-      print('Room ID: ${widget.sessionCode}');
-      print('User ID: $sessionUserId');
-      print('User Name: $userName');
-      print('DEBUG: appState.user?.uid = ${appState.user?.uid}');
-      print('DEBUG: widget.userId = ${widget.userId}');
-      print('DEBUG: appState.currentUserId = ${appState.currentUserId}');
+      developer.log('=== STARTING ZEGO VOICE CALL ===');
+      developer.log('Room ID: ${widget.sessionCode}');
+      developer.log('User ID: $sessionUserId');
+      developer.log('User Name: $userName');
+      developer.log('DEBUG: appState.user?.uid = ${appState.user?.uid}');
+      developer.log('DEBUG: widget.userId = ${widget.userId}');
+      developer.log(
+        'DEBUG: appState.currentUserId = ${appState.currentUserId}',
+      );
 
       // Get secure token from your backend
-      String? token = await ZegoTokenService.generateToken(sessionUserId, widget.sessionCode);
-      
+      String? token = await ZegoTokenService.generateToken(
+        sessionUserId,
+        widget.sessionCode,
+      );
+
       if (token == null) {
-        developer.log('WARNING: Could not get token from backend, joining without token');
+        developer.log(
+          'WARNING: Could not get token from backend, joining without token',
+        );
       } else {
         developer.log('Successfully obtained token from backend');
       }
 
       // Join voice room with token
-      await _zegoService.joinRoom(widget.sessionCode, sessionUserId, userName, token: token);
+      await _zegoService.joinRoom(
+        widget.sessionCode,
+        sessionUserId,
+        userName,
+        token: token,
+      );
 
       setState(() {
         _isInitializing = false;
@@ -246,7 +294,6 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
     } else {
       _connectionController.reverse();
     }
-
   }
 
   void _startSessionTimer() {
@@ -264,21 +311,103 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
   }
 
   void _startAIPromptTimer() {
-    // Show new AI prompts every 2-3 minutes to guide conversation
-    _aiPromptTimer = Timer.periodic(const Duration(minutes: 2), (timer) {
+    // Check for therapy suggestions every 30 seconds
+    _aiPromptTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       if (mounted && _isConnected) {
-        _showNewAIMessage();
+        _analyzeConversationAndSuggest();
       }
     });
   }
 
-  void _showNewAIMessage() {
+  void _analyzeConversationAndSuggest() {
+    final now = DateTime.now();
+    final timeSinceLastSuggestion = now.difference(_lastSuggestionTime);
+
+    // Don't suggest too frequently (minimum 45 seconds apart)
+    if (timeSinceLastSuggestion.inSeconds < 45) return;
+
+    // Simulate conversation analysis (in real app, this would analyze audio/transcription)
+    _conversationTurnCount++;
+
+    String newCategory = _determineTherapyCategory();
+    String suggestion = _getContextualSuggestion(newCategory);
+
+    if (suggestion != _currentAIMessage) {
+      setState(() {
+        _currentAIMessage = suggestion;
+        _currentTherapyCategory = newCategory;
+      });
+      _aiMessageController.reset();
+      _aiMessageController.forward();
+      _lastSuggestionTime = now;
+    }
+  }
+
+  String _determineTherapyCategory() {
+    // Simulate intelligent category selection based on conversation analysis
+    // In a real implementation, this would analyze:
+    // - Voice tone/volume changes
+    // - Speech patterns
+    // - Interruption frequency
+    // - Silence duration
+    // - Keyword detection from transcription
+
     final random = math.Random();
-    setState(() {
-      _currentAIMessage = _aiMessages[random.nextInt(_aiMessages.length)];
-    });
-    _aiMessageController.reset();
-    _aiMessageController.forward();
+    final sessionLength = _sessionMinutes * 60 + _sessionSeconds;
+
+    // Early conversation - focus on connection
+    if (sessionLength < 120) {
+      return random.nextBool() ? 'general' : 'connection_deepening';
+    }
+
+    // Detect escalation patterns (simplified simulation)
+    if (_zegoService.isInterruption || _showInterruptionWarning) {
+      _emotionalEscalationDetected = true;
+      return 'de_escalation';
+    }
+
+    // If speaking levels are very different, encourage participation
+    final localActive = _zegoService.isLocalAudioActive;
+    final remoteActive = _zegoService.isRemoteAudioActive;
+
+    if (localActive && !remoteActive) {
+      return 'empathy_building'; // Encourage listening
+    }
+
+    // Conflict resolution patterns
+    if (_conversationTurnCount > 0 && _conversationTurnCount % 8 == 0) {
+      return 'conflict_resolution';
+    }
+
+    // Emotional regulation if escalation was detected recently
+    if (_emotionalEscalationDetected && random.nextDouble() < 0.4) {
+      _emotionalEscalationDetected = false; // Reset after addressing
+      return 'emotional_regulation';
+    }
+
+    // Mid-conversation - focus on deeper connection and empathy
+    if (sessionLength > 300) {
+      final categories = [
+        'empathy_building',
+        'connection_deepening',
+        'general',
+      ];
+      return categories[random.nextInt(categories.length)];
+    }
+
+    return 'general';
+  }
+
+  String _getContextualSuggestion(String category) {
+    final suggestions =
+        _therapySuggestions[category] ?? _therapySuggestions['general']!;
+    final random = math.Random();
+    return suggestions[random.nextInt(suggestions.length)];
+  }
+
+  void _showNewAIMessage() {
+    // Manual trigger for new AI message
+    _analyzeConversationAndSuggest();
   }
 
   Future<void> _showMoodCheckinIfNeeded() async {
@@ -290,7 +419,6 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
       );
       if (mood != null && mounted) {
         setState(() {
-          _selectedMood = mood.emoji;
           _moodCheckedIn = true;
         });
       }
@@ -303,8 +431,6 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
       _isMuted = _zegoService.isMuted;
     });
   }
-
-
 
   void _endSession() async {
     final result = await showDialog<bool>(
@@ -396,11 +522,7 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF1a1a2e),
-            Color(0xFF16213e),
-            Color(0xFF0f3460),
-          ],
+          colors: [Color(0xFF1a1a2e), Color(0xFF16213e), Color(0xFF0f3460)],
         ),
       ),
       child: SafeArea(
@@ -434,20 +556,28 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
               return Transform.scale(
                 scale: 0.9 + (_connectionAnimation.value * 0.1),
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
                   decoration: BoxDecoration(
                     color: _isConnected
                         ? AppTheme.successGreen.withValues(alpha: 0.2)
                         : AppTheme.interruptionColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20.r),
                     border: Border.all(
-                      color: _isConnected ? AppTheme.successGreen : AppTheme.interruptionColor,
+                      color: _isConnected
+                          ? AppTheme.successGreen
+                          : AppTheme.interruptionColor,
                       width: 2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: (_isConnected ? AppTheme.successGreen : AppTheme.interruptionColor)
-                            .withValues(alpha: 0.3),
+                        color:
+                            (_isConnected
+                                    ? AppTheme.successGreen
+                                    : AppTheme.interruptionColor)
+                                .withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -460,12 +590,17 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
                         width: 10.w,
                         height: 10.w,
                         decoration: BoxDecoration(
-                          color: _isConnected ? AppTheme.successGreen : AppTheme.interruptionColor,
+                          color: _isConnected
+                              ? AppTheme.successGreen
+                              : AppTheme.interruptionColor,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: (_isConnected ? AppTheme.successGreen : AppTheme.interruptionColor)
-                                  .withValues(alpha: 0.6),
+                              color:
+                                  (_isConnected
+                                          ? AppTheme.successGreen
+                                          : AppTheme.interruptionColor)
+                                      .withValues(alpha: 0.6),
                               blurRadius: 8,
                               spreadRadius: 2,
                             ),
@@ -647,12 +782,40 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
                               ),
                               SizedBox(width: 8.w),
                               Text(
-                                'Mend AI',
+                                'Mend AI Therapist',
                                 style: TextStyle(
                                   color: AppTheme.textSecondary,
                                   fontSize: 12.sp,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.8,
+                                ),
+                              ),
+                              SizedBox(width: 4.w),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 6.w,
+                                  vertical: 2.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _getCategoryColor().withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  border: Border.all(
+                                    color: _getCategoryColor().withValues(
+                                      alpha: 0.4,
+                                    ),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  _getCategoryDisplayName(),
+                                  style: TextStyle(
+                                    color: _getCategoryColor(),
+                                    fontSize: 10.sp,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.5,
+                                  ),
                                 ),
                               ),
                             ],
@@ -852,8 +1015,8 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
                       isSpeaking
                           ? 'Speaking...'
                           : (isLocal && _isMuted)
-                              ? 'Muted'
-                              : 'Listening',
+                          ? 'Muted'
+                          : 'Listening',
                       style: TextStyle(
                         color: isSpeaking
                             ? Colors.white
@@ -891,11 +1054,12 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: List.generate(8, (index) {
-            final height = (15 +
-                    (level * 75) *
-                        _waveformAnimation.value *
-                        (0.3 + math.Random(index).nextDouble() * 0.7))
-                .h;
+            final height =
+                (15 +
+                        (level * 75) *
+                            _waveformAnimation.value *
+                            (0.3 + math.Random(index).nextDouble() * 0.7))
+                    .h;
             final opacity = 0.6 + (_waveformAnimation.value * 0.4);
 
             return Container(
@@ -957,18 +1121,24 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
           // Speaker toggle button (echo warning)
           _buildOldControlButton(
             onTap: () => _zegoService.toggleSpeaker(),
-            icon: _zegoService.isSpeakerOn ? Icons.volume_up_rounded : Icons.volume_down_rounded,
+            icon: _zegoService.isSpeakerOn
+                ? Icons.volume_up_rounded
+                : Icons.volume_down_rounded,
             isActive: _zegoService.isSpeakerOn,
-            backgroundColor: _zegoService.isSpeakerOn ? AppTheme.interruptionColor : null,
-            tooltip: _zegoService.isSpeakerOn ? 'Speaker On (Use Headphones!)' : 'Enable Speaker (May Echo)',
+            backgroundColor: _zegoService.isSpeakerOn
+                ? AppTheme.interruptionColor
+                : null,
+            tooltip: _zegoService.isSpeakerOn
+                ? 'Speaker On (Use Headphones!)'
+                : 'Enable Speaker (May Echo)',
           ),
 
-          // New AI Prompt button
+          // New AI Therapy Suggestion button
           _buildOldControlButton(
             onTap: _showNewAIMessage,
             icon: Icons.psychology_rounded,
             isActive: false,
-            tooltip: 'New AI Prompt',
+            tooltip: 'Get Therapy Suggestion',
           ),
 
           // End session button
@@ -982,6 +1152,40 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
         ],
       ),
     );
+  }
+
+  Color _getCategoryColor() {
+    switch (_currentTherapyCategory) {
+      case 'conflict_resolution':
+        return const Color(0xFFFF6B6B); // Soft red
+      case 'emotional_regulation':
+        return const Color(0xFFFFD93D); // Warm yellow
+      case 'empathy_building':
+        return const Color(0xFF6BCF7F); // Soft green
+      case 'connection_deepening':
+        return const Color(0xFF4ECDC4); // Teal
+      case 'de_escalation':
+        return const Color(0xFFFF8E53); // Orange
+      default:
+        return AppTheme.aiActive; // Default blue
+    }
+  }
+
+  String _getCategoryDisplayName() {
+    switch (_currentTherapyCategory) {
+      case 'conflict_resolution':
+        return 'CONFLICT';
+      case 'emotional_regulation':
+        return 'EMOTION';
+      case 'empathy_building':
+        return 'EMPATHY';
+      case 'connection_deepening':
+        return 'CONNECT';
+      case 'de_escalation':
+        return 'CALM';
+      default:
+        return 'THERAPY';
+    }
   }
 
   Widget _buildOldControlButton({
@@ -1029,15 +1233,6 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
       ),
     );
   }
-
-
-
-
-
-
-
-
-
 
   @override
   void dispose() {

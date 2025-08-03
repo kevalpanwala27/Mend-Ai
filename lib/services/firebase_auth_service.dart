@@ -28,7 +28,7 @@ class FirebaseAuthService {
         'email',
         'https://www.googleapis.com/auth/userinfo.profile',
       ]);
-      if (authz == null) {
+      if (authz.accessToken.isEmpty) {
         return GoogleSignInResult(
           errorMessage: 'Sign-in cancelled or not authorized by user.',
         );

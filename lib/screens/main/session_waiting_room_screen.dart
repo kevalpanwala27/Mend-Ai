@@ -135,10 +135,13 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
+        final navigator = Navigator.of(context);
         final shouldPop = await _showExitConfirmation();
-        if (shouldPop && mounted) {
+        if (shouldPop) {
           await _leaveSession();
-          Navigator.of(context).pop();
+          if (mounted) {
+            navigator.pop();
+          }
         }
       },
       child: Scaffold(
@@ -148,10 +151,13 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () async {
+              final navigator = Navigator.of(context);
               final shouldExit = await _showExitConfirmation();
-              if (shouldExit && mounted) {
+              if (shouldExit) {
                 await _leaveSession();
-                Navigator.of(context).pop();
+                if (mounted) {
+                  navigator.pop();
+                }
               }
             },
           ),
