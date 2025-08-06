@@ -663,13 +663,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   String _generateSessionCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final random = Random();
-    return String.fromCharCodes(
-      Iterable.generate(
-        6,
-        (_) => chars.codeUnitAt(random.nextInt(chars.length)),
-      ),
-    );
+    final random = Random.secure(); // Use secure random for better uniqueness
+    
+    // Generate a longer code (8 characters instead of 6)
+    String code;
+    do {
+      code = String.fromCharCodes(
+        Iterable.generate(
+          8,
+          (_) => chars.codeUnitAt(random.nextInt(chars.length)),
+        ),
+      );
+    } while (_isCodeInUse(code)); // Check for collision
+    
+    return code;
+  }
+  
+  bool _isCodeInUse(String code) {
+    // Check if this code is already being used by current active sessions
+    // This is a basic collision check - in production you'd check against database
+    final appState = context.read<FirebaseAppState>();
+    return appState.sessions.any((session) => 
+        session.id == code && 
+        session.endTime == null); // Only check active sessions
   }
 
   int _calculateStreak(List<dynamic> sessions) {

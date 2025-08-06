@@ -1236,15 +1236,48 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
 
   @override
   void dispose() {
+    // Cancel all timers first
     _sessionTimer?.cancel();
+    _sessionTimer = null;
     _aiPromptTimer?.cancel();
-    _zegoService.removeListener(_onZegoStateChanged);
-    _zegoService.dispose();
-    _pulseController.dispose();
-    _waveformController.dispose();
-    _aiMessageController.dispose();
-    _warningController.dispose();
-    _connectionController.dispose();
+    _aiPromptTimer = null;
+    
+    // Stop all animation controllers before disposing
+    try {
+      _pulseController.stop();
+      _waveformController.stop();
+      _aiMessageController.stop();
+      _warningController.stop();
+      _connectionController.stop();
+    } catch (e) {
+      debugPrint('Error stopping animation controllers: $e');
+    }
+    
+    // Dispose animation controllers with error handling
+    try {
+      _pulseController.dispose();
+      _waveformController.dispose();
+      _aiMessageController.dispose();
+      _warningController.dispose();
+      _connectionController.dispose();
+    } catch (e) {
+      debugPrint('Error disposing animation controllers: $e');
+    }
+    
+    // Remove listener and dispose ZEGO service
+    try {
+      _zegoService.removeListener(_onZegoStateChanged);
+    } catch (e) {
+      debugPrint('Error removing ZEGO listener: $e');
+    }
+    
+    // Don't dispose the singleton ZEGO service - just clean up our usage
+    try {
+      _zegoService.leaveRoom();
+    } catch (e) {
+      debugPrint('Error leaving ZEGO room: $e');
+    }
+    
     super.dispose();
   }
 }

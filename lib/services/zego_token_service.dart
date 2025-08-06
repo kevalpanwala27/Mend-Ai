@@ -3,8 +3,25 @@ import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 
 class ZegoTokenService {
-  // Replace with your EC2 instance URL
-  static const String baseUrl = 'http://13.223.2.148:3000';
+  // Server URL should be configured based on environment for security
+  static String get baseUrl {
+    const String serverUrl = String.fromEnvironment('ZEGO_SERVER_URL');
+    if (serverUrl.isNotEmpty) {
+      // Ensure HTTPS in production
+      if (!serverUrl.startsWith('https://') && !serverUrl.startsWith('http://localhost')) {
+        throw Exception('Server URL must use HTTPS in production. Got: $serverUrl');
+      }
+      return serverUrl;
+    }
+    
+    // Development fallback - NEVER use hardcoded production IPs
+    const bool isDevelopment = bool.fromEnvironment('dart.vm.product') == false;
+    if (isDevelopment) {
+      return 'http://localhost:3000';
+    }
+    
+    throw Exception('ZEGO_SERVER_URL environment variable not set. This is required for production.');
+  }
 
   /// Generate ZEGOCLOUD token from your backend
   static Future<String?> generateToken(String userId, String roomId) async {

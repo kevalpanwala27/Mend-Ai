@@ -90,9 +90,15 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
     _nameController.dispose();
     _customGoalController.dispose();
     _customChallengeController.dispose();
+    
+    // Stop animation controllers before disposing
+    _fadeController.stop();
     _fadeController.dispose();
+    _slideController.stop();
     _slideController.dispose();
+    _bounceController.stop();
     _bounceController.dispose();
+    
     super.dispose();
   }
 

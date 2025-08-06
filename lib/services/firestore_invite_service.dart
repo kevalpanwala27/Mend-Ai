@@ -34,16 +34,16 @@ class FirestoreInviteService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Generate a unique 6-character invite code
+  // Generate a unique 8-character invite code with better entropy
   String generateInviteCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final random = Random();
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed confusing chars
+    final random = Random.secure(); // Use cryptographically secure random
     return String.fromCharCodes(
-      Iterable.generate(6, (_) => chars.codeUnitAt(random.nextInt(chars.length)))
+      Iterable.generate(8, (_) => chars.codeUnitAt(random.nextInt(chars.length)))
     );
   }
 
-  // Create an invite code for Partner A
+  // Create an invite code for Partner A with better collision handling
   Future<String> createInvite(Partner partnerA) async {
     try {
       final user = _auth.currentUser;
@@ -51,30 +51,53 @@ class FirestoreInviteService {
         throw Exception('User not authenticated');
       }
 
+      // Try to create unique invite code with limited retries to prevent infinite loops
       String inviteCode;
-      bool isUnique = false;
+      int attempts = 0;
+      const maxAttempts = 10;
       
-      // Generate a unique invite code
-      do {
+      while (attempts < maxAttempts) {
         inviteCode = generateInviteCode();
-        final doc = await _firestore.collection('invites').doc(inviteCode).get();
-        isUnique = !doc.exists;
-      } while (!isUnique);
-
-      // Create invite document
-      await _firestore.collection('invites').doc(inviteCode).set({
-        'code': inviteCode,
-        'createdBy': user.uid,
-        'partnerA': partnerA.toJson(),
-        'createdAt': FieldValue.serverTimestamp(),
-        'expiresAt': DateTime.now().add(const Duration(hours: 24)),
-        'isUsed': false,
-        'usedBy': null,
-        'usedAt': null,
-        'partnerB': null,
-      });
-
-      return inviteCode;
+        
+        // Use a transaction to atomically check and create
+        try {
+          final result = await _firestore.runTransaction((transaction) async {
+            final docRef = _firestore.collection('invites').doc(inviteCode);
+            final doc = await transaction.get(docRef);
+            
+            if (doc.exists) {
+              // Code already exists, return null to retry
+              return null;
+            }
+            
+            // Create the invite document atomically
+            transaction.set(docRef, {
+              'code': inviteCode,
+              'createdBy': user.uid,
+              'partnerA': partnerA.toJson(),
+              'createdAt': FieldValue.serverTimestamp(),
+              'expiresAt': DateTime.now().add(const Duration(hours: 24)),
+              'isUsed': false,
+              'usedBy': null,
+              'usedAt': null,
+              'partnerB': null,
+            });
+            
+            return inviteCode;
+          });
+          
+          if (result != null) {
+            return result; // Success
+          }
+        } catch (e) {
+          debugPrint('Transaction failed for invite creation attempt ${attempts + 1}: $e');
+        }
+        
+        attempts++;
+      }
+      
+      // If we get here, we failed to create a unique code after maxAttempts
+      throw Exception('Failed to generate unique invite code after $maxAttempts attempts');
     } catch (e) {
       debugPrint('Error creating invite: $e');
       throw Exception('Failed to create invite code: $e');

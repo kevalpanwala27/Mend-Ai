@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class Partner {
   final String id;
   final String name;
@@ -30,15 +32,55 @@ class Partner {
   }
 
   factory Partner.fromJson(Map<String, dynamic> json) {
-    return Partner(
-      id: json['id'],
-      name: json['name'],
-      gender: json['gender'],
-      relationshipGoals: List<String>.from(json['relationshipGoals']),
-      currentChallenges: List<String>.from(json['currentChallenges']),
-      customGoal: json['customGoal'],
-      customChallenge: json['customChallenge'],
-    );
+    try {
+      // Validate required fields
+      final id = json['id'] as String?;
+      final name = json['name'] as String?;
+      final gender = json['gender'] as String?;
+      
+      if (id == null || id.isEmpty) {
+        throw ArgumentError('Invalid or missing id in Partner.fromJson');
+      }
+      if (name == null || name.isEmpty) {
+        throw ArgumentError('Invalid or missing name in Partner.fromJson');
+      }
+      if (gender == null || gender.isEmpty) {
+        throw ArgumentError('Invalid or missing gender in Partner.fromJson');
+      }
+      
+      // Safely parse arrays with null checks
+      List<String> relationshipGoals = [];
+      if (json['relationshipGoals'] is List) {
+        try {
+          relationshipGoals = List<String>.from(json['relationshipGoals']);
+        } catch (e) {
+          debugPrint('Warning: Invalid relationshipGoals format, using empty list');
+        }
+      }
+      
+      List<String> currentChallenges = [];
+      if (json['currentChallenges'] is List) {
+        try {
+          currentChallenges = List<String>.from(json['currentChallenges']);
+        } catch (e) {
+          debugPrint('Warning: Invalid currentChallenges format, using empty list');
+        }
+      }
+      
+      return Partner(
+        id: id,
+        name: name,
+        gender: gender,
+        relationshipGoals: relationshipGoals,
+        currentChallenges: currentChallenges,
+        customGoal: json['customGoal'] as String? ?? '',
+        customChallenge: json['customChallenge'] as String? ?? '',
+      );
+    } catch (e) {
+      debugPrint('Error parsing Partner from JSON: $e');
+      debugPrint('JSON data: $json');
+      rethrow;
+    }
   }
 }
 

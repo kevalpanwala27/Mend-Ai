@@ -19,6 +19,113 @@ class FirebaseAuthService {
   // Get auth state changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
+  // Sign in with email and password
+  Future<String?> signInWithEmailPassword(String email, String password) async {
+    try {
+      debugPrint('🔐 FirebaseAuthService: Starting sign in for: $email');
+      final result = await _auth.signInWithEmailAndPassword(email: email, password: password);
+      debugPrint('✅ FirebaseAuthService: Sign in successful for user: ${result.user?.uid}');
+      return null; // Success
+    } on FirebaseAuthException catch (e) {
+      debugPrint('❌ FirebaseAuthService: Firebase auth error: ${e.code} - ${e.message}');
+      switch (e.code) {
+        case 'user-not-found':
+          return 'No user found for this email address.';
+        case 'wrong-password':
+          return 'Wrong password provided.';
+        case 'invalid-email':
+          return 'The email address is not valid.';
+        case 'user-disabled':
+          return 'This user account has been disabled.';
+        case 'too-many-requests':
+          return 'Too many failed attempts. Please try again later.';
+        default:
+          return 'An error occurred: ${e.message}';
+      }
+    } catch (e) {
+      debugPrint('Unexpected error in sign-in: $e');
+      return 'An unexpected error occurred. Please try again.';
+    }
+  }
+
+  // Sign up with email and password
+  Future<String?> signUpWithEmailPassword(String email, String password) async {
+    try {
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      // Send email verification
+      if (userCredential.user != null && !userCredential.user!.emailVerified) {
+        await userCredential.user!.sendEmailVerification();
+      }
+      
+      return null; // Success
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'weak-password':
+          return 'The password provided is too weak.';
+        case 'email-already-in-use':
+          return 'An account already exists for this email address.';
+        case 'invalid-email':
+          return 'The email address is not valid.';
+        case 'operation-not-allowed':
+          return 'Email/password accounts are not enabled.';
+        default:
+          return 'An error occurred: ${e.message}';
+      }
+    } catch (e) {
+      debugPrint('Unexpected error in sign-up: $e');
+      return 'An unexpected error occurred. Please try again.';
+    }
+  }
+
+  // Send password reset email
+  Future<String?> resetPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      return null; // Success
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'user-not-found':
+          return 'No user found for this email address.';
+        case 'invalid-email':
+          return 'The email address is not valid.';
+        default:
+          return 'An error occurred: ${e.message}';
+      }
+    } catch (e) {
+      debugPrint('Unexpected error in password reset: $e');
+      return 'An unexpected error occurred. Please try again.';
+    }
+  }
+
+  // Send email verification
+  Future<String?> sendEmailVerification() async {
+    try {
+      final user = currentUser;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+        return null; // Success
+      }
+      return 'No user found or email already verified.';
+    } on FirebaseAuthException catch (e) {
+      return 'Error sending verification email: ${e.message}';
+    } catch (e) {
+      debugPrint('Unexpected error sending verification email: $e');
+      return 'An unexpected error occurred. Please try again.';
+    }
+  }
+
+  // Check if email is verified
+  Future<void> reloadUser() async {
+    await currentUser?.reload();
+  }
+
+  // Get email verification status
+  bool get isEmailVerified => currentUser?.emailVerified ?? false;
+
   // Sign in with Google
   Future<GoogleSignInResult> signInWithGoogle() async {
     try {

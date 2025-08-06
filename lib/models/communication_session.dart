@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class CommunicationSession {
   final String id;
   final DateTime startTime;
@@ -87,16 +89,56 @@ class Message {
   }
 
   factory Message.fromJson(Map<String, dynamic> json) {
-    return Message(
-      speakerId: json['speakerId'],
-      content: json['content'],
-      timestamp: DateTime.parse(json['timestamp']),
-      type: MessageType.values.firstWhere(
-        (e) => e.toString() == json['type'],
-        orElse: () => MessageType.user,
-      ),
-      wasInterrupted: json['wasInterrupted'] ?? false,
-    );
+    try {
+      // Validate required fields
+      final speakerId = json['speakerId'] as String?;
+      final content = json['content'] as String?;
+      final timestampStr = json['timestamp'] as String?;
+      final typeStr = json['type'] as String?;
+      
+      if (speakerId == null || speakerId.isEmpty) {
+        throw ArgumentError('Invalid speakerId in Message.fromJson');
+      }
+      if (content == null) {
+        throw ArgumentError('Invalid content in Message.fromJson');
+      }
+      if (timestampStr == null || timestampStr.isEmpty) {
+        throw ArgumentError('Invalid timestamp in Message.fromJson');
+      }
+      
+      // Parse timestamp with error handling
+      DateTime timestamp;
+      try {
+        timestamp = DateTime.parse(timestampStr);
+      } catch (e) {
+        throw ArgumentError('Invalid timestamp format in Message.fromJson: $timestampStr');
+      }
+      
+      // Parse message type with validation
+      MessageType messageType = MessageType.user; // Default
+      if (typeStr != null && typeStr.isNotEmpty) {
+        try {
+          messageType = MessageType.values.firstWhere(
+            (e) => e.toString().split('.').last == typeStr.split('.').last,
+            orElse: () => MessageType.user,
+          );
+        } catch (e) {
+          debugPrint('Warning: Invalid message type "$typeStr", using default');
+        }
+      }
+      
+      return Message(
+        speakerId: speakerId,
+        content: content,
+        timestamp: timestamp,
+        type: messageType,
+        wasInterrupted: json['wasInterrupted'] as bool? ?? false,
+      );
+    } catch (e) {
+      debugPrint('Error parsing Message from JSON: $e');
+      debugPrint('JSON data: $json');
+      rethrow;
+    }
   }
 }
 

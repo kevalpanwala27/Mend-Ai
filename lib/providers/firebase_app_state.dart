@@ -56,14 +56,17 @@ class FirebaseAppState extends ChangeNotifier {
   Future<void> initialize() async {
     // Listen to auth state changes
     _authService.authStateChanges.listen((user) async {
-      developer.log('Auth state changed: $user');
+      developer.log('🔄 Auth state changed: ${user?.email ?? 'null'} (verified: ${user?.emailVerified})');
       _user = user;
       if (user != null) {
+        developer.log('📊 Loading user data for: ${user.email}');
         await _loadUserData();
       } else {
+        developer.log('🧹 Clearing user data');
         _clearUserData();
       }
       _isLoading = false;
+      developer.log('🔔 Notifying listeners - user: ${_user?.email}, onboarding: $_isOnboardingComplete');
       notifyListeners();
     });
 
@@ -129,6 +132,38 @@ class FirebaseAppState extends ChangeNotifier {
     } else {
       return result.errorMessage ?? 'Unknown error occurred during sign-in.';
     }
+  }
+
+  // Sign in with email and password
+  Future<String?> signInWithEmailPassword(String email, String password) async {
+    developer.log('🔐 FirebaseAppState: Attempting sign in with email: $email');
+    final result = await _authService.signInWithEmailPassword(email, password);
+    developer.log('🔄 FirebaseAppState: Sign in result: ${result == null ? 'SUCCESS' : 'ERROR: $result'}');
+    return result;
+  }
+
+  // Sign up with email and password
+  Future<String?> signUpWithEmailPassword(String email, String password) async {
+    return await _authService.signUpWithEmailPassword(email, password);
+  }
+
+  // Reset password
+  Future<String?> resetPassword(String email) async {
+    return await _authService.resetPassword(email);
+  }
+
+  // Send email verification
+  Future<String?> sendEmailVerification() async {
+    return await _authService.sendEmailVerification();
+  }
+
+  // Check if email is verified
+  bool get isEmailVerified => _authService.isEmailVerified;
+
+  // Reload user to check verification status
+  Future<void> reloadUser() async {
+    await _authService.reloadUser();
+    notifyListeners();
   }
 
   // Sign out

@@ -6,9 +6,18 @@ const helmet = require("helmet");
 const crypto = require('crypto');
 require("dotenv").config();
 
-// ZEGOCLOUD App credentials
-const APP_ID = 1390967091;
-const SERVER_SECRET = "c47a44d5ff4b82d828282ff1d4d510af";
+// ZEGOCLOUD App credentials - MOVED TO ENVIRONMENT VARIABLES FOR SECURITY
+const APP_ID = parseInt(process.env.ZEGO_APP_ID);
+const SERVER_SECRET = process.env.ZEGO_SERVER_SECRET;
+
+// Validate required environment variables
+if (!APP_ID || !SERVER_SECRET) {
+  console.error('❌ CRITICAL ERROR: ZEGO_APP_ID and ZEGO_SERVER_SECRET environment variables are required!');
+  console.error('Please set these environment variables before starting the server:');
+  console.error('  export ZEGO_APP_ID=your_app_id');
+  console.error('  export ZEGO_SERVER_SECRET=your_server_secret');
+  process.exit(1);
+}
 
 // ZEGOCLOUD Token Generator Functions
 function generateToken(userID, effectiveTimeInSeconds = 86400) {
@@ -67,78 +76,209 @@ function validateToken(token) {
 const app = express();
 const server = http.createServer(app);
 
+// Configure CORS securely
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:3000', 'http://localhost:8080']; // Development defaults
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+      callback(null, true);
+    } else {
+      console.warn(`🚨 CORS blocked request from origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
 // Configure CORS for Socket.IO
 const io = socketIo(server, {
-  cors: {
-    origin: "*", // In production, specify your app's domain
-    methods: ["GET", "POST"],
-    credentials: true,
+  cors: corsOptions,
+});
+
+// Rate limiting configuration
+const rateLimit = require("express-rate-limit");
+
+// General API rate limiting
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: {
+    error: "Too many requests from this IP, please try again later.",
   },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Token generation rate limiting (more restrictive)
+const tokenLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // Limit each IP to 10 token requests per minute
+  message: {
+    error: "Too many token requests, please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 // Middleware
-app.use(helmet());
-app.use(cors());
-app.use(express.json());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+}));
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+app.use(generalLimiter);
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - IP: ${req.ip}`);
+  next();
+});
 
 // Health check endpoint
 app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-// ZEGOCLOUD token generation endpoint
-app.post("/zego-token", (req, res) => {
+// Input validation functions
+function isValidUserId(userId) {
+  return typeof userId === 'string' && 
+         userId.length > 0 && 
+         userId.length <= 64 && 
+         /^[a-zA-Z0-9_-]+$/.test(userId);
+}
+
+function isValidRoomId(roomId) {
+  return typeof roomId === 'string' && 
+         roomId.length > 0 && 
+         roomId.length <= 128 && 
+         /^[a-zA-Z0-9_-]+$/.test(roomId);
+}
+
+function sanitizeString(str) {
+  return str.replace(/[<>\"'&]/g, '');
+}
+
+// ZEGOCLOUD token generation endpoint with enhanced security
+app.post("/zego-token", tokenLimiter, (req, res) => {
   try {
     const { userId, roomId } = req.body;
 
-    // Validate input
+    // Enhanced input validation
     if (!userId || !roomId) {
+      console.warn(`❌ Token request missing required fields - IP: ${req.ip}`);
       return res.status(400).json({
         error: "userId and roomId are required",
+        code: "MISSING_REQUIRED_FIELDS"
       });
     }
 
-    // Generate token (valid for 24 hours)
-    const token = generateToken(userId, 86400);
+    // Validate userId format and length
+    if (!isValidUserId(userId)) {
+      console.warn(`❌ Invalid userId format: "${userId}" - IP: ${req.ip}`);
+      return res.status(400).json({
+        error: "Invalid userId format. Must be alphanumeric with underscores/hyphens, max 64 characters",
+        code: "INVALID_USER_ID"
+      });
+    }
 
-    console.log(`Generated ZEGO token for user ${userId} in room ${roomId}`);
+    // Validate roomId format and length
+    if (!isValidRoomId(roomId)) {
+      console.warn(`❌ Invalid roomId format: "${roomId}" - IP: ${req.ip}`);
+      return res.status(400).json({
+        error: "Invalid roomId format. Must be alphanumeric with underscores/hyphens, max 128 characters",
+        code: "INVALID_ROOM_ID"
+      });
+    }
+
+    // Sanitize inputs
+    const cleanUserId = sanitizeString(userId);
+    const cleanRoomId = sanitizeString(roomId);
+
+    // Generate token (valid for 24 hours)
+    const token = generateToken(cleanUserId, 86400);
+
+    console.log(`✅ Generated ZEGO token for user ${cleanUserId} in room ${cleanRoomId} - IP: ${req.ip}`);
 
     res.json({
       token,
-      userId,
-      roomId,
+      userId: cleanUserId,
+      roomId: cleanRoomId,
       expiresIn: 86400, // 24 hours in seconds
+      generatedAt: new Date().toISOString()
     });
   } catch (error) {
-    console.error("Error generating ZEGO token:", error);
+    console.error(`❌ Error generating ZEGO token - IP: ${req.ip}:`, error);
+    
+    // Don't expose internal error details to client
     res.status(500).json({
-      error: "Failed to generate token",
-      message: error.message,
+      error: "Internal server error while generating token",
+      code: "TOKEN_GENERATION_FAILED"
     });
   }
 });
 
-// Token validation endpoint
-app.post("/zego-token/validate", (req, res) => {
+// Token validation endpoint with security improvements
+app.post("/zego-token/validate", tokenLimiter, (req, res) => {
   try {
     const { token } = req.body;
 
+    // Input validation
     if (!token) {
+      console.warn(`❌ Token validation request missing token - IP: ${req.ip}`);
       return res.status(400).json({
         error: "token is required",
+        code: "MISSING_TOKEN"
+      });
+    }
+
+    // Validate token format (basic JWT structure check)
+    if (typeof token !== 'string' || !token.includes('.')) {
+      console.warn(`❌ Invalid token format - IP: ${req.ip}`);
+      return res.status(400).json({
+        error: "Invalid token format",
+        code: "INVALID_TOKEN_FORMAT"
+      });
+    }
+
+    // Validate token length (prevent extremely long tokens)
+    if (token.length > 2048) {
+      console.warn(`❌ Token too long - IP: ${req.ip}`);
+      return res.status(400).json({
+        error: "Token too long",
+        code: "TOKEN_TOO_LONG"
       });
     }
 
     const isValid = validateToken(token);
 
+    console.log(`🔍 Token validation result: ${isValid ? 'VALID' : 'INVALID'} - IP: ${req.ip}`);
+
     res.json({
       valid: isValid,
+      validatedAt: new Date().toISOString()
     });
   } catch (error) {
-    console.error("Error validating ZEGO token:", error);
+    console.error(`❌ Error validating ZEGO token - IP: ${req.ip}:`, error);
+    
+    // Don't expose internal error details
     res.status(500).json({
-      error: "Failed to validate token",
-      message: error.message,
+      error: "Internal server error while validating token",
+      code: "TOKEN_VALIDATION_FAILED"
     });
   }
 });

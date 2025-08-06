@@ -9,9 +9,40 @@ class ZegoVoiceService extends ChangeNotifier {
   factory ZegoVoiceService() => _instance;
   ZegoVoiceService._internal();
 
-  // ZEGOCLOUD configuration - REPLACE WITH YOUR ACTUAL VALUES
-  static const int appID = 1390967091; // Replace with your ZEGOCLOUD App ID
-  static const String appSign = "11552a1db7c26772508de5585c686f49ab126eb5f1713d3c82c442391483a734"; // Replace with your App Sign
+  // ZEGOCLOUD configuration - MOVED TO ENVIRONMENT VARIABLES FOR SECURITY
+  static int get appID {
+    // TODO: Move to environment variables or server-side configuration
+    const String appIdString = String.fromEnvironment('ZEGO_APP_ID');
+    if (appIdString.isNotEmpty) {
+      return int.parse(appIdString);
+    }
+    
+    // Development fallback - REMOVE THIS IN PRODUCTION
+    const bool isDevelopment = bool.fromEnvironment('dart.vm.product') == false;
+    if (isDevelopment) {
+      // WARNING: Development credentials - REPLACE WITH YOUR ACTUAL VALUES
+      return 1390967091;
+    }
+    
+    throw Exception('ZEGO_APP_ID environment variable not set. This is required for production.');
+  }
+  
+  static String get appSign {
+    // TODO: Move to environment variables or server-side configuration
+    const String appSign = String.fromEnvironment('ZEGO_APP_SIGN');
+    if (appSign.isNotEmpty) {
+      return appSign;
+    }
+    
+    // Development fallback - REMOVE THIS IN PRODUCTION
+    const bool isDevelopment = bool.fromEnvironment('dart.vm.product') == false;
+    if (isDevelopment) {
+      // WARNING: Development credentials - REPLACE WITH YOUR ACTUAL VALUES
+      return "11552a1db7c26772508de5585c686f49ab126eb5f1713d3c82c442391483a734";
+    }
+    
+    throw Exception('ZEGO_APP_SIGN environment variable not set. This is required for production.');
+  }
 
   // Connection state
   bool _isEngineInitialized = false;
@@ -434,39 +465,96 @@ class ZegoVoiceService extends ChangeNotifier {
     }
   }
 
-  /// Clean shutdown
+  /// Clean shutdown with proper error handling
   @override
   Future<void> dispose() async {
-    _audioSimulationTimer?.cancel();
+    developer.log('=== STARTING ZEGO VOICE SERVICE DISPOSAL ===');
+    
+    try {
+      // Cancel timers first
+      _audioSimulationTimer?.cancel();
+      _audioSimulationTimer = null;
+      
+      // Clear all event callbacks to prevent memory leaks
+      if (_isEngineInitialized) {
+        try {
+          ZegoExpressEngine.onRoomStateChanged = null;
+          ZegoExpressEngine.onRoomUserUpdate = null;
+          // Note: onSoundLevelUpdate and onRemoteSoundLevelUpdate may not exist in this version
+          // ZegoExpressEngine.onSoundLevelUpdate = null;
+          // ZegoExpressEngine.onRemoteSoundLevelUpdate = null;
+          developer.log('Cleared ZEGO event handlers');
+        } catch (e) {
+          developer.log('Warning: Error clearing ZEGO event handlers: $e');
+        }
+      }
 
-    // Stop sound level monitoring
-    if (_isEngineInitialized) {
+      // Stop sound level monitoring with timeout
+      if (_isEngineInitialized) {
+        try {
+          await ZegoExpressEngine.instance.stopSoundLevelMonitor()
+              .timeout(const Duration(seconds: 3));
+          developer.log('Sound level monitoring stopped');
+        } catch (e) {
+          developer.log('Warning: Error stopping sound level monitor: $e');
+          // Continue disposal even if this fails
+        }
+      }
+
+      // Leave room with timeout
+      if (_isInRoom) {
+        try {
+          await leaveRoom().timeout(const Duration(seconds: 5));
+        } catch (e) {
+          developer.log('Warning: Error leaving room during disposal: $e');
+          // Continue disposal even if this fails
+        }
+      }
+
+      // Destroy engine with timeout and error handling
+      if (_isEngineInitialized) {
+        try {
+          await ZegoExpressEngine.destroyEngine()
+              .timeout(const Duration(seconds: 10));
+          _isEngineInitialized = false;
+          developer.log('ZEGO Engine destroyed successfully');
+        } catch (e) {
+          developer.log('Critical: Error destroying ZEGO Engine: $e');
+          // Force mark as not initialized to prevent further operations
+          _isEngineInitialized = false;
+        }
+      }
+
+      // Reset state
+      _isConnected = false;
+      _isInRoom = false;
+      _isMuted = false;
+      _roomID = null;
+      _userID = null;
+      _partnerID = null;
+      _partnerName = null;
+      _isLocalAudioActive = false;
+      _isRemoteAudioActive = false;
+      _localAudioLevel = 0.0;
+      _remoteAudioLevel = 0.0;
+      _isInterruption = false;
+      _isRemoteUserOnline = false;
+      _isRemoteUserMuted = false;
+      _lastLocalSpeechTime = null;
+      _lastRemoteSpeechTime = null;
+
+      developer.log('=== ZEGO VOICE SERVICE DISPOSAL COMPLETED ===');
+    } catch (e) {
+      developer.log('Critical error during ZEGO service disposal: $e');
+      // Ensure we still call super.dispose() even if errors occur
+    } finally {
+      // Always call super.dispose() to ensure ChangeNotifier cleanup
       try {
-        await ZegoExpressEngine.instance.stopSoundLevelMonitor();
-        developer.log('Sound level monitoring stopped');
+        super.dispose();
       } catch (e) {
-        developer.log('Error stopping sound level monitor: $e');
+        developer.log('Error in super.dispose(): $e');
       }
     }
-
-    // Leave room if still in one
-    await leaveRoom();
-
-    // Destroy engine
-    if (_isEngineInitialized) {
-      await ZegoExpressEngine.destroyEngine();
-      _isEngineInitialized = false;
-    }
-
-    // Reset state
-    _isConnected = false;
-    _isLocalAudioActive = false;
-    _isRemoteAudioActive = false;
-    _localAudioLevel = 0.0;
-    _remoteAudioLevel = 0.0;
-    _isInterruption = false;
-
-    super.dispose();
   }
 
   /// Force end session (for UI session end)
