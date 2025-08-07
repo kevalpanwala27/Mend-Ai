@@ -9,6 +9,7 @@ import '../../widgets/gradient_button.dart';
 import '../../widgets/animated_card.dart';
 import '../main/insights_dashboard_screen.dart';
 import 'session_waiting_room_screen.dart';
+import '../settings/settings_screen.dart';
 import 'dart:math';
 import 'package:flutter/services.dart';
 
@@ -89,6 +90,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const InsightsDashboardScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: AppTheme.spacingS),
+                IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.secondary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                    ),
+                    child: const Icon(
+                      Icons.settings_rounded,
+                      color: AppTheme.secondary,
+                      size: 20,
+                      semanticLabel: 'Settings',
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsScreen(),
                       ),
                     );
                   },

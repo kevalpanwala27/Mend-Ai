@@ -15,7 +15,7 @@ class AuthWrapper extends StatelessWidget {
     return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
         developer.log(
-          'AuthWrapper: isLoading=\u001b[33m${appState.isLoading}\u001b[0m, user=\u001b[36m${appState.user}\u001b[0m, emailVerified=\u001b[35m${appState.user?.emailVerified}\u001b[0m, onboarding=\u001b[32m${appState.isOnboardingComplete}\u001b[0m',
+          '🔥 AuthWrapper rebuild: isLoading=\u001b[33m${appState.isLoading}\u001b[0m, user=\u001b[36m${appState.user}\u001b[0m, isAuthenticated=\u001b[35m${appState.isAuthenticated}\u001b[0m, onboarding=\u001b[32m${appState.isOnboardingComplete}\u001b[0m',
         );
         // Show loading screen while initializing
         if (appState.isLoading) {

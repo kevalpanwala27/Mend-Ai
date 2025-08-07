@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer' as developer;
+import 'dart:async';
 import '../models/partner.dart';
 import '../models/communication_session.dart';
 import '../services/firebase_auth_service.dart';
@@ -56,14 +57,17 @@ class FirebaseAppState extends ChangeNotifier {
   Future<void> initialize() async {
     // Listen to auth state changes
     _authService.authStateChanges.listen((user) async {
-      developer.log('Auth state changed: $user');
+      developer.log('🔥 Auth state changed: $user');
       _user = user;
       if (user != null) {
+        debugPrint('🔥 User signed in, loading data...');
         await _loadUserData();
       } else {
+        debugPrint('🔥 User signed out, clearing data and should navigate to login...');
         _clearUserData();
       }
       _isLoading = false;
+      debugPrint('🔥 Calling notifyListeners() - AuthWrapper should rebuild now');
       notifyListeners();
     });
 
@@ -110,6 +114,8 @@ class FirebaseAppState extends ChangeNotifier {
 
   // Clear user data
   void _clearUserData() {
+    debugPrint('🔥 Clearing user data and setting user to null');
+    _user = null; // This is crucial for navigation
     _relationshipData = null;
     _sessions = [];
     _currentSession = null;
@@ -206,9 +212,61 @@ class FirebaseAppState extends ChangeNotifier {
   // Sign out
   Future<void> signOut() async {
     try {
+      debugPrint('🔥 Starting sign out process...');
       await _authService.signOut();
+      debugPrint('🔥 Sign out completed successfully');
     } catch (e) {
-      debugPrint('Error signing out: $e');
+      debugPrint('🔥 ERROR: Sign out failed: $e');
+      rethrow;
+    }
+  }
+
+  // Delete account
+  Future<String?> deleteAccount() async {
+    try {
+      debugPrint('🔥 Starting account deletion process...');
+      
+      // Delete the Firebase Auth account FIRST (before signing out)
+      debugPrint('🔥 Step 1: Deleting Firebase Auth account...');
+      final result = await _authService.deleteCurrentUser().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('🔥 Step 1: Auth deletion timed out');
+          return AuthResult(errorMessage: 'Account deletion timed out. Please try again.');
+        },
+      );
+      
+      if (result.errorMessage != null) {
+        debugPrint('🔥 Step 1: Auth deletion failed: ${result.errorMessage}');
+        return result.errorMessage;
+      }
+      debugPrint('🔥 Step 1: Firebase Auth account deleted successfully');
+      
+      // Then clear all user data (relationships, sessions, etc.)
+      debugPrint('🔥 Step 2: Clearing all user data...');
+      if (_relationshipData != null &&
+          _relationshipData!['createdBy'] == _user?.uid) {
+        await _relationshipService.deleteRelationship(_relationshipData!['id']).timeout(
+          const Duration(seconds: 15),
+          onTimeout: () {
+            debugPrint('🔥 Step 2: Relationship deletion timed out (non-critical)');
+          },
+        );
+      }
+      debugPrint('🔥 Step 2: User data cleared successfully');
+      
+      // Clear local state
+      debugPrint('🔥 Step 3: Clearing local state...');
+      _clearUserData();
+      notifyListeners();
+      debugPrint('🔥 Step 3: Local state cleared successfully');
+      
+      debugPrint('🔥 Account deletion completed successfully');
+      return null; // Success
+    } catch (e) {
+      debugPrint('🔥 ERROR: Account deletion failed: $e');
+      debugPrint('🔥 Stack trace: ${StackTrace.current}');
+      return 'Failed to delete account. Please try again or contact support.';
     }
   }
 
