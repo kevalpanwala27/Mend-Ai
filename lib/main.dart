@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'providers/firebase_app_state.dart';
-import 'screens/auth/auth_wrapper.dart';
+import 'screens/auth/splash_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -31,7 +31,7 @@ class MendApp extends StatelessWidget {
           return MaterialApp(
             title: 'Mend',
             theme: AppTheme.themeData,
-            home: const AuthWrapper(),
+            home: const SplashScreen(),
             debugShowCheckedModeBanner: false,
           );
         },

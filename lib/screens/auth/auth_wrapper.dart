@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer' as developer;
 import '../../providers/firebase_app_state.dart';
-import 'login_screen.dart';
+import 'enhanced_login_screen.dart';
 import '../onboarding/questionnaire_screen.dart';
 import '../main/home_screen.dart';
 
@@ -15,7 +15,7 @@ class AuthWrapper extends StatelessWidget {
     return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
         developer.log(
-          'AuthWrapper: isLoading=\u001b[33m${appState.isLoading}\u001b[0m, user=\u001b[36m${appState.user}\u001b[0m, onboarding=\u001b[32m${appState.isOnboardingComplete}\u001b[0m',
+          'AuthWrapper: isLoading=\u001b[33m${appState.isLoading}\u001b[0m, user=\u001b[36m${appState.user}\u001b[0m, emailVerified=\u001b[35m${appState.user?.emailVerified}\u001b[0m, onboarding=\u001b[32m${appState.isOnboardingComplete}\u001b[0m',
         );
         // Show loading screen while initializing
         if (appState.isLoading) {
@@ -32,9 +32,9 @@ class AuthWrapper extends StatelessWidget {
             ),
           );
         }
-        // User is authenticated
+        // User is authenticated and verified (verification check is handled in sign-in)
         if (appState.user != null) {
-          // If onboarding is complete, go to HomeScreen
+          // User is verified - proceed with normal flow
           if (appState.isOnboardingComplete) {
             return const HomeScreen();
           } else {
@@ -43,7 +43,7 @@ class AuthWrapper extends StatelessWidget {
           }
         }
         // Default to login screen
-        return const LoginScreen();
+        return const EnhancedLoginScreen();
       },
     );
   }

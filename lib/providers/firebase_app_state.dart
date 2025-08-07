@@ -131,6 +131,78 @@ class FirebaseAppState extends ChangeNotifier {
     }
   }
 
+  // Sign in with email and password
+  Future<String?> signInWithEmail(String email, String password) async {
+    final result = await _authService.signInWithEmail(email, password);
+    if (result.userCredential != null) {
+      // Check if email is verified for email/password users
+      final user = result.userCredential!.user!;
+      final isEmailPasswordUser = user.providerData.any((info) => info.providerId == 'password');
+      
+      if (isEmailPasswordUser && !user.emailVerified) {
+        // Sign out the unverified user immediately
+        await _authService.signOut();
+        return 'Please verify your email address before signing in. Check your inbox for the verification link.';
+      }
+      
+      return null; // Success, no error
+    } else {
+      return result.errorMessage ?? 'Unknown error occurred during sign-in.';
+    }
+  }
+
+  // Sign up with email and password
+  Future<String?> signUpWithEmail(String email, String password) async {
+    final result = await _authService.signUpWithEmail(email, password);
+    if (result.userCredential != null) {
+      return null; // Success, no error
+    } else {
+      return result.errorMessage ?? 'Unknown error occurred during sign-up.';
+    }
+  }
+
+  // Send password reset email
+  Future<String?> sendPasswordResetEmail(String email) async {
+    final result = await _authService.sendPasswordResetEmail(email);
+    if (result.errorMessage == null) {
+      return null; // Success, no error
+    } else {
+      return result.errorMessage ?? 'Unknown error occurred.';
+    }
+  }
+
+  // Send email verification
+  Future<String?> sendEmailVerification() async {
+    final result = await _authService.sendEmailVerification();
+    if (result.errorMessage == null) {
+      return null; // Success, no error
+    } else {
+      return result.errorMessage ?? 'Unknown error occurred.';
+    }
+  }
+
+  // Reload user to check verification status
+  Future<void> reloadUser() async {
+    await _authService.reloadUser();
+    notifyListeners();
+  }
+
+  // Delete current user account (for unverified accounts)
+  Future<String?> deleteCurrentUser() async {
+    final result = await _authService.deleteCurrentUser();
+    if (result.errorMessage == null) {
+      return null; // Success, no error
+    } else {
+      return result.errorMessage ?? 'Unknown error occurred.';
+    }
+  }
+
+  // Check if user needs email verification
+  bool get needsEmailVerification => _authService.needsEmailVerification;
+
+  // Get user creation time
+  DateTime? get userCreationTime => _authService.userCreationTime;
+
   // Sign out
   Future<void> signOut() async {
     try {
