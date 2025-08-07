@@ -41,6 +41,9 @@ class FirebaseAppState extends ChangeNotifier {
   bool _isOnboardingComplete = false;
   String? _currentUserId;
   bool _isLoading = true;
+  
+  // Temporary storage for session data during navigation
+  Map<String, dynamic>? _temporarySessionData;
 
   // Getters
   User? get user => _user;
@@ -52,6 +55,31 @@ class FirebaseAppState extends ChangeNotifier {
   bool get hasPartner => _relationshipData?['partnerB'] != null;
   bool get isAuthenticated => _user != null;
   bool get isLoading => _isLoading;
+  
+  // Temporary session data methods
+  void setTemporarySessionData({
+    required String? sessionId,
+    required String? currentUserId,
+    required String? partnerId,
+    required String? partnerName,
+  }) {
+    _temporarySessionData = {
+      'sessionId': sessionId,
+      'currentUserId': currentUserId,
+      'partnerId': partnerId,
+      'partnerName': partnerName,
+    };
+    notifyListeners();
+  }
+  
+  Map<String, dynamic>? getTemporarySessionData() {
+    return _temporarySessionData;
+  }
+  
+  void clearTemporarySessionData() {
+    _temporarySessionData = null;
+    notifyListeners();
+  }
 
   // Initialize the app state
   Future<void> initialize() async {

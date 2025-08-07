@@ -31,6 +31,93 @@ class FirestoreSessionsService {
     }
   }
 
+  // Save individual user rating for their partner
+  Future<void> saveUserRating({
+    required String sessionId,
+    required String raterId,
+    required String ratedPartnerId,
+    required PartnerScore score,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Save the rating in a subcollection
+      await _firestore
+          .collection('sessions')
+          .doc(sessionId)
+          .collection('ratings')
+          .doc(raterId)
+          .set({
+        'raterId': raterId,
+        'ratedPartnerId': ratedPartnerId,
+        'score': score.toJson(),
+        'submittedAt': FieldValue.serverTimestamp(),
+      });
+
+      debugPrint('Rating saved successfully for session $sessionId');
+    } catch (e) {
+      debugPrint('Error saving user rating: $e');
+      throw Exception('Failed to save rating: $e');
+    }
+  }
+
+  // Check if a user has already rated their partner
+  Future<bool> hasUserRatedPartner(String sessionId, String userId) async {
+    try {
+      final doc = await _firestore
+          .collection('sessions')
+          .doc(sessionId)
+          .collection('ratings')
+          .doc(userId)
+          .get();
+      
+      return doc.exists;
+    } catch (e) {
+      debugPrint('Error checking rating status: $e');
+      return false;
+    }
+  }
+
+  // Check if both partners have rated each other
+  Future<bool> haveBothPartnersRated(String sessionId) async {
+    try {
+      final ratings = await _firestore
+          .collection('sessions')
+          .doc(sessionId)
+          .collection('ratings')
+          .get();
+      
+      return ratings.docs.length >= 2;
+    } catch (e) {
+      debugPrint('Error checking both partners rating status: $e');
+      return false;
+    }
+  }
+
+  // Get all ratings for a session
+  Future<List<Map<String, dynamic>>> getSessionRatings(String sessionId) async {
+    try {
+      final ratings = await _firestore
+          .collection('sessions')
+          .doc(sessionId)
+          .collection('ratings')
+          .get();
+      
+      return ratings.docs.map((doc) => {
+        'raterId': doc.data()['raterId'],
+        'ratedPartnerId': doc.data()['ratedPartnerId'],
+        'score': doc.data()['score'],
+        'submittedAt': doc.data()['submittedAt'],
+      }).toList();
+    } catch (e) {
+      debugPrint('Error getting session ratings: $e');
+      throw Exception('Failed to get ratings: $e');
+    }
+  }
+
   // Update an existing session
   Future<void> updateSession(String sessionId, CommunicationSession session) async {
     try {

@@ -6,10 +6,19 @@ import 'package:confetti/confetti.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/gradient_button.dart';
-import 'scoring_screen.dart';
+import '../main/home_screen.dart';
 
 class PostResolutionScreen extends StatefulWidget {
-  const PostResolutionScreen({super.key});
+  final String? sessionId;
+  final String? currentUserId;
+  final String? partnerName;
+
+  const PostResolutionScreen({
+    super.key,
+    this.sessionId,
+    this.currentUserId,
+    this.partnerName,
+  });
 
   @override
   State<PostResolutionScreen> createState() => _PostResolutionScreenState();
@@ -241,6 +250,14 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
 
   Future<void> _completeFlow() async {
     final appState = context.read<FirebaseAppState>();
+    
+    // Use passed parameters as fallback if app state is null
+    final sessionId = widget.sessionId ?? appState.currentSession?.id;
+    final currentUserId = widget.currentUserId ?? appState.currentUserId;
+    final partnerName = widget.partnerName ?? appState.getOtherPartner()?.name;
+    
+    debugPrint('Post-resolution flow - Session: $sessionId, User: $currentUserId, Partner: $partnerName');
+    debugPrint('Widget params - SessionId: ${widget.sessionId}, UserId: ${widget.currentUserId}, Partner: ${widget.partnerName}');
 
     // Save user responses to the session if enabled
     if (_saveToInsights) {
@@ -263,11 +280,12 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
       );
     }
 
-    // Navigate to the scoring screen
+    // Session completed - navigate to home screen
     if (mounted) {
-      Navigator.push(
+      Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const ScoringScreen()),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        (route) => false,
       );
     }
   }
@@ -279,14 +297,45 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
         final currentPartner = appState.getCurrentPartner();
         final otherPartner = appState.getOtherPartner();
 
-        return Stack(
-          children: [
-            Scaffold(
-              backgroundColor: Colors.black,
-              appBar: AppBar(
-                title: const Text('Resolution Complete'),
-                automaticallyImplyLeading: false,
-              ),
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) {
+            if (!didPop) {
+              // Prevent going back to voice session - show confirmation dialog
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Go Home?'),
+                  content: const Text('Are you sure you want to go back to the home screen? You won\'t be able to return to this session.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => const HomeScreen()),
+                          (route) => false,
+                        );
+                      },
+                      child: const Text('Go Home'),
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
+          child: Stack(
+            children: [
+              Scaffold(
+                backgroundColor: Colors.black,
+                appBar: AppBar(
+                  title: const Text('Resolution Complete'),
+                  automaticallyImplyLeading: false,
+                ),
               body: Container(
                 decoration: const BoxDecoration(color: Colors.black),
                 child: SafeArea(
@@ -401,7 +450,7 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
                           width: double.infinity,
                           child: GradientButton(
                             text: _currentPage == 3
-                                ? 'View Scores'
+                                ? 'Complete Session'
                                 : 'Continue',
                             onPressed: _nextPage,
                             height: 56,
@@ -430,7 +479,8 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
               ),
             ),
           ],
-        );
+        ),
+      );
       },
     );
   }

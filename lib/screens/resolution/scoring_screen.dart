@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../../providers/firebase_app_state.dart';
-import '../../services/ai_service.dart';
+import '../../services/firestore_sessions_service.dart';
 import '../../models/communication_session.dart';
 import '../../theme/app_theme.dart';
 import '../main/home_screen.dart';
@@ -19,9 +19,10 @@ class ScoringScreen extends StatefulWidget {
 
 class _ScoringScreenState extends State<ScoringScreen>
     with TickerProviderStateMixin {
-  final AIService _aiService = AIService();
+  final FirestoreSessionsService _sessionsService = FirestoreSessionsService();
   CommunicationScores? _scores;
   bool _isLoading = true;
+  bool _waitingForPartnerRating = false;
 
   late ConfettiController _confettiController;
   late AnimationController _celebrationController;
@@ -68,56 +69,64 @@ class _ScoringScreenState extends State<ScoringScreen>
     final appState = context.read<FirebaseAppState>();
     final currentSession = appState.currentSession;
 
-    debugPrint('=== SCORING DEBUG INFO ===');
+    debugPrint('=== MUTUAL SCORING DEBUG INFO ===');
     debugPrint('Current session exists: ${currentSession != null}');
     if (currentSession != null) {
       debugPrint('Session ID: ${currentSession.id}');
-      debugPrint('Session start time: ${currentSession.startTime}');
-      debugPrint('Session end time: ${currentSession.endTime}');
-      debugPrint(
-        'Session duration: ${currentSession.duration.inMinutes} minutes',
-      );
-      debugPrint('Session messages count: ${currentSession.messages.length}');
     }
-    debugPrint('========================');
+    debugPrint('===============================');
 
     if (currentSession != null) {
       try {
-        final scores = await _aiService.analyzeCommunication(currentSession);
+        // Check if both partners have completed their ratings
+        final bothRated = await _sessionsService.haveBothPartnersRated(currentSession.id);
+        
+        if (!bothRated) {
+          setState(() {
+            _waitingForPartnerRating = true;
+            _isLoading = false;
+          });
+          return;
+        }
 
-        debugPrint('Scores generated successfully!');
-        debugPrint(
-          'Partner A score: ${scores.partnerScores['A']?.averageScore}',
-        );
-        debugPrint(
-          'Partner B score: ${scores.partnerScores['B']?.averageScore}',
-        );
+        // Get the mutual ratings from Firebase
+        final ratings = await _sessionsService.getSessionRatings(currentSession.id);
+        
+        if (ratings.length >= 2) {
+          // Create CommunicationScores from mutual ratings
+          final communicationScores = CommunicationScores(
+            partnerScores: {
+              for (var rating in ratings)
+                rating['ratedPartnerId']: PartnerScore.fromJson(rating['score'])
+            },
+            overallFeedback: _generateOverallFeedback(ratings),
+            improvementSuggestions: _generateImprovementSuggestions(),
+          );
 
-        // End the session with scores
-        await appState.endCommunicationSession(
-          scores: scores,
-          reflection: 'Session completed with AI analysis',
-          suggestedActivities: _aiService.getBondingActivities(),
-        );
+          debugPrint('Mutual scores loaded successfully!');
+          debugPrint('Ratings count: ${ratings.length}');
 
-        setState(() {
-          _scores = scores;
-          _isLoading = false;
-        });
+          setState(() {
+            _scores = communicationScores;
+            _isLoading = false;
+          });
 
-        // Trigger celebratory animations
-        Future.delayed(const Duration(milliseconds: 500), () {
-          _celebrationController.forward();
-          _scoreAnimationController.forward();
-          _confettiController.play();
-        });
+          // Trigger celebratory animations
+          Future.delayed(const Duration(milliseconds: 500), () {
+            _celebrationController.forward();
+            _scoreAnimationController.forward();
+            _confettiController.play();
+          });
+        } else {
+          throw Exception('Insufficient ratings found');
+        }
       } catch (e) {
         setState(() {
           _isLoading = false;
         });
         debugPrint('Scoring error details: $e');
         debugPrint('Error type: ${e.runtimeType}');
-        _showError('Failed to generate communication scores: ${e.toString()}');
+        _showError('Failed to load communication scores: ${e.toString()}');
       }
     } else {
       setState(() {
@@ -128,6 +137,37 @@ class _ScoringScreenState extends State<ScoringScreen>
         'No active session found. Please complete a communication session first.',
       );
     }
+  }
+
+  String _generateOverallFeedback(List<Map<String, dynamic>> ratings) {
+    if (ratings.length < 2) return "Waiting for both partners to complete their evaluations.";
+    
+    // Calculate average of both ratings
+    double totalAverage = 0.0;
+    for (var rating in ratings) {
+      final score = PartnerScore.fromJson(rating['score']);
+      totalAverage += score.averageScore;
+    }
+    totalAverage /= ratings.length;
+
+    if (totalAverage > 0.8) {
+      return "Excellent mutual evaluation! You both rated each other highly, showing strong communication and respect.";
+    } else if (totalAverage > 0.6) {
+      return "Good mutual evaluation. You both recognize each other's communication efforts with room for growth.";
+    } else if (totalAverage > 0.4) {
+      return "Your mutual evaluation shows areas for improvement. Focus on the specific feedback to strengthen communication.";
+    } else {
+      return "This evaluation reveals communication challenges. Practice the suggested improvements together.";
+    }
+  }
+
+  List<String> _generateImprovementSuggestions() {
+    return [
+      "Practice giving each other regular, constructive feedback",
+      "Set aside time for monthly communication check-ins",
+      "Use 'I' statements when discussing areas for improvement",
+      "Celebrate each other's communication strengths more often",
+    ];
   }
 
   void _showError(String message) {
@@ -202,6 +242,116 @@ class _ScoringScreenState extends State<ScoringScreen>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildWaitingForPartnerState() {
+    return Consumer<FirebaseAppState>(
+      builder: (context, appState, child) {
+        final otherPartner = appState.getOtherPartner();
+        
+        return Center(
+          child: Container(
+            margin: const EdgeInsets.all(AppTheme.spacingL),
+            padding: const EdgeInsets.all(AppTheme.spacingXL),
+            decoration: AppTheme.glassmorphicDecoration(
+              borderRadius: AppTheme.radiusXL,
+              hasGlow: true,
+              glowColor: AppTheme.primary,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spacingL),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppTheme.primary.withValues(alpha: 0.2),
+                        AppTheme.primary.withValues(alpha: 0.1),
+                      ],
+                    ),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppTheme.primary.withValues(alpha: 0.4),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primary.withValues(alpha: 0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.hourglass_empty_rounded,
+                    size: 48,
+                    color: AppTheme.primary,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacingL),
+                Text(
+                  'Waiting for Partner Rating',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 22,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacingM),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacingM,
+                  ),
+                  child: Text(
+                    'You\'ve completed your rating! Waiting for ${otherPartner?.name ?? 'your partner'} to finish their evaluation. Results will appear once both ratings are submitted.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondary,
+                      height: 1.5,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacingL),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _generateScores(), // Refresh to check status
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Check Status'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacingM,
+                            vertical: AppTheme.spacingM,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.spacingM),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _returnHome,
+                        icon: const Icon(Icons.home_rounded),
+                        label: const Text('Home'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacingM,
+                            vertical: AppTheme.spacingM,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -323,6 +473,8 @@ class _ScoringScreenState extends State<ScoringScreen>
                 child: SafeArea(
                   child: _isLoading
                       ? _buildLoadingState()
+                      : _waitingForPartnerRating
+                      ? _buildWaitingForPartnerState()
                       : _scores == null
                       ? _buildErrorState()
                       : SingleChildScrollView(
@@ -343,27 +495,24 @@ class _ScoringScreenState extends State<ScoringScreen>
 
                                   const SizedBox(height: AppTheme.spacingXL),
 
-                                  // Current user's scores
-                                  if (_scores!.partnerScores[appState
-                                          .currentUserId] !=
-                                      null)
-                                    _buildPartnerScore(
-                                      appState.currentUserId ?? 'A',
+                                  // Partner A's score (rated by Partner B)
+                                  if (_scores!.partnerScores['A'] != null)
+                                    _buildMutualPartnerScore(
+                                      'A',
                                       currentPartner?.name ?? 'You',
-                                      _scores!.partnerScores[appState
-                                          .currentUserId]!,
+                                      _scores!.partnerScores['A']!,
+                                      'Rated by ${otherPartner?.name ?? 'Your Partner'}',
                                     ),
 
                                   const SizedBox(height: AppTheme.spacingL),
 
-                                  // Partner's scores (if available)
-                                  if (otherPartner != null &&
-                                      _scores!.partnerScores[otherPartner.id] !=
-                                          null)
-                                    _buildPartnerScore(
-                                      otherPartner.id,
-                                      otherPartner.name,
-                                      _scores!.partnerScores[otherPartner.id]!,
+                                  // Partner B's score (rated by Partner A)
+                                  if (_scores!.partnerScores['B'] != null)
+                                    _buildMutualPartnerScore(
+                                      'B',
+                                      otherPartner?.name ?? 'Your Partner',
+                                      _scores!.partnerScores['B']!,
+                                      'Rated by ${currentPartner?.name ?? 'You'}',
                                     ),
 
                                   const SizedBox(height: AppTheme.spacingXL),
@@ -443,7 +592,7 @@ class _ScoringScreenState extends State<ScoringScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Session Complete!',
+                      'Mutual Evaluation Complete!',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: AppTheme.textPrimary,
                         fontWeight: FontWeight.w600,
@@ -451,7 +600,7 @@ class _ScoringScreenState extends State<ScoringScreen>
                     ),
                     const SizedBox(height: AppTheme.spacingXS),
                     Text(
-                      'Here are your communication insights',
+                      'Here are your mutual communication ratings',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppTheme.textSecondary,
                       ),
@@ -497,7 +646,7 @@ class _ScoringScreenState extends State<ScoringScreen>
     );
   }
 
-  Widget _buildPartnerScore(String partnerId, String name, PartnerScore score) {
+  Widget _buildMutualPartnerScore(String partnerId, String name, PartnerScore score, String ratedBy) {
     final partnerColor = AppTheme.getPartnerColor(partnerId);
     final overallScore = (score.averageScore * 100).round();
 
@@ -517,7 +666,7 @@ class _ScoringScreenState extends State<ScoringScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with radial progress
+            // Header with radial progress and "rated by" info
             Row(
               children: [
                 // Radial progress chart
@@ -611,6 +760,29 @@ class _ScoringScreenState extends State<ScoringScreen>
                         style: TextStyle(
                           fontSize: 14.sp,
                           color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 4.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color: AppTheme.accent.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          ratedBy,
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.accent,
+                          ),
                         ),
                       ),
                       SizedBox(height: 8.h),

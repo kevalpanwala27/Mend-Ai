@@ -8,7 +8,7 @@ import '../../providers/firebase_app_state.dart';
 import '../../services/zego_voice_service.dart';
 import '../../services/zego_token_service.dart';
 import '../../theme/app_theme.dart';
-import '../resolution/post_resolution_screen.dart';
+import '../resolution/user_scoring_screen.dart';
 import '../../widgets/mood_checkin_dialog.dart';
 
 class ZegoVoiceChatScreen extends StatefulWidget {
@@ -436,29 +436,144 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('End Session'),
-        content: const Text('Are you sure you want to end this voice session?'),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.stop_rounded,
+                color: AppTheme.primary,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text('End Voice Session'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Are you ready to end this conversation?'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.successGreen.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppTheme.successGreen.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    color: AppTheme.successGreen,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Next: Rate your partner\'s communication',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Continue Talking'),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('End Session'),
+            style: TextButton.styleFrom(
+              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+            ),
+            child: Text(
+              'End & Continue',
+              style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
     );
 
     if (result == true && mounted) {
+      // Show loading overlay while processing
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Ending session...'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Capture session info BEFORE ending ZEGO session
+      final appState = context.read<FirebaseAppState>();
+      final sessionId = appState.currentSession?.id;
+      final currentUserId = appState.currentUserId;
+      final otherPartner = appState.getOtherPartner();
+      
+      print('=== VOICE CHAT ENDING DEBUG ===');
+      print('Current session: ${appState.currentSession}');
+      print('Session ID: $sessionId');
+      print('Current user ID: $currentUserId');
+      print('Other partner: $otherPartner');
+      print('Other partner ID: ${otherPartner?.id}');
+      print('Other partner name: ${otherPartner?.name}');
+      
+      // Store session data in app state for navigation
+      appState.setTemporarySessionData(
+        sessionId: sessionId,
+        currentUserId: currentUserId,
+        partnerId: otherPartner?.id,
+        partnerName: otherPartner?.name,
+      );
+      
       await _zegoService.endSession();
 
-      // Navigate to post-resolution with session data
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Navigate directly to user scoring screen
       if (mounted) {
+        print('=== NAVIGATING TO SCORING SCREEN ===');
+        print('Passing sessionId: $sessionId');
+        print('Passing currentUserId: $currentUserId');
+        print('Passing partnerName: ${otherPartner?.name}');
+        print('Passing partnerId: ${otherPartner?.id}');
+        
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const PostResolutionScreen()),
+          MaterialPageRoute(
+            builder: (context) => UserScoringScreen(
+              sessionId: sessionId,
+              currentUserId: currentUserId,
+              partnerName: otherPartner?.name,
+              partnerId: otherPartner?.id,
+            ),
+          ),
         );
       }
     }
