@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'dart:developer' as developer;
 import '../../providers/firebase_app_state.dart';
 import 'enhanced_login_screen.dart';
 import '../onboarding/questionnaire_screen.dart';
@@ -14,11 +13,13 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
-        developer.log(
-          '🔥 AuthWrapper rebuild: isLoading=\u001b[33m${appState.isLoading}\u001b[0m, user=\u001b[36m${appState.user}\u001b[0m, isAuthenticated=\u001b[35m${appState.isAuthenticated}\u001b[0m, onboarding=\u001b[32m${appState.isOnboardingComplete}\u001b[0m',
+        debugPrint(
+          '🔥 AuthWrapper rebuild: isLoading=${appState.isLoading}, user=${appState.user?.uid}, isAuthenticated=${appState.isAuthenticated}, onboarding=${appState.isOnboardingComplete}',
         );
+        
         // Show loading screen while initializing
         if (appState.isLoading) {
+          debugPrint('🔥 AuthWrapper: Showing loading screen');
           return Scaffold(
             backgroundColor: Colors.black,
             body: Container(
@@ -32,17 +33,21 @@ class AuthWrapper extends StatelessWidget {
             ),
           );
         }
+        
         // User is authenticated and verified (verification check is handled in sign-in)
         if (appState.user != null) {
           // User is verified - proceed with normal flow
           if (appState.isOnboardingComplete) {
+            debugPrint('🔥 AuthWrapper: Navigating to HomeScreen');
             return const HomeScreen();
           } else {
-            // Show QuestionnaireScreen if onboarding is not complete
+            debugPrint('🔥 AuthWrapper: Navigating to QuestionnaireScreen');
             return const QuestionnaireScreen();
           }
         }
+        
         // Default to login screen
+        debugPrint('🔥 AuthWrapper: Navigating to LoginScreen');
         return const EnhancedLoginScreen();
       },
     );

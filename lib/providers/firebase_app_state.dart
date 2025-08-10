@@ -110,33 +110,45 @@ class FirebaseAppState extends ChangeNotifier {
 
   // Load user data from Firestore
   Future<void> _loadUserData() async {
-    developer.log('Loading user data...');
+    debugPrint('🔥 Loading user data for user: ${_user?.uid}');
     try {
       // Load relationship data
+      debugPrint('🔥 Calling getUserRelationship()...');
       _relationshipData = await _relationshipService.getUserRelationship();
-      developer.log('User data loaded:  [32m [1m [4m [7m$_relationshipData [0m');
+      debugPrint('🔥 Relationship data result: $_relationshipData');
+      
       if (_relationshipData != null) {
+        debugPrint('🔥 Found relationship data - setting onboarding complete to true');
         _isOnboardingComplete = true;
         // Determine current user ID based on relationship data
         if (_relationshipData!['createdBy'] == _user!.uid) {
           _currentUserId = 'A';
+          debugPrint('🔥 User is Partner A');
         } else {
           _currentUserId = 'B';
+          debugPrint('🔥 User is Partner B');
         }
         // Load sessions
+        debugPrint('🔥 Loading sessions...');
         _sessions = await _sessionsService.getRelationshipSessions(
           _relationshipData!['id'],
         );
         // Load active session
+        debugPrint('🔥 Loading active session...');
         _currentSession = await _sessionsService.getActiveSession(
           _relationshipData!['id'],
         );
+        debugPrint('🔥 Sessions loaded successfully');
+      } else {
+        debugPrint('🔥 No relationship data found - onboarding incomplete');
+        _isOnboardingComplete = false;
       }
-      developer.log(
-        'Finished loading user data. Onboarding complete: $_isOnboardingComplete',
+      debugPrint(
+        '🔥 Finished loading user data. Onboarding complete: $_isOnboardingComplete',
       );
     } catch (e) {
-      debugPrint('Error loading user data: $e');
+      debugPrint('🔥 ERROR loading user data: $e');
+      _isOnboardingComplete = false;
     }
   }
 

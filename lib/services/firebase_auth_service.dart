@@ -27,24 +27,26 @@ class FirebaseAuthService {
   Future<GoogleSignInResult> signInWithGoogle() async {
     try {
       await _googleSignIn.initialize();
-      final client = _googleSignIn.authorizationClient;
-      final authz = await client.authorizeScopes([
-        'email',
-        'https://www.googleapis.com/auth/userinfo.profile',
-      ]);
-      if (authz.accessToken.isEmpty) {
+      
+      final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
+      
+      if (googleUser == null) {
         return GoogleSignInResult(
-          errorMessage: 'Sign-in cancelled or not authorized by user.',
+          errorMessage: 'Sign-in cancelled by user.',
         );
       }
+
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+
       final credential = GoogleAuthProvider.credential(
-        accessToken: authz.accessToken,
+        idToken: googleAuth.idToken,
       );
+
       final userCredential = await _auth.signInWithCredential(credential);
       return GoogleSignInResult(userCredential: userCredential);
-    } catch (e, stack) {
-      debugPrint('Error signing in with Google: $e\n$stack');
-      return GoogleSignInResult(errorMessage: e.toString());
+    } catch (e) {
+      debugPrint('Error signing in with Google: $e');
+      return GoogleSignInResult(errorMessage: 'Sign-in failed. Please try again.');
     }
   }
 

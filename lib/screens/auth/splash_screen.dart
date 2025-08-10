@@ -66,16 +66,21 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
     
     final appState = context.read<FirebaseAppState>();
+    debugPrint('🔥 SplashScreen: Initial state - isLoading=${appState.isLoading}, isAuthenticated=${appState.isAuthenticated}');
     
     // Wait for Firebase to initialize if it's still loading
     while (appState.isLoading && mounted) {
+      debugPrint('🔥 SplashScreen: Still loading, waiting...');
       await Future.delayed(const Duration(milliseconds: 100));
     }
     
     if (!mounted) return;
     
+    debugPrint('🔥 SplashScreen: Final state - isLoading=${appState.isLoading}, isAuthenticated=${appState.isAuthenticated}, onboarding=${appState.isOnboardingComplete}');
+    
     // Check if user is already authenticated
     if (appState.isAuthenticated) {
+      debugPrint('🔥 SplashScreen: User is authenticated, navigating to AuthWrapper');
       // Returning user - go directly to AuthWrapper (which will route to appropriate screen)
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
@@ -88,6 +93,7 @@ class _SplashScreenState extends State<SplashScreen>
         ),
       );
     } else {
+      debugPrint('🔥 SplashScreen: User not authenticated, navigating to StartScreen');
       // New user - show start screen
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(

@@ -8,6 +8,7 @@ import '../../widgets/app_logo.dart';
 import '../../widgets/animated_card.dart';
 import '../../widgets/loading_overlay.dart';
 import '../../widgets/gradient_button.dart';
+import 'auth_wrapper.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -83,6 +84,19 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
 
       if (error != null && mounted) {
         _showErrorSnackBar('Failed to sign in: $error');
+      } else if (mounted) {
+        // Sign in successful - navigate to AuthWrapper
+        debugPrint('🔥 EnhancedLoginScreen: Sign in successful, navigating to AuthWrapper');
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const AuthWrapper(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 500),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -108,6 +122,19 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
 
       if (error != null && mounted) {
         _showErrorSnackBar(error);
+      } else if (mounted) {
+        // Sign in successful - navigate to AuthWrapper
+        debugPrint('🔥 EnhancedLoginScreen: Email sign in successful, navigating to AuthWrapper');
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const AuthWrapper(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 500),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {

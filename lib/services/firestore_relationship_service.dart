@@ -59,8 +59,13 @@ class FirestoreRelationshipService {
   Future<Map<String, dynamic>?> getUserRelationship() async {
     try {
       final user = _auth.currentUser;
-      if (user == null) return null;
+      debugPrint('🔥 getUserRelationship: current user = ${user?.uid}');
+      if (user == null) {
+        debugPrint('🔥 getUserRelationship: No authenticated user');
+        return null;
+      }
 
+      debugPrint('🔥 getUserRelationship: Querying relationships for user ${user.uid}');
       final querySnapshot = await _firestore
           .collection('relationships')
           .where('participants', arrayContains: user.uid)
@@ -68,16 +73,22 @@ class FirestoreRelationshipService {
           .limit(1)
           .get();
 
+      debugPrint('🔥 getUserRelationship: Query returned ${querySnapshot.docs.length} documents');
+      
       if (querySnapshot.docs.isNotEmpty) {
         final doc = querySnapshot.docs.first;
-        return {
+        final data = {
           'id': doc.id,
           ...doc.data(),
         };
+        debugPrint('🔥 getUserRelationship: Found relationship: ${data['id']}');
+        return data;
       }
+      
+      debugPrint('🔥 getUserRelationship: No relationship found');
       return null;
     } catch (e) {
-      debugPrint('Error getting user relationship: $e');
+      debugPrint('🔥 ERROR getUserRelationship: $e');
       return null;
     }
   }
