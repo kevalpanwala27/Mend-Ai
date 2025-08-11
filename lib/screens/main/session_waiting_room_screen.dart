@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../chat/zego_voice_chat_screen.dart';
+import '../main/home_screen.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
 
@@ -140,7 +141,9 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
         if (shouldPop) {
           await _leaveSession();
           if (mounted) {
-            navigator.pop();
+            navigator.pushReplacement(
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+            );
           }
         }
       },
@@ -156,7 +159,9 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
               if (shouldExit) {
                 await _leaveSession();
                 if (mounted) {
-                  navigator.pop();
+                  navigator.pushReplacement(
+                    MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  );
                 }
               }
             },
