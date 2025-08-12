@@ -9,6 +9,7 @@ import '../../widgets/gradient_button.dart';
 import '../../widgets/animated_card.dart';
 import '../main/insights_dashboard_screen.dart';
 import 'session_waiting_room_screen.dart';
+import 'session_history_screen.dart';
 import '../settings/settings_screen.dart';
 import 'dart:math';
 import 'package:flutter/services.dart';
@@ -51,7 +52,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(_fontScale)),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(_fontScale)),
           child: Scaffold(
             backgroundColor: Colors.black, // Set solid black background
             appBar: AppBar(
@@ -370,6 +373,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             icon: Icons.group_add_rounded,
             isSecondary: true,
             onPressed: () => _showJoinSessionDialog(context),
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacingM),
+        SizedBox(
+          width: double.infinity,
+          child: GradientButton(
+            text: 'View Session History',
+            icon: Icons.history_rounded,
+            isSecondary: true,
+            onPressed: () => _navigateToSessionHistory(context),
           ),
         ),
       ],
@@ -723,5 +736,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
 
     return streak;
+  }
+
+  void _navigateToSessionHistory(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SessionHistoryScreen()),
+    );
   }
 }

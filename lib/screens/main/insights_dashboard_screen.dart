@@ -7,6 +7,8 @@ import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/gradient_button.dart';
 import '../../widgets/animated_card.dart';
+import '../../models/communication_session.dart';
+import 'session_history_screen.dart';
 
 class InsightsDashboardScreen extends StatefulWidget {
   const InsightsDashboardScreen({super.key});
@@ -148,6 +150,10 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
 
                           // Communication Trends Chart
                           _buildCommunicationTrendsCard(context, appState),
+                          SizedBox(height: 32.h),
+
+                          // Session History Section
+                          _buildSessionHistorySection(context, appState),
                           SizedBox(height: 32.h),
 
                           // Reflections & Exercises Panel
@@ -1188,4 +1194,209 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
     };
   }
 
+  Widget _buildSessionHistorySection(
+    BuildContext context,
+    FirebaseAppState appState,
+  ) {
+    final recentSessions = appState.getRecentSessions(limit: 5);
+
+    return AnimatedCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                ),
+                child: Icon(
+                  Icons.history_rounded,
+                  color: AppTheme.primary,
+                  size: 24.sp,
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Recent Sessions',
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      'Your communication journey and progress',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppTheme.textSecondary,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 24.h),
+
+          // Sessions Preview
+          if (recentSessions.isNotEmpty) ...[
+            ...recentSessions
+                .take(3)
+                .map((session) => _buildSessionPreviewCard(session)),
+            SizedBox(height: 16.h),
+            SizedBox(
+              width: double.infinity,
+              child: GradientButton(
+                text: 'View All Sessions',
+                icon: Icons.history_rounded,
+                isSecondary: true,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SessionHistoryScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ] else ...[
+            Container(
+              padding: EdgeInsets.all(24.w),
+              decoration: BoxDecoration(
+                color: AppTheme.surface.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                border: Border.all(
+                  color: AppTheme.surface.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.history_rounded,
+                    color: AppTheme.textSecondary,
+                    size: 32.sp,
+                  ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    'No sessions yet',
+                    style: TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'Start your first communication session\nto see your progress here',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 14.sp,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSessionPreviewCard(CommunicationSession session) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: AppTheme.surface.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        border: Border.all(color: AppTheme.surface.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(8.w),
+            decoration: BoxDecoration(
+              color: session.isCompleted
+                  ? AppTheme.successGreen.withValues(alpha: 0.2)
+                  : AppTheme.neonCoral.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(AppTheme.radiusS),
+            ),
+            child: Icon(
+              session.isCompleted
+                  ? Icons.check_circle_rounded
+                  : Icons.pending_rounded,
+              color: session.isCompleted
+                  ? AppTheme.successGreen
+                  : AppTheme.neonCoral,
+              size: 16.sp,
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Session ${session.id.substring(0, 8)}',
+                  style: TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  _formatSessionDate(session.startTime),
+                  style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 12.sp,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (session.isCompleted && session.scores != null)
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(AppTheme.radiusS),
+              ),
+              child: Text(
+                '${session.scores!.averageScore.toStringAsFixed(1)}/10',
+                style: TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _formatSessionDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date).inDays;
+
+    if (difference == 0) return 'Today';
+    if (difference == 1) return 'Yesterday';
+    if (difference < 7) return '${difference} days ago';
+    if (difference < 30) return '${(difference / 7).floor()} weeks ago';
+    if (difference < 365) return '${(difference / 30).floor()} months ago';
+    return '${(difference / 365).floor()} years ago';
+  }
 }
