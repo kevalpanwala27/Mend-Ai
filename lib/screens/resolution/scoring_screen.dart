@@ -10,7 +10,6 @@ import '../../theme/app_theme.dart';
 import '../main/home_screen.dart';
 import '../main/insights_dashboard_screen.dart';
 import '../../widgets/aurora_background.dart';
-import '../../widgets/pill_app_bar.dart';
 
 class ScoringScreen extends StatefulWidget {
   const ScoringScreen({super.key});
@@ -81,8 +80,10 @@ class _ScoringScreenState extends State<ScoringScreen>
     if (currentSession != null) {
       try {
         // Check if both partners have completed their ratings
-        final bothRated = await _sessionsService.haveBothPartnersRated(currentSession.id);
-        
+        final bothRated = await _sessionsService.haveBothPartnersRated(
+          currentSession.id,
+        );
+
         if (!bothRated) {
           setState(() {
             _waitingForPartnerRating = true;
@@ -92,14 +93,18 @@ class _ScoringScreenState extends State<ScoringScreen>
         }
 
         // Get the mutual ratings from Firebase
-        final ratings = await _sessionsService.getSessionRatings(currentSession.id);
-        
+        final ratings = await _sessionsService.getSessionRatings(
+          currentSession.id,
+        );
+
         if (ratings.length >= 2) {
           // Create CommunicationScores from mutual ratings
           final communicationScores = CommunicationScores(
             partnerScores: {
               for (var rating in ratings)
-                rating['ratedPartnerId']: PartnerScore.fromJson(rating['score'])
+                rating['ratedPartnerId']: PartnerScore.fromJson(
+                  rating['score'],
+                ),
             },
             overallFeedback: _generateOverallFeedback(ratings),
             improvementSuggestions: _generateImprovementSuggestions(),
@@ -142,8 +147,9 @@ class _ScoringScreenState extends State<ScoringScreen>
   }
 
   String _generateOverallFeedback(List<Map<String, dynamic>> ratings) {
-    if (ratings.length < 2) return "Waiting for both partners to complete their evaluations.";
-    
+    if (ratings.length < 2)
+      return "Waiting for both partners to complete their evaluations.";
+
     // Calculate average of both ratings
     double totalAverage = 0.0;
     for (var rating in ratings) {
@@ -251,7 +257,7 @@ class _ScoringScreenState extends State<ScoringScreen>
     return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
         final otherPartner = appState.getOtherPartner();
-        
+
         return Center(
           child: Container(
             margin: const EdgeInsets.all(AppTheme.spacingL),
@@ -322,7 +328,8 @@ class _ScoringScreenState extends State<ScoringScreen>
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () => _generateScores(), // Refresh to check status
+                        onPressed: () =>
+                            _generateScores(), // Refresh to check status
                         icon: const Icon(Icons.refresh_rounded),
                         label: const Text('Check Status'),
                         style: ElevatedButton.styleFrom(
@@ -454,8 +461,11 @@ class _ScoringScreenState extends State<ScoringScreen>
         return Stack(
           children: [
             Scaffold(
-              backgroundColor: Colors.black,
-              appBar: const PillAppBar(title: 'Communication Scores'),
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                title: const Text('Communication Scores'),
+              ),
               body: AuroraBackground(
                 intensity: 0.6,
                 child: SafeArea(
@@ -634,7 +644,12 @@ class _ScoringScreenState extends State<ScoringScreen>
     );
   }
 
-  Widget _buildMutualPartnerScore(String partnerId, String name, PartnerScore score, String ratedBy) {
+  Widget _buildMutualPartnerScore(
+    String partnerId,
+    String name,
+    PartnerScore score,
+    String ratedBy,
+  ) {
     final partnerColor = AppTheme.getPartnerColor(partnerId);
     final overallScore = (score.averageScore * 100).round();
 

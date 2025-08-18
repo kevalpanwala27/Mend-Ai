@@ -85,7 +85,6 @@ class _StartScreenState extends State<StartScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       body: AuroraBackground(
         intensity: 0.6,
         child: SafeArea(

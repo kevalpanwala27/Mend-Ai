@@ -8,7 +8,6 @@ import '../../widgets/gradient_button.dart';
 import '../../widgets/animated_card.dart';
 import '../../models/communication_session.dart';
 import '../../widgets/aurora_background.dart';
-import '../../widgets/pill_app_bar.dart';
 
 import 'session_waiting_room_screen.dart';
 
@@ -75,11 +74,14 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: PillAppBar(
-        title: 'Session History',
-        showBack: true,
-        onBack: () => Navigator.pop(context),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+        ),
+        title: const Text('Session History'),
         actions: [
           IconButton(
             onPressed: () => _showFilterDialog(context),

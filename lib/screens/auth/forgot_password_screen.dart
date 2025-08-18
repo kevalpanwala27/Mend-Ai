@@ -146,7 +146,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
       isLoading: _isLoading,
       loadingText: 'Sending reset email...',
       child: Scaffold(
-        backgroundColor: Colors.black,
         body: AuroraBackground(
           intensity: 0.6,
           child: SafeArea(

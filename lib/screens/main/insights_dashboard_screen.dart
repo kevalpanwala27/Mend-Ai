@@ -9,7 +9,7 @@ import '../../widgets/gradient_button.dart';
 import '../../widgets/animated_card.dart';
 import '../../models/communication_session.dart';
 import '../../widgets/aurora_background.dart';
-import '../../widgets/pill_app_bar.dart';
+
 import 'session_history_screen.dart';
 
 class InsightsDashboardScreen extends StatefulWidget {
@@ -70,11 +70,13 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: PillAppBar(
-        title: 'Insights Dashboard',
-        showBack: true,
-        onBack: () => Navigator.pop(context),
+      appBar: AppBar(
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+        ),
+        title: const Text('Insights Dashboard'),
         actions: [
           IconButton(
             onPressed: () => _showTimeRangeSelector(),

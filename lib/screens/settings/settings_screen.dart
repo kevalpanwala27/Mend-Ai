@@ -8,7 +8,6 @@ import '../../widgets/animated_card.dart';
 import '../../widgets/gradient_button.dart';
 import '../auth/enhanced_login_screen.dart';
 import '../../widgets/aurora_background.dart';
-import '../../widgets/pill_app_bar.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -46,11 +45,14 @@ class _SettingsScreenState extends State<SettingsScreen>
     return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
         return Scaffold(
-          backgroundColor: Colors.black,
-          appBar: PillAppBar(
-            title: 'Settings',
-            showBack: true,
-            onBack: () => Navigator.pop(context),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+            ),
+            title: const Text('Settings'),
           ),
           body: AuroraBackground(
             intensity: 0.6,
@@ -337,7 +339,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ),
                   );
 
-                  // Force navigate directly to login screen  
+                  // Force navigate directly to login screen
                   Navigator.of(context).pushAndRemoveUntil(
                     PageRouteBuilder(
                       pageBuilder: (context, animation, secondaryAnimation) =>
@@ -353,7 +355,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ),
                     (route) => false,
                   );
-                  
+
                   debugPrint('🔥 Navigation to login screen completed');
                 }
               } catch (e) {
@@ -518,7 +520,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   debugPrint('🔥 Account deletion failed with error: $error');
                   // Close loading dialog
                   navigator.pop();
-                  
+
                   // Show error (this might not work if context is unmounted, but we try)
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -531,23 +533,31 @@ class _SettingsScreenState extends State<SettingsScreen>
                     );
                   }
                 } else {
-                  debugPrint('🔥 Account deletion succeeded, navigating with stored navigator');
+                  debugPrint(
+                    '🔥 Account deletion succeeded, navigating with stored navigator',
+                  );
                   // Account deleted successfully - use stored navigator
-                  
+
                   // Close loading dialog and navigate in one go
                   navigator.pushAndRemoveUntil(
                     PageRouteBuilder(
                       pageBuilder: (context, animation, secondaryAnimation) =>
                           const EnhancedLoginScreen(),
-                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                        return FadeTransition(opacity: animation, child: child);
-                      },
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) {
+                            return FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            );
+                          },
                       transitionDuration: const Duration(milliseconds: 300),
                     ),
                     (route) => false,
                   );
-                  
-                  debugPrint('🔥 Navigation to login screen completed using stored navigator');
+
+                  debugPrint(
+                    '🔥 Navigation to login screen completed using stored navigator',
+                  );
                 }
               } catch (e) {
                 confirmController.dispose();

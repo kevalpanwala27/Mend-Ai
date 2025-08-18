@@ -4,11 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../chat/zego_voice_chat_screen.dart';
-import '../main/home_screen.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/aurora_background.dart';
-import '../../widgets/pill_app_bar.dart';
 
 class SessionWaitingRoomScreen extends StatefulWidget {
   final String sessionCode;
@@ -142,30 +140,33 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
         final shouldPop = await _showExitConfirmation();
         if (shouldPop) {
           await _leaveSession();
-          if (mounted) {
-            navigator.pushReplacement(
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
-            );
+          if (mounted && navigator.canPop()) {
+            navigator.pop();
           }
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.black,
-        appBar: PillAppBar(
-          title: 'Waiting Room',
-          showBack: true,
-          onBack: () async {
-            final navigator = Navigator.of(context);
-            final shouldExit = await _showExitConfirmation();
-            if (shouldExit) {
-              await _leaveSession();
-              if (mounted) {
-                navigator.pushReplacement(
-                  MaterialPageRoute(builder: (context) => const HomeScreen()),
-                );
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: AppTheme.textPrimary,
+              size: 20,
+            ),
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final shouldExit = await _showExitConfirmation();
+              if (shouldExit) {
+                await _leaveSession();
+                if (mounted && navigator.canPop()) {
+                  navigator.pop();
+                }
               }
-            }
-          },
+            },
+          ),
+          title: const Text('Waiting Room'),
         ),
         body: AuroraBackground(
           intensity: 0.6,

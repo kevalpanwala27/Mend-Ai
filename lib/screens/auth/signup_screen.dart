@@ -234,7 +234,6 @@ class _SignUpScreenState extends State<SignUpScreen>
       isLoading: _isLoading,
       loadingText: 'Creating your account...',
       child: Scaffold(
-        backgroundColor: Colors.black,
         body: AuroraBackground(
           intensity: 0.6,
           child: SafeArea(

@@ -8,7 +8,6 @@ import '../../theme/app_theme.dart';
 import '../../widgets/gradient_button.dart';
 import '../main/home_screen.dart';
 import '../../widgets/aurora_background.dart';
-import '../../widgets/pill_app_bar.dart';
 
 class PostResolutionScreen extends StatefulWidget {
   final String? sessionId;
@@ -252,14 +251,18 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
 
   Future<void> _completeFlow() async {
     final appState = context.read<FirebaseAppState>();
-    
+
     // Use passed parameters as fallback if app state is null
     final sessionId = widget.sessionId ?? appState.currentSession?.id;
     final currentUserId = widget.currentUserId ?? appState.currentUserId;
     final partnerName = widget.partnerName ?? appState.getOtherPartner()?.name;
-    
-    debugPrint('Post-resolution flow - Session: $sessionId, User: $currentUserId, Partner: $partnerName');
-    debugPrint('Widget params - SessionId: ${widget.sessionId}, UserId: ${widget.currentUserId}, Partner: ${widget.partnerName}');
+
+    debugPrint(
+      'Post-resolution flow - Session: $sessionId, User: $currentUserId, Partner: $partnerName',
+    );
+    debugPrint(
+      'Widget params - SessionId: ${widget.sessionId}, UserId: ${widget.currentUserId}, Partner: ${widget.partnerName}',
+    );
 
     // Save user responses to the session if enabled
     if (_saveToInsights) {
@@ -308,7 +311,9 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text('Go Home?'),
-                  content: const Text('Are you sure you want to go back to the home screen? You won\'t be able to return to this session.'),
+                  content: const Text(
+                    'Are you sure you want to go back to the home screen? You won\'t be able to return to this session.',
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
@@ -319,7 +324,9 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
                         Navigator.of(context).pop();
                         Navigator.pushAndRemoveUntil(
                           context,
-                          MaterialPageRoute(builder: (context) => const HomeScreen()),
+                          MaterialPageRoute(
+                            builder: (context) => const HomeScreen(),
+                          ),
                           (route) => false,
                         );
                       },
@@ -333,153 +340,163 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
           child: Stack(
             children: [
               Scaffold(
-                backgroundColor: Colors.black,
-                appBar: const PillAppBar(title: 'Resolution Complete'),
-              body: AuroraBackground(
-                intensity: 0.6,
-                child: SafeArea(
-                  child: Column(
-                    children: [
-                      // Progress indicator card
-                      Container(
-                        margin: const EdgeInsets.all(AppTheme.spacingL),
-                        padding: const EdgeInsets.all(AppTheme.spacingM),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surface,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusL),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
+                appBar: AppBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  title: const Text('Resolution Complete'),
+                ),
+                body: AuroraBackground(
+                  intensity: 0.6,
+                  child: SafeArea(
+                    child: Column(
+                      children: [
+                        // Progress indicator card
+                        Container(
+                          margin: const EdgeInsets.all(AppTheme.spacingL),
+                          padding: const EdgeInsets.all(AppTheme.spacingM),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surface,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusL,
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Step ${_currentPage + 1} of 4',
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(
-                                        color: AppTheme.textPrimary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppTheme.spacingM,
-                                    vertical: AppTheme.spacingS,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.successGreen.withValues(
-                                      alpha: 0.1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(
-                                      AppTheme.radiusS,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    '${((_currentPage + 1) / 4 * 100).round()}%',
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Step ${_currentPage + 1} of 4',
                                     style: Theme.of(context)
                                         .textTheme
-                                        .bodyMedium
+                                        .titleMedium
                                         ?.copyWith(
-                                          color: AppTheme.successGreen,
+                                          color: AppTheme.textPrimary,
                                           fontWeight: FontWeight.w600,
                                         ),
                                   ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppTheme.spacingM,
+                                      vertical: AppTheme.spacingS,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.successGreen.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusS,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      '${((_currentPage + 1) / 4 * 100).round()}%',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: AppTheme.successGreen,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppTheme.spacingM),
+                              LinearProgressIndicator(
+                                value: (_currentPage + 1) / 4,
+                                backgroundColor: AppTheme.borderColor,
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                  AppTheme.successGreen,
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: AppTheme.spacingM),
-                            LinearProgressIndicator(
-                              value: (_currentPage + 1) / 4,
-                              backgroundColor: AppTheme.borderColor,
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                AppTheme.successGreen,
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radiusS,
+                                ),
                               ),
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radiusS,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Page content
-                      Expanded(
-                        child: PageView(
-                          controller: _pageController,
-                          onPageChanged: (index) {
-                            setState(() {
-                              _currentPage = index;
-                            });
-                          },
-                          children: [
-                            _buildGratitudePage(
-                              currentPartner?.name ?? 'You',
-                              otherPartner?.name ?? 'Your Partner',
-                            ),
-                            _buildReflectionPage(),
-                            _buildBondingActivitiesPage(),
-                            _buildSummaryPage(),
-                          ],
-                        ),
-                      ),
-
-                      // Navigation
-                      Container(
-                        margin: const EdgeInsets.all(AppTheme.spacingL),
-                        padding: const EdgeInsets.all(AppTheme.spacingM),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surface,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusL),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: GradientButton(
-                            text: _currentPage == 3
-                                ? 'Complete Session'
-                                : 'Continue',
-                            onPressed: _nextPage,
-                            height: 56,
+                            ],
                           ),
                         ),
-                      ),
-                    ],
+
+                        // Page content
+                        Expanded(
+                          child: PageView(
+                            controller: _pageController,
+                            onPageChanged: (index) {
+                              setState(() {
+                                _currentPage = index;
+                              });
+                            },
+                            children: [
+                              _buildGratitudePage(
+                                currentPartner?.name ?? 'You',
+                                otherPartner?.name ?? 'Your Partner',
+                              ),
+                              _buildReflectionPage(),
+                              _buildBondingActivitiesPage(),
+                              _buildSummaryPage(),
+                            ],
+                          ),
+                        ),
+
+                        // Navigation
+                        Container(
+                          margin: const EdgeInsets.all(AppTheme.spacingL),
+                          padding: const EdgeInsets.all(AppTheme.spacingM),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surface,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusL,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: GradientButton(
+                              text: _currentPage == 3
+                                  ? 'Complete Session'
+                                  : 'Continue',
+                              onPressed: _nextPage,
+                              height: 56,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            // Confetti overlay
-            Align(
-              alignment: Alignment.topCenter,
-              child: ConfettiWidget(
-                confettiController: _confettiController,
-                blastDirectionality: BlastDirectionality.explosive,
-                shouldLoop: false,
-                colors: const [
-                  AppTheme.primary,
-                  AppTheme.secondary,
-                  AppTheme.accent,
-                  Colors.pink,
-                ],
+              // Confetti overlay
+              Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiWidget(
+                  confettiController: _confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  shouldLoop: false,
+                  colors: const [
+                    AppTheme.primary,
+                    AppTheme.secondary,
+                    AppTheme.accent,
+                    Colors.pink,
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-      );
+            ],
+          ),
+        );
       },
     );
   }

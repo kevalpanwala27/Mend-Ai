@@ -41,7 +41,7 @@ class FirebaseAppState extends ChangeNotifier {
   bool _isOnboardingComplete = false;
   String? _currentUserId;
   bool _isLoading = true;
-  
+
   // Temporary storage for session data during navigation
   Map<String, dynamic>? _temporarySessionData;
 
@@ -55,7 +55,7 @@ class FirebaseAppState extends ChangeNotifier {
   bool get hasPartner => _relationshipData?['partnerB'] != null;
   bool get isAuthenticated => _user != null;
   bool get isLoading => _isLoading;
-  
+
   // Temporary session data methods
   void setTemporarySessionData({
     required String? sessionId,
@@ -71,11 +71,11 @@ class FirebaseAppState extends ChangeNotifier {
     };
     notifyListeners();
   }
-  
+
   Map<String, dynamic>? getTemporarySessionData() {
     return _temporarySessionData;
   }
-  
+
   void clearTemporarySessionData() {
     _temporarySessionData = null;
     notifyListeners();
@@ -91,11 +91,15 @@ class FirebaseAppState extends ChangeNotifier {
         debugPrint('🔥 User signed in, loading data...');
         await _loadUserData();
       } else {
-        debugPrint('🔥 User signed out, clearing data and should navigate to login...');
+        debugPrint(
+          '🔥 User signed out, clearing data and should navigate to login...',
+        );
         _clearUserData();
       }
       _isLoading = false;
-      debugPrint('🔥 Calling notifyListeners() - AuthWrapper should rebuild now');
+      debugPrint(
+        '🔥 Calling notifyListeners() - AuthWrapper should rebuild now',
+      );
       notifyListeners();
     });
 
@@ -116,9 +120,11 @@ class FirebaseAppState extends ChangeNotifier {
       debugPrint('🔥 Calling getUserRelationship()...');
       _relationshipData = await _relationshipService.getUserRelationship();
       debugPrint('🔥 Relationship data result: $_relationshipData');
-      
+
       if (_relationshipData != null) {
-        debugPrint('🔥 Found relationship data - setting onboarding complete to true');
+        debugPrint(
+          '🔥 Found relationship data - setting onboarding complete to true',
+        );
         _isOnboardingComplete = true;
         // Determine current user ID based on relationship data
         if (_relationshipData!['createdBy'] == _user!.uid) {
@@ -183,14 +189,16 @@ class FirebaseAppState extends ChangeNotifier {
     if (result.userCredential != null) {
       // Check if email is verified for email/password users
       final user = result.userCredential!.user!;
-      final isEmailPasswordUser = user.providerData.any((info) => info.providerId == 'password');
-      
+      final isEmailPasswordUser = user.providerData.any(
+        (info) => info.providerId == 'password',
+      );
+
       if (isEmailPasswordUser && !user.emailVerified) {
         // Sign out the unverified user immediately
         await _authService.signOut();
         return 'Please verify your email address before signing in. Check your inbox for the verification link.';
       }
-      
+
       return null; // Success, no error
     } else {
       return result.errorMessage ?? 'Unknown error occurred during sign-in.';
@@ -265,42 +273,69 @@ class FirebaseAppState extends ChangeNotifier {
   Future<String?> deleteAccount() async {
     try {
       debugPrint('🔥 Starting account deletion process...');
-      
+
       // Delete the Firebase Auth account FIRST (before signing out)
       debugPrint('🔥 Step 1: Deleting Firebase Auth account...');
-      final result = await _authService.deleteCurrentUser().timeout(
+      var result = await _authService.deleteCurrentUser().timeout(
         const Duration(seconds: 30),
         onTimeout: () {
           debugPrint('🔥 Step 1: Auth deletion timed out');
-          return AuthResult(errorMessage: 'Account deletion timed out. Please try again.');
+          return AuthResult(
+            errorMessage: 'Account deletion timed out. Please try again.',
+          );
         },
       );
-      
+
       if (result.errorMessage != null) {
         debugPrint('🔥 Step 1: Auth deletion failed: ${result.errorMessage}');
-        return result.errorMessage;
+        // If recent-login required and user is Google signed-in, attempt reauth once
+        if (result.errorMessage!.contains('sign in again') &&
+            _authService.userHasProvider('google.com')) {
+          debugPrint(
+            '🔥 Attempting Google reauthentication for account deletion...',
+          );
+          final reauth = await _authService.reauthenticateWithGoogle();
+          if (reauth.errorMessage != null) {
+            debugPrint('🔥 Reauthentication failed: ${reauth.errorMessage}');
+            return result.errorMessage; // original error
+          }
+          debugPrint('🔥 Reauthentication succeeded. Retrying deletion...');
+          result = await _authService.deleteCurrentUser();
+          if (result.errorMessage != null) {
+            debugPrint(
+              '🔥 Deletion still failed after reauth: ${result.errorMessage}',
+            );
+            return result.errorMessage;
+          }
+        } else {
+          return result.errorMessage;
+        }
       }
       debugPrint('🔥 Step 1: Firebase Auth account deleted successfully');
-      
+
       // Then clear all user data (relationships, sessions, etc.)
       debugPrint('🔥 Step 2: Clearing all user data...');
       if (_relationshipData != null &&
           _relationshipData!['createdBy'] == _user?.uid) {
-        await _relationshipService.deleteRelationship(_relationshipData!['id']).timeout(
-          const Duration(seconds: 15),
-          onTimeout: () {
-            debugPrint('🔥 Step 2: Relationship deletion timed out (non-critical)');
-          },
-        );
+        await _relationshipService
+            .deleteRelationship(_relationshipData!['id'])
+            .timeout(
+              const Duration(seconds: 15),
+              onTimeout: () {
+                debugPrint(
+                  '🔥 Step 2: Relationship deletion timed out (non-critical)',
+                );
+              },
+            );
       }
       debugPrint('🔥 Step 2: User data cleared successfully');
-      
+
       // Clear local state
       debugPrint('🔥 Step 3: Clearing local state...');
       _clearUserData();
       notifyListeners();
       debugPrint('🔥 Step 3: Local state cleared successfully');
-      
+
       debugPrint('🔥 Account deletion completed successfully');
       return null; // Success
     } catch (e) {
@@ -402,10 +437,7 @@ class FirebaseAppState extends ChangeNotifier {
         id: sessionCode ?? DateTime.now().millisecondsSinceEpoch.toString(),
         startTime: DateTime.now(),
         messages: [],
-        participantStatus: {
-          'A': true,
-          'B': true,
-        },
+        participantStatus: {'A': true, 'B': true},
       );
 
       if (sessionCode != null) {
@@ -419,7 +451,7 @@ class FirebaseAppState extends ChangeNotifier {
           session,
         );
       }
-      
+
       _currentSession = session;
 
       notifyListeners();
@@ -458,14 +490,23 @@ class FirebaseAppState extends ChangeNotifier {
   // Mark current user as left from session
   Future<void> leaveCurrentSession() async {
     try {
-      if (_currentSession == null || _currentSessionId == null || _currentUserId == null) {
-        debugPrint('Cannot leave session - missing session info: session=$_currentSession, sessionId=$_currentSessionId, userId=$_currentUserId');
+      if (_currentSession == null ||
+          _currentSessionId == null ||
+          _currentUserId == null) {
+        debugPrint(
+          'Cannot leave session - missing session info: session=$_currentSession, sessionId=$_currentSessionId, userId=$_currentUserId',
+        );
         return;
       }
 
-      debugPrint('Leaving session: sessionId=$_currentSessionId, userId=$_currentUserId');
-      await _sessionsService.markParticipantLeft(_currentSessionId!, _currentUserId!);
-      
+      debugPrint(
+        'Leaving session: sessionId=$_currentSessionId, userId=$_currentUserId',
+      );
+      await _sessionsService.markParticipantLeft(
+        _currentSessionId!,
+        _currentUserId!,
+      );
+
       notifyListeners();
     } catch (e) {
       debugPrint('Error leaving communication session: $e');

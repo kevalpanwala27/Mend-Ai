@@ -9,7 +9,6 @@ import '../../services/firestore_sessions_service.dart';
 import '../main/home_screen.dart';
 import 'post_resolution_screen.dart';
 import '../../widgets/aurora_background.dart';
-import '../../widgets/pill_app_bar.dart';
 
 class UserScoringScreen extends StatefulWidget {
   final String? sessionId;
@@ -32,7 +31,7 @@ class UserScoringScreen extends StatefulWidget {
 class _UserScoringScreenState extends State<UserScoringScreen>
     with TickerProviderStateMixin {
   final FirestoreSessionsService _sessionsService = FirestoreSessionsService();
-  
+
   late AnimationController _fadeController;
   late AnimationController _slideController;
   late Animation<double> _fadeAnimation;
@@ -105,14 +104,15 @@ class _UserScoringScreenState extends State<UserScoringScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0.0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
 
     _fadeController.forward();
     _slideController.forward();
@@ -122,9 +122,11 @@ class _UserScoringScreenState extends State<UserScoringScreen>
     final appState = context.read<FirebaseAppState>();
     final sessionId = widget.sessionId ?? appState.currentSession?.id;
     final currentUserId = widget.currentUserId ?? appState.currentUserId;
-    
-    print('Checking if already rated - sessionId: $sessionId, userId: $currentUserId');
-    
+
+    print(
+      'Checking if already rated - sessionId: $sessionId, userId: $currentUserId',
+    );
+
     if (sessionId == null || currentUserId == null) return;
 
     try {
@@ -133,7 +135,7 @@ class _UserScoringScreenState extends State<UserScoringScreen>
         sessionId,
         currentUserId,
       );
-      
+
       if (mounted) {
         setState(() {
           _hasAlreadyRated = hasRated;
@@ -150,20 +152,23 @@ class _UserScoringScreenState extends State<UserScoringScreen>
     return result;
   }
 
-  String _getPartnerIdFromRelationship(FirebaseAppState appState, String currentUserId) {
+  String _getPartnerIdFromRelationship(
+    FirebaseAppState appState,
+    String currentUserId,
+  ) {
     final relationshipData = appState.relationshipData;
     if (relationshipData == null) return 'partner_unknown';
-    
+
     // Check if current user is partnerA or partnerB and return the other one
     final partnerA = relationshipData['partnerA'];
     final partnerB = relationshipData['partnerB'];
-    
+
     if (partnerA?['id'] == currentUserId) {
       return partnerB?['id'] ?? 'partner_b';
     } else if (partnerB?['id'] == currentUserId) {
       return partnerA?['id'] ?? 'partner_a';
     }
-    
+
     // Fallback
     return 'partner_other';
   }
@@ -182,34 +187,44 @@ class _UserScoringScreenState extends State<UserScoringScreen>
     });
 
     final appState = context.read<FirebaseAppState>();
-    
+
     // Try to get data from widget params first, then from temporary storage, then from current session
     final tempData = appState.getTemporarySessionData();
-    
+
     // Create dynamic session ID if none exists
-    String sessionId = widget.sessionId ?? 
-                      tempData?['sessionId'] ?? 
-                      appState.currentSession?.id ?? 
-                      'session_${DateTime.now().millisecondsSinceEpoch}';
-    
-    String currentUserId = widget.currentUserId ?? 
-                          tempData?['currentUserId'] ?? 
-                          appState.currentUserId ?? 
-                          appState.user?.uid ?? 'unknown_user';
-    
+    String sessionId =
+        widget.sessionId ??
+        tempData?['sessionId'] ??
+        appState.currentSession?.id ??
+        'session_${DateTime.now().millisecondsSinceEpoch}';
+
+    String currentUserId =
+        widget.currentUserId ??
+        tempData?['currentUserId'] ??
+        appState.currentUserId ??
+        appState.user?.uid ??
+        'unknown_user';
+
     // Get partner info from relationship data
-    String partnerId = widget.partnerId ?? 
-                      tempData?['partnerId'] ?? 
-                      appState.getOtherPartner()?.id ?? 
-                      _getPartnerIdFromRelationship(appState, currentUserId);
-    
-    print('Session info - Session: $sessionId, User: $currentUserId, Partner: $partnerId');
-    print('Widget params - SessionId: ${widget.sessionId}, UserId: ${widget.currentUserId}, PartnerId: ${widget.partnerId}');
+    String partnerId =
+        widget.partnerId ??
+        tempData?['partnerId'] ??
+        appState.getOtherPartner()?.id ??
+        _getPartnerIdFromRelationship(appState, currentUserId);
+
+    print(
+      'Session info - Session: $sessionId, User: $currentUserId, Partner: $partnerId',
+    );
+    print(
+      'Widget params - SessionId: ${widget.sessionId}, UserId: ${widget.currentUserId}, PartnerId: ${widget.partnerId}',
+    );
     print('Temp data: $tempData');
     print('Relationship data: ${appState.relationshipData}');
-    
+
     if (sessionId.isEmpty || currentUserId.isEmpty || partnerId.isEmpty) {
-      print('Missing session information - sessionId: $sessionId, userId: $currentUserId, partnerId: $partnerId');
+      print(
+        'Missing session information - sessionId: $sessionId, userId: $currentUserId, partnerId: $partnerId',
+      );
       _showError('Session information not available');
       setState(() {
         _isLoading = false;
@@ -246,7 +261,7 @@ class _UserScoringScreenState extends State<UserScoringScreen>
       // Check if both partners have now rated each other
       final bothRated = await _sessionsService.haveBothPartnersRated(sessionId);
       debugPrint('Both partners rated result: $bothRated');
-      
+
       if (bothRated) {
         debugPrint('Both partners have rated - completing mutual scoring...');
         // Both partners have rated - generate final scores and complete session
@@ -255,14 +270,15 @@ class _UserScoringScreenState extends State<UserScoringScreen>
       }
 
       // Show success and navigate to home screen
-      debugPrint('Rating submitted successfully. Both partners rated: $bothRated');
+      debugPrint(
+        'Rating submitted successfully. Both partners rated: $bothRated',
+      );
       debugPrint('About to show success dialog...');
-      
+
       // Clear temporary session data since we're done with it
       appState.clearTemporarySessionData();
-      
+
       _showSuccessDialog(bothRated);
-      
     } catch (e) {
       _showError('Failed to save rating: $e');
     } finally {
@@ -278,13 +294,13 @@ class _UserScoringScreenState extends State<UserScoringScreen>
     try {
       // Get both partner ratings
       final ratings = await _sessionsService.getSessionRatings(sessionId);
-      
+
       if (ratings.length == 2) {
         // Create CommunicationScores from mutual ratings
         final communicationScores = CommunicationScores(
           partnerScores: {
             for (var rating in ratings)
-              rating['ratedPartnerId']: PartnerScore.fromJson(rating['score'])
+              rating['ratedPartnerId']: PartnerScore.fromJson(rating['score']),
           },
           overallFeedback: _generateOverallFeedback(ratings),
           improvementSuggestions: _generateImprovementSuggestions(),
@@ -296,7 +312,11 @@ class _UserScoringScreenState extends State<UserScoringScreen>
           await appState.endCommunicationSession(
             scores: communicationScores,
             reflection: 'Session completed with mutual partner evaluation',
-            suggestedActivities: ['Continue practicing open communication', 'Schedule regular check-ins', 'Practice active listening exercises'],
+            suggestedActivities: [
+              'Continue practicing open communication',
+              'Schedule regular check-ins',
+              'Practice active listening exercises',
+            ],
           );
         }
       }
@@ -307,41 +327,53 @@ class _UserScoringScreenState extends State<UserScoringScreen>
 
   List<String> _generateStrengths(Map<String, double> scores) {
     final strengths = <String>[];
-    
-    if (scores['empathy']! >= 4.0) strengths.add("Shows strong emotional understanding");
-    if (scores['listening']! >= 4.0) strengths.add("Excellent active listening skills");
-    if (scores['respect']! >= 4.0) strengths.add("Maintains respectful communication");
+
+    if (scores['empathy']! >= 4.0)
+      strengths.add("Shows strong emotional understanding");
+    if (scores['listening']! >= 4.0)
+      strengths.add("Excellent active listening skills");
+    if (scores['respect']! >= 4.0)
+      strengths.add("Maintains respectful communication");
     if (scores['clarity']! >= 4.0) strengths.add("Expresses thoughts clearly");
-    if (scores['responsiveness']! >= 4.0) strengths.add("Very responsive to concerns");
-    
+    if (scores['responsiveness']! >= 4.0)
+      strengths.add("Very responsive to concerns");
+
     if (strengths.isEmpty) {
       strengths.add("Engaged in the conversation willingly");
     }
-    
+
     return strengths.take(3).toList();
   }
 
   List<String> _generateImprovements(Map<String, double> scores) {
     final improvements = <String>[];
-    
-    if (scores['empathy']! < 3.0) improvements.add("Practice showing more empathy");
-    if (scores['listening']! < 3.0) improvements.add("Focus on active listening");
-    if (scores['reception']! < 3.0) improvements.add("Be more open to feedback");
-    if (scores['clarity']! < 3.0) improvements.add("Work on expressing thoughts more clearly");
-    if (scores['respect']! < 3.0) improvements.add("Practice more respectful communication");
-    if (scores['responsiveness']! < 3.0) improvements.add("Respond more thoughtfully to concerns");
-    if (scores['openmindedness']! < 3.0) improvements.add("Consider alternative perspectives more openly");
-    
+
+    if (scores['empathy']! < 3.0)
+      improvements.add("Practice showing more empathy");
+    if (scores['listening']! < 3.0)
+      improvements.add("Focus on active listening");
+    if (scores['reception']! < 3.0)
+      improvements.add("Be more open to feedback");
+    if (scores['clarity']! < 3.0)
+      improvements.add("Work on expressing thoughts more clearly");
+    if (scores['respect']! < 3.0)
+      improvements.add("Practice more respectful communication");
+    if (scores['responsiveness']! < 3.0)
+      improvements.add("Respond more thoughtfully to concerns");
+    if (scores['openmindedness']! < 3.0)
+      improvements.add("Consider alternative perspectives more openly");
+
     if (improvements.isEmpty) {
       improvements.add("Continue building on current communication strengths");
     }
-    
+
     return improvements.take(3).toList();
   }
 
   String _generateOverallFeedback(List<Map<String, dynamic>> ratings) {
-    if (ratings.length < 2) return "Waiting for both partners to complete their evaluations.";
-    
+    if (ratings.length < 2)
+      return "Waiting for both partners to complete their evaluations.";
+
     // Calculate average of both ratings
     double totalAverage = 0.0;
     for (var rating in ratings) {
@@ -382,10 +414,16 @@ class _UserScoringScreenState extends State<UserScoringScreen>
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
         title: Row(
           children: [
-            Icon(Icons.check_circle_rounded, color: AppTheme.successGreen, size: 24.sp),
+            Icon(
+              Icons.check_circle_rounded,
+              color: AppTheme.successGreen,
+              size: 24.sp,
+            ),
             SizedBox(width: 8.w),
             Text(
               'Rating Submitted!',
@@ -394,15 +432,17 @@ class _UserScoringScreenState extends State<UserScoringScreen>
           ],
         ),
         content: Text(
-          bothPartnersRated 
-            ? 'Great job! Both partners have completed their ratings. Let\'s reflect on your conversation together.'
-            : 'Thank you for rating your partner. Let\'s continue with some reflection on your conversation.',
+          bothPartnersRated
+              ? 'Great job! Both partners have completed their ratings. Let\'s reflect on your conversation together.'
+              : 'Thank you for rating your partner. Let\'s continue with some reflection on your conversation.',
           style: TextStyle(color: AppTheme.textSecondary, fontSize: 14.sp),
         ),
         actions: [
           TextButton(
             onPressed: () {
-              debugPrint('Success dialog button clicked. Navigating to Post-Resolution screen.');
+              debugPrint(
+                'Success dialog button clicked. Navigating to Post-Resolution screen.',
+              );
               Navigator.of(context).pop();
               Navigator.pushReplacement(
                 context,
@@ -417,7 +457,10 @@ class _UserScoringScreenState extends State<UserScoringScreen>
             },
             child: Text(
               'Continue',
-              style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: AppTheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -430,7 +473,8 @@ class _UserScoringScreenState extends State<UserScoringScreen>
     return Consumer<FirebaseAppState>(
       builder: (context, appState, child) {
         final otherPartner = appState.getOtherPartner();
-        final displayPartnerName = widget.partnerName ?? otherPartner?.name ?? 'Your Partner';
+        final displayPartnerName =
+            widget.partnerName ?? otherPartner?.name ?? 'Your Partner';
 
         if (_hasAlreadyRated) {
           return _buildAlreadyRatedScreen();
@@ -442,72 +486,82 @@ class _UserScoringScreenState extends State<UserScoringScreen>
             // Prevent back navigation - users must complete the scoring flow
           },
           child: Scaffold(
-            backgroundColor: Colors.black,
-            appBar: const PillAppBar(title: 'Rate Your Partner'),
-          body: AuroraBackground(
-            intensity: 0.6,
-            child: SafeArea(
-              child: AnimatedBuilder(
-                animation: _slideAnimation,
-                builder: (context, child) {
-                  return SlideTransition(
-                    position: _slideAnimation,
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Padding(
-                        padding: EdgeInsets.all(20.w),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Header
-                            _buildHeader(displayPartnerName),
-                            
-                            SizedBox(height: 24.h),
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              title: const Text('Rate Your Partner'),
+            ),
+            body: AuroraBackground(
+              intensity: 0.6,
+              child: SafeArea(
+                child: AnimatedBuilder(
+                  animation: _slideAnimation,
+                  builder: (context, child) {
+                    return SlideTransition(
+                      position: _slideAnimation,
+                      child: FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: Padding(
+                          padding: EdgeInsets.all(20.w),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header
+                              _buildHeader(displayPartnerName),
 
-                            // Criteria list
-                            Expanded(
-                              child: SingleChildScrollView(
-                                child: Column(
-                                  children: List.generate(_criteriaNames.length, (index) {
-                                    final criteriaKey = _criteriaNames[index].toLowerCase().replaceAll('-', '');
-                                    return _buildCriteriaCard(
-                                      criteriaKey,
-                                      _criteriaNames[index],
-                                      _criteriaDescriptions[index],
-                                      _criteriaIcons[index],
-                                      _partnerScores[criteriaKey] ?? 0.0,
-                                      AppTheme.partnerBColor, // Color for the partner being rated
-                                      (value) {
-                                        setState(() {
-                                          _partnerScores[criteriaKey] = value;
-                                        });
+                              SizedBox(height: 24.h),
+
+                              // Criteria list
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    children: List.generate(
+                                      _criteriaNames.length,
+                                      (index) {
+                                        final criteriaKey =
+                                            _criteriaNames[index]
+                                                .toLowerCase()
+                                                .replaceAll('-', '');
+                                        return _buildCriteriaCard(
+                                          criteriaKey,
+                                          _criteriaNames[index],
+                                          _criteriaDescriptions[index],
+                                          _criteriaIcons[index],
+                                          _partnerScores[criteriaKey] ?? 0.0,
+                                          AppTheme
+                                              .partnerBColor, // Color for the partner being rated
+                                          (value) {
+                                            setState(() {
+                                              _partnerScores[criteriaKey] =
+                                                  value;
+                                            });
+                                          },
+                                        );
                                       },
-                                    );
-                                  }),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                            
-                            // Submit button
-                            _buildSubmitButton(),
-                          ],
+
+                              // Submit button
+                              _buildSubmitButton(),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
       },
     );
   }
 
   Widget _buildAlreadyRatedScreen() {
     return Scaffold(
-      backgroundColor: Colors.black,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -577,7 +631,9 @@ class _UserScoringScreenState extends State<UserScoringScreen>
                         onPressed: () {
                           Navigator.pushAndRemoveUntil(
                             context,
-                            MaterialPageRoute(builder: (context) => const HomeScreen()),
+                            MaterialPageRoute(
+                              builder: (context) => const HomeScreen(),
+                            ),
                             (route) => false,
                           );
                         },
@@ -618,11 +674,7 @@ class _UserScoringScreenState extends State<UserScoringScreen>
                 ),
               ],
             ),
-            child: Icon(
-              Icons.person_rounded,
-              color: Colors.white,
-              size: 30.sp,
-            ),
+            child: Icon(Icons.person_rounded, color: Colors.white, size: 30.sp),
           ),
           SizedBox(height: 16.h),
           Text(
@@ -637,10 +689,7 @@ class _UserScoringScreenState extends State<UserScoringScreen>
           SizedBox(height: 8.h),
           Text(
             'Rate each communication skill honestly',
-            style: TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 14.sp,
-            ),
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 14.sp),
             textAlign: TextAlign.center,
           ),
         ],
@@ -701,30 +750,32 @@ class _UserScoringScreenState extends State<UserScoringScreen>
               ),
             ],
           ),
-          
+
           SizedBox(height: 20.h),
-          
+
           // Star rating
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(5, (index) {
               final starValue = index + 1.0;
               final isFilled = currentValue >= starValue;
-              
+
               return GestureDetector(
                 onTap: () => onChanged(starValue),
                 child: Container(
                   margin: EdgeInsets.symmetric(horizontal: 4.w),
                   child: Icon(
                     isFilled ? Icons.star_rounded : Icons.star_border_rounded,
-                    color: isFilled ? accentColor : Colors.white.withValues(alpha: 0.3),
+                    color: isFilled
+                        ? accentColor
+                        : Colors.white.withValues(alpha: 0.3),
                     size: 32.sp,
                   ),
                 ),
               );
             }),
           ),
-          
+
           if (currentValue > 0)
             Padding(
               padding: EdgeInsets.only(top: 12.h),
@@ -746,12 +797,18 @@ class _UserScoringScreenState extends State<UserScoringScreen>
 
   String _getRatingLabel(int rating) {
     switch (rating) {
-      case 1: return 'Needs Work';
-      case 2: return 'Fair';
-      case 3: return 'Good';
-      case 4: return 'Great';
-      case 5: return 'Excellent';
-      default: return '';
+      case 1:
+        return 'Needs Work';
+      case 2:
+        return 'Fair';
+      case 3:
+        return 'Good';
+      case 4:
+        return 'Great';
+      case 5:
+        return 'Excellent';
+      default:
+        return '';
     }
   }
 

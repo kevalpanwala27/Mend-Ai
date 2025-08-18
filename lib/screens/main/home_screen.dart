@@ -57,7 +57,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             context,
           ).copyWith(textScaler: TextScaler.linear(_fontScale)),
           child: Scaffold(
-            backgroundColor: Colors.black, // Set solid black background
             appBar: _buildModernAppBar(context),
             body: AuroraBackground(
               intensity: 0.55,
@@ -112,9 +111,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   PreferredSizeWidget _buildModernAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.transparent,
+      automaticallyImplyLeading: false,
       elevation: 0,
-      titleSpacing: 0,
+      titleSpacing: AppTheme.spacingM,
       title: Row(
         children: [
           Container(
@@ -279,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         crossAxisCount: 3,
         mainAxisSpacing: AppTheme.spacingM,
         crossAxisSpacing: AppTheme.spacingM,
-        childAspectRatio: 1.0,
+        childAspectRatio: 0.9,
       ),
       children: [
         _statTile(
@@ -317,7 +316,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     Color color,
   ) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spacingL),
+      padding: const EdgeInsets.all(AppTheme.spacingM),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppTheme.radiusL),
         gradient: LinearGradient(
@@ -328,32 +327,36 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
         border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spacingM),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppTheme.radiusM),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppTheme.spacingS),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppTheme.radiusM),
+              ),
+              child: Icon(icon, color: color, size: 20),
             ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(height: AppTheme.spacingS),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: AppTheme.textPrimary,
-              fontWeight: FontWeight.w700,
+            const SizedBox(height: AppTheme.spacingXS),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
-          ),
-        ],
+            Text(
+              label,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
+            ),
+          ],
+        ),
       ),
     );
   }

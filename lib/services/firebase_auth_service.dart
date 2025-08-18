@@ -27,13 +27,12 @@ class FirebaseAuthService {
   Future<GoogleSignInResult> signInWithGoogle() async {
     try {
       await _googleSignIn.initialize();
-      
-      final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
-      
+
+      final GoogleSignInAccount? googleUser = await _googleSignIn
+          .authenticate();
+
       if (googleUser == null) {
-        return GoogleSignInResult(
-          errorMessage: 'Sign-in cancelled by user.',
-        );
+        return GoogleSignInResult(errorMessage: 'Sign-in cancelled by user.');
       }
 
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
@@ -46,7 +45,9 @@ class FirebaseAuthService {
       return GoogleSignInResult(userCredential: userCredential);
     } catch (e) {
       debugPrint('Error signing in with Google: $e');
-      return GoogleSignInResult(errorMessage: 'Sign-in failed. Please try again.');
+      return GoogleSignInResult(
+        errorMessage: 'Sign-in failed. Please try again.',
+      );
     }
   }
 
@@ -119,7 +120,8 @@ class FirebaseAuthService {
           errorMessage = 'Too many failed attempts. Please try again later.';
           break;
         case 'invalid-credential':
-          errorMessage = 'Invalid email or password. Please check your credentials.';
+          errorMessage =
+              'Invalid email or password. Please check your credentials.';
           break;
         default:
           errorMessage = 'Sign in failed: ${e.message}';
@@ -127,7 +129,9 @@ class FirebaseAuthService {
       return AuthResult(errorMessage: errorMessage);
     } catch (e) {
       debugPrint('Error signing in with email: $e');
-      return AuthResult(errorMessage: 'An unexpected error occurred. Please try again.');
+      return AuthResult(
+        errorMessage: 'An unexpected error occurred. Please try again.',
+      );
     }
   }
 
@@ -138,10 +142,10 @@ class FirebaseAuthService {
         email: email.trim(),
         password: password,
       );
-      
+
       // Send email verification
       await userCredential.user?.sendEmailVerification();
-      
+
       return AuthResult(userCredential: userCredential);
     } on FirebaseAuthException catch (e) {
       String errorMessage;
@@ -164,7 +168,9 @@ class FirebaseAuthService {
       return AuthResult(errorMessage: errorMessage);
     } catch (e) {
       debugPrint('Error signing up with email: $e');
-      return AuthResult(errorMessage: 'An unexpected error occurred. Please try again.');
+      return AuthResult(
+        errorMessage: 'An unexpected error occurred. Please try again.',
+      );
     }
   }
 
@@ -188,7 +194,9 @@ class FirebaseAuthService {
       return AuthResult(errorMessage: errorMessage);
     } catch (e) {
       debugPrint('Error sending password reset email: $e');
-      return AuthResult(errorMessage: 'An unexpected error occurred. Please try again.');
+      return AuthResult(
+        errorMessage: 'An unexpected error occurred. Please try again.',
+      );
     }
   }
 
@@ -241,14 +249,54 @@ class FirebaseAuthService {
     }
   }
 
+  // Check if user has a linked provider
+  bool userHasProvider(String providerId) {
+    final user = currentUser;
+    if (user == null) return false;
+    return user.providerData.any((info) => info.providerId == providerId);
+  }
+
+  // Reauthenticate with Google for sensitive operations
+  Future<AuthResult> reauthenticateWithGoogle() async {
+    try {
+      final user = currentUser;
+      if (user == null) {
+        return AuthResult(errorMessage: 'No authenticated user.');
+      }
+
+      await _googleSignIn.initialize();
+      final GoogleSignInAccount? googleUser = await _googleSignIn
+          .authenticate();
+
+      if (googleUser == null) {
+        return AuthResult(errorMessage: 'Reauthentication cancelled.');
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+      );
+
+      final cred = await user.reauthenticateWithCredential(credential);
+      return AuthResult(userCredential: cred);
+    } on FirebaseAuthException catch (e) {
+      return AuthResult(errorMessage: e.message ?? 'Reauthentication failed.');
+    } catch (e) {
+      debugPrint('Error during Google reauthentication: $e');
+      return AuthResult(errorMessage: 'Reauthentication failed.');
+    }
+  }
+
   // Check if user needs email verification
   bool get needsEmailVerification {
     final user = currentUser;
     if (user == null) return false;
-    
+
     // Check if this is an email/password user (not Google sign-in)
-    final isEmailPasswordUser = user.providerData.any((info) => info.providerId == 'password');
-    
+    final isEmailPasswordUser = user.providerData.any(
+      (info) => info.providerId == 'password',
+    );
+
     return isEmailPasswordUser && !user.emailVerified;
   }
 

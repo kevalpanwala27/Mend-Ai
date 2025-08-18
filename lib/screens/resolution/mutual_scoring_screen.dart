@@ -7,7 +7,6 @@ import '../../theme/app_theme.dart';
 import '../../widgets/gradient_button.dart';
 import 'scoring_screen.dart';
 import '../../widgets/aurora_background.dart';
-import '../../widgets/pill_app_bar.dart';
 
 class MutualScoringScreen extends StatefulWidget {
   const MutualScoringScreen({super.key});
@@ -37,7 +36,7 @@ class _MutualScoringScreenState extends State<MutualScoringScreen>
     'openMindedness': 0.0,
   };
 
-  // Partner B scores Partner A  
+  // Partner B scores Partner A
   final Map<String, double> _partnerBScoresA = {
     'empathy': 0.0,
     'listening': 0.0,
@@ -95,17 +94,19 @@ class _MutualScoringScreenState extends State<MutualScoringScreen>
       vsync: this,
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(1.0, 0.0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(1.0, 0.0), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
 
     _fadeController.forward();
     _slideController.forward();
   }
 
   bool get _canProceed {
-    final currentScores = _currentPage == 0 ? _partnerAScoresB : _partnerBScoresA;
+    final currentScores = _currentPage == 0
+        ? _partnerAScoresB
+        : _partnerBScoresA;
     return currentScores.values.every((score) => score > 0.0);
   }
 
@@ -128,7 +129,7 @@ class _MutualScoringScreenState extends State<MutualScoringScreen>
   void _generateMutualScores() async {
     final appState = context.read<FirebaseAppState>();
     final currentSession = appState.currentSession;
-    
+
     if (currentSession == null) {
       _showError('No active session found.');
       return;
@@ -161,10 +162,7 @@ class _MutualScoringScreenState extends State<MutualScoringScreen>
       );
 
       final communicationScores = CommunicationScores(
-        partnerScores: {
-          'A': partnerAScore,
-          'B': partnerBScore,
-        },
+        partnerScores: {'A': partnerAScore, 'B': partnerBScore},
         overallFeedback: _generateOverallFeedback(partnerAScore, partnerBScore),
         improvementSuggestions: _generateImprovementSuggestions(),
       );
@@ -173,15 +171,17 @@ class _MutualScoringScreenState extends State<MutualScoringScreen>
       await appState.endCommunicationSession(
         scores: communicationScores,
         reflection: 'Session completed with mutual partner evaluation',
-        suggestedActivities: ['Continue practicing open communication', 'Schedule regular check-ins', 'Practice active listening exercises'],
+        suggestedActivities: [
+          'Continue practicing open communication',
+          'Schedule regular check-ins',
+          'Practice active listening exercises',
+        ],
       );
 
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const ScoringScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const ScoringScreen()),
         );
       }
     } catch (e) {
@@ -191,35 +191,46 @@ class _MutualScoringScreenState extends State<MutualScoringScreen>
 
   List<String> _generateStrengths(Map<String, double> scores) {
     final strengths = <String>[];
-    
-    if (scores['empathy']! >= 4.0) strengths.add("Shows strong emotional understanding");
-    if (scores['listening']! >= 4.0) strengths.add("Excellent active listening skills");
-    if (scores['respect']! >= 4.0) strengths.add("Maintains respectful communication");
+
+    if (scores['empathy']! >= 4.0)
+      strengths.add("Shows strong emotional understanding");
+    if (scores['listening']! >= 4.0)
+      strengths.add("Excellent active listening skills");
+    if (scores['respect']! >= 4.0)
+      strengths.add("Maintains respectful communication");
     if (scores['clarity']! >= 4.0) strengths.add("Expresses thoughts clearly");
-    if (scores['responsiveness']! >= 4.0) strengths.add("Very responsive to concerns");
-    
+    if (scores['responsiveness']! >= 4.0)
+      strengths.add("Very responsive to concerns");
+
     if (strengths.isEmpty) {
       strengths.add("Engaged in the conversation willingly");
     }
-    
+
     return strengths.take(3).toList();
   }
 
   List<String> _generateImprovements(Map<String, double> scores) {
     final improvements = <String>[];
-    
-    if (scores['empathy']! < 3.0) improvements.add("Practice showing more empathy");
-    if (scores['listening']! < 3.0) improvements.add("Focus on active listening");
-    if (scores['reception']! < 3.0) improvements.add("Be more open to feedback");
-    if (scores['clarity']! < 3.0) improvements.add("Work on expressing thoughts more clearly");
-    if (scores['respect']! < 3.0) improvements.add("Practice more respectful communication");
-    if (scores['responsiveness']! < 3.0) improvements.add("Respond more thoughtfully to concerns");
-    if (scores['openMindedness']! < 3.0) improvements.add("Consider alternative perspectives more openly");
-    
+
+    if (scores['empathy']! < 3.0)
+      improvements.add("Practice showing more empathy");
+    if (scores['listening']! < 3.0)
+      improvements.add("Focus on active listening");
+    if (scores['reception']! < 3.0)
+      improvements.add("Be more open to feedback");
+    if (scores['clarity']! < 3.0)
+      improvements.add("Work on expressing thoughts more clearly");
+    if (scores['respect']! < 3.0)
+      improvements.add("Practice more respectful communication");
+    if (scores['responsiveness']! < 3.0)
+      improvements.add("Respond more thoughtfully to concerns");
+    if (scores['openMindedness']! < 3.0)
+      improvements.add("Consider alternative perspectives more openly");
+
     if (improvements.isEmpty) {
       improvements.add("Continue building on current communication strengths");
     }
-    
+
     return improvements.take(3).toList();
   }
 
@@ -262,8 +273,11 @@ class _MutualScoringScreenState extends State<MutualScoringScreen>
         final otherPartner = appState.getOtherPartner();
 
         return Scaffold(
-          backgroundColor: Colors.black,
-          appBar: const PillAppBar(title: 'Rate Your Partner'),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: const Text('Rate Your Partner'),
+          ),
           body: AuroraBackground(
             intensity: 0.6,
             child: SafeArea(
@@ -271,7 +285,7 @@ class _MutualScoringScreenState extends State<MutualScoringScreen>
                 children: [
                   // Progress indicator
                   _buildProgressIndicator(),
-                  
+
                   // Main content
                   Expanded(
                     child: PageView(
@@ -295,7 +309,7 @@ class _MutualScoringScreenState extends State<MutualScoringScreen>
                       ],
                     ),
                   ),
-                  
+
                   // Action button
                   _buildActionButton(),
                 ],
@@ -328,7 +342,9 @@ class _MutualScoringScreenState extends State<MutualScoringScreen>
             child: Container(
               height: 6.h,
               decoration: BoxDecoration(
-                color: _currentPage >= 1 ? AppTheme.partnerBColor : AppTheme.partnerBColor.withValues(alpha: 0.3),
+                color: _currentPage >= 1
+                    ? AppTheme.partnerBColor
+                    : AppTheme.partnerBColor.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(3.r),
               ),
             ),
@@ -415,7 +431,9 @@ class _MutualScoringScreenState extends State<MutualScoringScreen>
                   child: SingleChildScrollView(
                     child: Column(
                       children: List.generate(_criteriaNames.length, (index) {
-                        final criteriaKey = _criteriaNames[index].toLowerCase().replaceAll('-', '');
+                        final criteriaKey = _criteriaNames[index]
+                            .toLowerCase()
+                            .replaceAll('-', '');
                         return _buildCriteriaCard(
                           criteriaKey,
                           _criteriaNames[index],
@@ -494,30 +512,32 @@ class _MutualScoringScreenState extends State<MutualScoringScreen>
               ),
             ],
           ),
-          
+
           SizedBox(height: 20.h),
-          
+
           // Star rating
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(5, (index) {
               final starValue = index + 1.0;
               final isFilled = currentValue >= starValue;
-              
+
               return GestureDetector(
                 onTap: () => onChanged(starValue),
                 child: Container(
                   margin: EdgeInsets.symmetric(horizontal: 4.w),
                   child: Icon(
                     isFilled ? Icons.star_rounded : Icons.star_border_rounded,
-                    color: isFilled ? accentColor : Colors.white.withValues(alpha: 0.3),
+                    color: isFilled
+                        ? accentColor
+                        : Colors.white.withValues(alpha: 0.3),
                     size: 32.sp,
                   ),
                 ),
               );
             }),
           ),
-          
+
           if (currentValue > 0)
             Padding(
               padding: EdgeInsets.only(top: 12.h),
@@ -539,12 +559,18 @@ class _MutualScoringScreenState extends State<MutualScoringScreen>
 
   String _getRatingLabel(int rating) {
     switch (rating) {
-      case 1: return 'Needs Work';
-      case 2: return 'Fair';
-      case 3: return 'Good';
-      case 4: return 'Great';
-      case 5: return 'Excellent';
-      default: return '';
+      case 1:
+        return 'Needs Work';
+      case 2:
+        return 'Fair';
+      case 3:
+        return 'Good';
+      case 4:
+        return 'Great';
+      case 5:
+        return 'Excellent';
+      default:
+        return '';
     }
   }
 
@@ -555,7 +581,9 @@ class _MutualScoringScreenState extends State<MutualScoringScreen>
         width: double.infinity,
         child: GradientButton(
           onPressed: _canProceed ? _nextPage : null,
-          text: _currentPage == 0 ? 'Continue to Next Rating' : 'Generate Results',
+          text: _currentPage == 0
+              ? 'Continue to Next Rating'
+              : 'Generate Results',
         ),
       ),
     );

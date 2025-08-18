@@ -5,6 +5,7 @@ import '../../providers/firebase_app_state.dart';
 import 'enhanced_login_screen.dart';
 import '../onboarding/questionnaire_screen.dart';
 import '../main/home_screen.dart';
+import '../../widgets/aurora_background.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
@@ -21,9 +22,8 @@ class AuthWrapper extends StatelessWidget {
         if (appState.isLoading) {
           debugPrint('🔥 AuthWrapper: Showing loading screen');
           return Scaffold(
-            backgroundColor: Colors.black,
-            body: Container(
-              decoration: const BoxDecoration(color: Colors.black),
+            body: AuroraBackground(
+              intensity: 0.6,
               child: Center(
                 child: CircularProgressIndicator(
                   color: Colors.white,

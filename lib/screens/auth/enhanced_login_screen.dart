@@ -245,7 +245,6 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
       isLoading: _isLoading,
       loadingText: 'Signing you in...',
       child: Scaffold(
-        backgroundColor: Colors.black,
         body: AuroraBackground(
           intensity: 0.6,
           child: SafeArea(

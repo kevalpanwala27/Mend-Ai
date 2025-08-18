@@ -9,7 +9,6 @@ import '../../widgets/loading_overlay.dart';
 import '../../theme/app_theme.dart';
 import '../main/home_screen.dart';
 import '../../widgets/aurora_background.dart';
-import '../../widgets/pill_app_bar.dart';
 
 class QuestionnaireScreen extends StatefulWidget {
   const QuestionnaireScreen({super.key});
@@ -192,11 +191,20 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
       isLoading: _isLoading,
       loadingText: 'Setting up your relationship profile...',
       child: Scaffold(
-        backgroundColor: Colors.black,
-        appBar: PillAppBar(
-          title: 'Getting to Know You',
-          showBack: _currentPage > 0,
-          onBack: _previousPage,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: _currentPage > 0
+              ? IconButton(
+                  icon: Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: AppTheme.textPrimary,
+                    size: 20,
+                  ),
+                  onPressed: _previousPage,
+                )
+              : null,
+          title: const Text('Getting to Know You'),
         ),
         body: AuroraBackground(
           intensity: 0.6,
@@ -591,7 +599,9 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                                           end: Alignment.bottomRight,
                                           colors: [
                                             AppTheme.primary,
-                                            AppTheme.primary.withValues(alpha: 0.8),
+                                            AppTheme.primary.withValues(
+                                              alpha: 0.8,
+                                            ),
                                           ],
                                         )
                                       : null,
@@ -775,7 +785,9 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                                             end: Alignment.bottomRight,
                                             colors: [
                                               AppTheme.primary,
-                                              AppTheme.primary.withValues(alpha: 0.8),
+                                              AppTheme.primary.withValues(
+                                                alpha: 0.8,
+                                              ),
                                             ],
                                           )
                                         : null,
@@ -1045,7 +1057,9 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                                         ? LinearGradient(
                                             colors: [
                                               AppTheme.primary,
-                                              AppTheme.primary.withValues(alpha: 0.8),
+                                              AppTheme.primary.withValues(
+                                                alpha: 0.8,
+                                              ),
                                             ],
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,

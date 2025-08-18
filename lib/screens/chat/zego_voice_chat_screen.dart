@@ -501,7 +501,10 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
             ),
             child: Text(
               'End & Continue',
-              style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: AppTheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -535,7 +538,7 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
       final sessionId = appState.currentSession?.id;
       final currentUserId = appState.currentUserId;
       final otherPartner = appState.getOtherPartner();
-      
+
       print('=== VOICE CHAT ENDING DEBUG ===');
       print('Current session: ${appState.currentSession}');
       print('Session ID: $sessionId');
@@ -543,7 +546,7 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
       print('Other partner: $otherPartner');
       print('Other partner ID: ${otherPartner?.id}');
       print('Other partner name: ${otherPartner?.name}');
-      
+
       // Store session data in app state for navigation
       appState.setTemporarySessionData(
         sessionId: sessionId,
@@ -551,7 +554,7 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
         partnerId: otherPartner?.id,
         partnerName: otherPartner?.name,
       );
-      
+
       await _zegoService.endSession();
 
       // Close loading dialog
@@ -564,7 +567,7 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
         print('Passing currentUserId: $currentUserId');
         print('Passing partnerName: ${otherPartner?.name}');
         print('Passing partnerId: ${otherPartner?.id}');
-        
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -602,10 +605,11 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       body: AuroraBackground(
         intensity: 0.6,
-        child: _isInitializing ? _buildInitializingScreen() : _buildVoiceChatUI(),
+        child: _isInitializing
+            ? _buildInitializingScreen()
+            : _buildVoiceChatUI(),
       ),
     );
   }
