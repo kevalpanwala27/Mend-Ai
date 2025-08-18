@@ -9,6 +9,8 @@ import '../../models/communication_session.dart';
 import '../../theme/app_theme.dart';
 import '../main/home_screen.dart';
 import '../main/insights_dashboard_screen.dart';
+import '../../widgets/aurora_background.dart';
+import '../../widgets/pill_app_bar.dart';
 
 class ScoringScreen extends StatefulWidget {
   const ScoringScreen({super.key});
@@ -453,23 +455,9 @@ class _ScoringScreenState extends State<ScoringScreen>
           children: [
             Scaffold(
               backgroundColor: Colors.black,
-              appBar: AppBar(
-                title: ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
-                  ).createShader(bounds),
-                  child: const Text(
-                    'Communication Scores',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
-                    ),
-                  ),
-                ),
-              ),
-              body: Container(
-                decoration: const BoxDecoration(color: Colors.black),
+              appBar: const PillAppBar(title: 'Communication Scores'),
+              body: AuroraBackground(
+                intensity: 0.6,
                 child: SafeArea(
                   child: _isLoading
                       ? _buildLoadingState()

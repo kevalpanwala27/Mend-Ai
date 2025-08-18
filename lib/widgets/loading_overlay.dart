@@ -38,21 +38,13 @@ class _LoadingOverlayState extends State<LoadingOverlay>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.easeOutQuart,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeOutQuart),
+    );
   }
 
   @override
@@ -83,17 +75,18 @@ class _LoadingOverlayState extends State<LoadingOverlay>
           FadeTransition(
             opacity: _fadeAnimation,
             child: Container(
-              color: widget.backgroundColor ?? Colors.black.withValues(alpha: 0.6),
+              color:
+                  widget.backgroundColor ?? Colors.black.withValues(alpha: 0.6),
               child: Center(
                 child: ScaleTransition(
                   scale: _scaleAnimation,
                   child: Container(
                     padding: const EdgeInsets.all(AppTheme.spacingXL),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
+                      gradient: LinearGradient(
                         colors: [
-                          AppTheme.surface,
-                          Color(0xFFFDFDFD),
+                          AppTheme.backgroundTertiary,
+                          AppTheme.backgroundQuaternary,
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -132,7 +125,9 @@ class _LoadingOverlayState extends State<LoadingOverlay>
                           ),
                           child: const Center(
                             child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                               strokeWidth: 3,
                             ),
                           ),
@@ -141,18 +136,18 @@ class _LoadingOverlayState extends State<LoadingOverlay>
                           const SizedBox(height: AppTheme.spacingL),
                           Text(
                             widget.loadingText!,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: AppTheme.textPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  color: AppTheme.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: AppTheme.spacingS),
                           Text(
                             'Please wait...',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppTheme.textTertiary,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: AppTheme.textTertiary),
                             textAlign: TextAlign.center,
                           ),
                         ],

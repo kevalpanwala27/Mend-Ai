@@ -16,7 +16,7 @@ class AuthWrapper extends StatelessWidget {
         debugPrint(
           '🔥 AuthWrapper rebuild: isLoading=${appState.isLoading}, user=${appState.user?.uid}, isAuthenticated=${appState.isAuthenticated}, onboarding=${appState.isOnboardingComplete}',
         );
-        
+
         // Show loading screen while initializing
         if (appState.isLoading) {
           debugPrint('🔥 AuthWrapper: Showing loading screen');
@@ -33,7 +33,7 @@ class AuthWrapper extends StatelessWidget {
             ),
           );
         }
-        
+
         // User is authenticated and verified (verification check is handled in sign-in)
         if (appState.user != null) {
           // User is verified - proceed with normal flow
@@ -45,7 +45,7 @@ class AuthWrapper extends StatelessWidget {
             return const QuestionnaireScreen();
           }
         }
-        
+
         // Default to login screen
         debugPrint('🔥 AuthWrapper: Navigating to LoginScreen');
         return const EnhancedLoginScreen();

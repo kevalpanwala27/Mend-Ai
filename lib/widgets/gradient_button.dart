@@ -95,16 +95,22 @@ class _GradientButtonState extends State<GradientButton>
                       ),
                 color: widget.isSecondary ? Colors.transparent : null,
                 border: widget.isSecondary
-                    ? Border.all(color: AppTheme.primary, width: 2)
+                    ? Border.all(color: AppTheme.primary, width: 1.5)
                     : null,
-                borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                borderRadius: BorderRadius.circular(AppTheme.radiusL),
                 boxShadow: widget.isSecondary
-                    ? null
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.25),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ]
                     : [
                         BoxShadow(
-                          color: AppTheme.primary.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
+                          color: AppTheme.primary.withValues(alpha: 0.35),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
                         ),
                       ],
               ),

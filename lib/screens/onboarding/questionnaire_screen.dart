@@ -8,6 +8,8 @@ import '../../widgets/gradient_button.dart';
 import '../../widgets/loading_overlay.dart';
 import '../../theme/app_theme.dart';
 import '../main/home_screen.dart';
+import '../../widgets/aurora_background.dart';
+import '../../widgets/pill_app_bar.dart';
 
 class QuestionnaireScreen extends StatefulWidget {
   const QuestionnaireScreen({super.key});
@@ -191,19 +193,13 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
       loadingText: 'Setting up your relationship profile...',
       child: Scaffold(
         backgroundColor: Colors.black,
-        appBar: AppBar(
-          title: const Text('Getting to Know You'),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: _currentPage > 0
-              ? IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_rounded),
-                  onPressed: _previousPage,
-                )
-              : null,
+        appBar: PillAppBar(
+          title: 'Getting to Know You',
+          showBack: _currentPage > 0,
+          onBack: _previousPage,
         ),
-        body: Container(
-          decoration: const BoxDecoration(color: Colors.black),
+        body: AuroraBackground(
+          intensity: 0.6,
           child: Column(
             children: [
               // Enhanced Progress indicator

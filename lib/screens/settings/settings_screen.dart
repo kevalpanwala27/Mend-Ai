@@ -7,6 +7,8 @@ import '../../theme/app_theme.dart';
 import '../../widgets/animated_card.dart';
 import '../../widgets/gradient_button.dart';
 import '../auth/enhanced_login_screen.dart';
+import '../../widgets/aurora_background.dart';
+import '../../widgets/pill_app_bar.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -45,40 +47,13 @@ class _SettingsScreenState extends State<SettingsScreen>
       builder: (context, appState, child) {
         return Scaffold(
           backgroundColor: Colors.black,
-          appBar: AppBar(
-            title: ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
-              ).createShader(bounds),
-              child: const Text(
-                'Settings',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
-                ),
-              ),
-            ),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                ),
-                child: const Icon(
-                  Icons.arrow_back_rounded,
-                  color: AppTheme.primary,
-                  size: 20,
-                ),
-              ),
-              onPressed: () => Navigator.pop(context),
-            ),
+          appBar: PillAppBar(
+            title: 'Settings',
+            showBack: true,
+            onBack: () => Navigator.pop(context),
           ),
-          body: Container(
-            decoration: const BoxDecoration(color: Colors.black),
+          body: AuroraBackground(
+            intensity: 0.6,
             child: SafeArea(
               child: FadeTransition(
                 opacity: _fadeAnimation,

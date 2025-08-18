@@ -96,7 +96,7 @@ class _AnimatedCardState extends State<AnimatedCard>
             child: Container(
               margin: widget.margin ?? const EdgeInsets.all(AppTheme.spacingS),
               decoration: BoxDecoration(
-                color: widget.backgroundColor ?? AppTheme.surface,
+                color: widget.backgroundColor,
                 borderRadius:
                     widget.borderRadius ??
                     BorderRadius.circular(AppTheme.radiusL),
@@ -118,13 +118,13 @@ class _AnimatedCardState extends State<AnimatedCard>
                   width: 0.5,
                 ),
                 gradient: widget.backgroundColor == null
-                    ? const LinearGradient(
-                        colors: [
-                          AppTheme.backgroundPrimary,
-                          AppTheme.backgroundPrimary,
-                        ],
+                    ? LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.06),
+                          Colors.white.withValues(alpha: 0.02),
+                        ],
                       )
                     : null,
               ),

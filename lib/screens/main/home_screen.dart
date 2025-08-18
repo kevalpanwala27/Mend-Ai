@@ -13,6 +13,7 @@ import 'session_history_screen.dart';
 import '../settings/settings_screen.dart';
 import 'dart:math';
 import 'package:flutter/services.dart';
+import '../../widgets/aurora_background.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -57,78 +58,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ).copyWith(textScaler: TextScaler.linear(_fontScale)),
           child: Scaffold(
             backgroundColor: Colors.black, // Set solid black background
-            appBar: AppBar(
-              title: ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
-                ).createShader(bounds),
-                child: const Text(
-                  'Mend',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                  ),
-                ),
-              ),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              actions: [
-                IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                    ),
-                    child: const Icon(
-                      Icons.insights_rounded,
-                      color: AppTheme.primary,
-                      size: 20,
-                      semanticLabel: 'Insights Dashboard',
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const InsightsDashboardScreen(),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: AppTheme.spacingS),
-                IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.secondary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                    ),
-                    child: const Icon(
-                      Icons.settings_rounded,
-                      color: AppTheme.secondary,
-                      size: 20,
-                      semanticLabel: 'Settings',
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsScreen(),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: AppTheme.spacingM),
-              ],
-            ),
-            body: Container(
-              decoration: const BoxDecoration(
-                color:
-                    Colors.black, // Solid black background instead of gradient
-              ),
+            appBar: _buildModernAppBar(context),
+            body: AuroraBackground(
+              intensity: 0.55,
               child: SafeArea(
                 child: FadeTransition(
                   opacity: _fadeAnimation,
@@ -144,25 +76,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             child: FadeInAnimation(child: widget),
                           ),
                           children: [
-                            // Welcome Section
                             Semantics(
-                              label: 'Welcome Section',
-                              child: _buildWelcomeSection(context, appState),
+                              label: 'Hero Header',
+                              child: _buildHeroHeader(context, appState),
                             ),
                             SizedBox(height: AppTheme.spacingXL.h),
-                            // Quick Stats Card
                             Semantics(
-                              label: 'Quick Stats',
-                              child: _buildQuickStatsCard(context, appState),
+                              label: 'Quick Grid Stats',
+                              child: _buildQuickStatsGrid(context, appState),
                             ),
                             SizedBox(height: AppTheme.spacingXL.h),
-                            // Session Actions
                             Semantics(
-                              label: 'Session Actions',
-                              child: _buildSessionActions(context),
+                              label: 'Session CTA',
+                              child: _buildSessionCtaRow(context),
                             ),
                             SizedBox(height: AppTheme.spacingXL.h),
-                            // Features Overview
                             Semantics(
                               label: 'Features Overview',
                               child: _buildFeaturesOverview(context),
@@ -182,7 +110,88 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildWelcomeSection(BuildContext context, FirebaseAppState appState) {
+  PreferredSizeWidget _buildModernAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      titleSpacing: 0,
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacingM,
+              vertical: AppTheme.spacingS,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(AppTheme.radiusL),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            ),
+            child: ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
+              ).createShader(bounds),
+              child: const Text(
+                'Mend',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        _pillAction(
+          context,
+          icon: Icons.insights_rounded,
+          color: AppTheme.primary,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const InsightsDashboardScreen(),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppTheme.spacingS),
+        _pillAction(
+          context,
+          icon: Icons.settings_rounded,
+          color: AppTheme.secondary,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SettingsScreen()),
+          ),
+        ),
+        const SizedBox(width: AppTheme.spacingM),
+      ],
+    );
+  }
+
+  Widget _pillAction(
+    BuildContext context, {
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return IconButton(
+      onPressed: onTap,
+      icon: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Icon(icon, color: color, size: 20),
+      ),
+    );
+  }
+
+  Widget _buildHeroHeader(BuildContext context, FirebaseAppState appState) {
     final currentPartner = appState.getCurrentPartner();
     final timeOfDay = DateTime.now().hour;
     String greeting = 'Good morning';
@@ -192,56 +201,68 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       greeting = 'Good evening';
     }
 
-    return AnimatedCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacingXL),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.06),
+            Colors.white.withValues(alpha: 0.02),
+          ],
+        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppTheme.spacingM),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                ),
-                child: const Icon(
-                  Icons.waving_hand_rounded,
-                  color: Colors.white,
-                  size: 28,
-                ),
+          Container(
+            padding: const EdgeInsets.all(AppTheme.spacingL),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              const SizedBox(width: AppTheme.spacingM),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$greeting, ${currentPartner?.name ?? 'there'}!',
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            color: AppTheme.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    const SizedBox(height: AppTheme.spacingS),
-                    Text(
-                      'Ready to strengthen your relationship today?',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppTheme.textSecondary,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
+            ),
+            child: const Icon(
+              Icons.waving_hand_rounded,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacingL),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$greeting, ${currentPartner?.name ?? 'there'}',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: AppTheme.spacingS),
+                Text(
+                  'Let’s grow together today. Your companion is standing by.',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppTheme.textSecondary,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildQuickStatsCard(BuildContext context, FirebaseAppState appState) {
+  Widget _buildQuickStatsGrid(BuildContext context, FirebaseAppState appState) {
     final recentSessions = appState.getRecentSessions(limit: 10);
     final totalSessions = recentSessions.length;
     final avgScore = totalSessions > 0
@@ -251,135 +272,116 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               totalSessions
         : 0.0;
 
-    return AnimatedCard(
+    return GridView(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisSpacing: AppTheme.spacingM,
+        crossAxisSpacing: AppTheme.spacingM,
+        childAspectRatio: 1.0,
+      ),
+      children: [
+        _statTile(
+          context,
+          'Sessions',
+          totalSessions.toString(),
+          Icons.chat_rounded,
+          AppTheme.primary,
+        ),
+        _statTile(
+          context,
+          'Avg Score',
+          totalSessions > 0 ? '${avgScore.toStringAsFixed(1)}/10' : '--',
+          Icons.star_rounded,
+          AppTheme.secondary,
+        ),
+        _statTile(
+          context,
+          'Streak',
+          '${_calculateStreak(recentSessions)}d',
+          Icons.local_fire_department_rounded,
+          AppTheme.accent,
+        ),
+      ],
+    );
+  }
+
+  // _buildStatItem removed in favor of _statTile grid design
+
+  Widget _statTile(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacingL),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withValues(alpha: 0.08),
+            Colors.white.withValues(alpha: 0.03),
+          ],
+        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Icon(Icons.analytics_rounded, color: AppTheme.primary, size: 24),
-              const SizedBox(width: AppTheme.spacingM),
-              Text(
-                'Your Progress',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.all(AppTheme.spacingM),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppTheme.radiusM),
+            ),
+            child: Icon(icon, color: color, size: 22),
           ),
-          const SizedBox(height: AppTheme.spacingL),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatItem(
-                  context,
-                  'Sessions',
-                  totalSessions.toString(),
-                  Icons.chat_rounded,
-                ),
-              ),
-              Expanded(
-                child: _buildStatItem(
-                  context,
-                  'Avg Score',
-                  totalSessions > 0
-                      ? '${avgScore.toStringAsFixed(1)}/10'
-                      : '--',
-                  Icons.star_rounded,
-                ),
-              ),
-              Expanded(
-                child: _buildStatItem(
-                  context,
-                  'Streak',
-                  '${_calculateStreak(recentSessions)} days',
-                  Icons.local_fire_department_rounded,
-                ),
-              ),
-            ],
+          const SizedBox(height: AppTheme.spacingS),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatItem(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-  ) {
-    return Column(
+  Widget _buildSessionCtaRow(BuildContext context) {
+    return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(AppTheme.spacingM),
-          decoration: BoxDecoration(
-            color: AppTheme.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(AppTheme.radiusM),
-          ),
-          child: Icon(icon, color: AppTheme.primary, size: 24),
-        ),
-        const SizedBox(height: AppTheme.spacingS),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSessionActions(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Start a Conversation',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: AppTheme.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppTheme.spacingM),
-        Text(
-          'Choose how you\'d like to begin your guided communication session',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
-        ),
-        const SizedBox(height: AppTheme.spacingL),
-        SizedBox(
-          width: double.infinity,
+        Expanded(
+          flex: 2,
           child: GradientButton(
-            text: 'Start New Session',
+            text: 'Start Session',
             icon: Icons.add_circle_outline_rounded,
             onPressed: () => _showStartSessionDialog(context),
           ),
         ),
-        const SizedBox(height: AppTheme.spacingM),
-        SizedBox(
-          width: double.infinity,
+        const SizedBox(width: AppTheme.spacingM),
+        Expanded(
           child: GradientButton(
-            text: 'Join Session',
+            text: 'Join',
             icon: Icons.group_add_rounded,
             isSecondary: true,
             onPressed: () => _showJoinSessionDialog(context),
           ),
         ),
-        const SizedBox(height: AppTheme.spacingM),
-        SizedBox(
-          width: double.infinity,
+        const SizedBox(width: AppTheme.spacingM),
+        Expanded(
           child: GradientButton(
-            text: 'View Session History',
+            text: 'History',
             icon: Icons.history_rounded,
             isSecondary: true,
             onPressed: () => _navigateToSessionHistory(context),
@@ -438,13 +440,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppTheme.secondary.withValues(alpha: 0.2),
-                  AppTheme.secondary.withValues(alpha: 0.1),
+                  Colors.white.withValues(alpha: 0.10),
+                  Colors.white.withValues(alpha: 0.02),
                 ],
               ),
               borderRadius: BorderRadius.circular(AppTheme.radiusM),
               border: Border.all(
-                color: AppTheme.secondary.withValues(alpha: 0.3),
+                color: Colors.white.withValues(alpha: 0.16),
                 width: 1,
               ),
             ),

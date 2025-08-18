@@ -8,6 +8,7 @@ import '../../widgets/app_logo.dart';
 import '../../widgets/animated_card.dart';
 import '../../widgets/loading_overlay.dart';
 import '../../widgets/gradient_button.dart';
+import '../../widgets/aurora_background.dart';
 import 'auth_wrapper.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
@@ -24,7 +25,7 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _showEmailForm = false;
@@ -44,27 +45,20 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
+
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutQuart,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutQuart),
+        );
   }
 
   @override
@@ -86,14 +80,17 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
         _showErrorSnackBar('Failed to sign in: $error');
       } else if (mounted) {
         // Sign in successful - navigate to AuthWrapper
-        debugPrint('🔥 EnhancedLoginScreen: Sign in successful, navigating to AuthWrapper');
+        debugPrint(
+          '🔥 EnhancedLoginScreen: Sign in successful, navigating to AuthWrapper',
+        );
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
                 const AuthWrapper(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
             transitionDuration: const Duration(milliseconds: 500),
           ),
         );
@@ -124,14 +121,17 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
         _showErrorSnackBar(error);
       } else if (mounted) {
         // Sign in successful - navigate to AuthWrapper
-        debugPrint('🔥 EnhancedLoginScreen: Email sign in successful, navigating to AuthWrapper');
+        debugPrint(
+          '🔥 EnhancedLoginScreen: Email sign in successful, navigating to AuthWrapper',
+        );
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
                 const AuthWrapper(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
             transitionDuration: const Duration(milliseconds: 500),
           ),
         );
@@ -164,7 +164,7 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
     setState(() {
       _showEmailForm = !_showEmailForm;
     });
-    
+
     if (_showEmailForm) {
       _fadeController.forward();
       _slideController.forward();
@@ -181,13 +181,13 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
             const SignUpScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(1.0, 0.0),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeInOut,
-            )),
+            position:
+                Tween<Offset>(
+                  begin: const Offset(1.0, 0.0),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+                ),
             child: child,
           );
         },
@@ -203,13 +203,13 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
             ForgotPasswordScreen(email: _emailController.text.trim()),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(1.0, 0.0),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeInOut,
-            )),
+            position:
+                Tween<Offset>(
+                  begin: const Offset(1.0, 0.0),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+                ),
             child: child,
           );
         },
@@ -246,8 +246,8 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
       loadingText: 'Signing you in...',
       child: Scaffold(
         backgroundColor: Colors.black,
-        body: Container(
-          decoration: const BoxDecoration(color: Colors.black),
+        body: AuroraBackground(
+          intensity: 0.6,
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppTheme.spacingL),
@@ -300,15 +300,22 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
                         child: Container(
                           height: 56,
                           decoration: BoxDecoration(
-                            color: AppTheme.primary,
+                            gradient: const LinearGradient(
+                              colors: [
+                                AppTheme.gradientStart,
+                                AppTheme.gradientEnd,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                             borderRadius: BorderRadius.circular(
                               AppTheme.radiusM,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.primary.withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
+                                color: AppTheme.primary.withValues(alpha: 0.35),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
                               ),
                             ],
                           ),
@@ -392,14 +399,19 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(color: AppTheme.primary),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusM,
+                              ),
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.email_outlined, color: AppTheme.primary),
+                              Icon(
+                                Icons.email_outlined,
+                                color: AppTheme.primary,
+                              ),
                               const SizedBox(width: AppTheme.spacingS),
                               Text(
                                 'Sign in with Email',
@@ -416,7 +428,10 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
                     ] else ...[
                       // Email Sign In Form
                       AnimatedBuilder(
-                        animation: Listenable.merge([_fadeAnimation, _slideAnimation]),
+                        animation: Listenable.merge([
+                          _fadeAnimation,
+                          _slideAnimation,
+                        ]),
                         builder: (context, child) {
                           return FadeTransition(
                             opacity: _fadeAnimation,
@@ -424,7 +439,9 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
                               position: _slideAnimation,
                               child: AnimatedCard(
                                 child: Padding(
-                                  padding: const EdgeInsets.all(AppTheme.spacingL),
+                                  padding: const EdgeInsets.all(
+                                    AppTheme.spacingL,
+                                  ),
                                   child: Form(
                                     key: _formKey,
                                     child: Column(
@@ -433,86 +450,148 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
                                         TextFormField(
                                           controller: _emailController,
                                           validator: _validateEmail,
-                                          keyboardType: TextInputType.emailAddress,
-                                          style: const TextStyle(color: Colors.white),
+                                          keyboardType:
+                                              TextInputType.emailAddress,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
                                           decoration: InputDecoration(
                                             labelText: 'Email',
-                                            labelStyle: TextStyle(color: AppTheme.textSecondary),
-                                            prefixIcon: Icon(Icons.email_outlined, color: AppTheme.primary),
+                                            labelStyle: TextStyle(
+                                              color: AppTheme.textSecondary,
+                                            ),
+                                            prefixIcon: Icon(
+                                              Icons.email_outlined,
+                                              color: AppTheme.primary,
+                                            ),
                                             border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                                              borderSide: BorderSide(color: AppTheme.textTertiary),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppTheme.radiusS,
+                                                  ),
+                                              borderSide: BorderSide(
+                                                color: AppTheme.textTertiary,
+                                              ),
                                             ),
                                             enabledBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppTheme.radiusS,
+                                                  ),
                                               borderSide: BorderSide(
-                                                color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                                                color: AppTheme.textTertiary
+                                                    .withValues(alpha: 0.5),
                                               ),
                                             ),
                                             focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                                              borderSide: BorderSide(color: AppTheme.primary),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppTheme.radiusS,
+                                                  ),
+                                              borderSide: BorderSide(
+                                                color: AppTheme.primary,
+                                              ),
                                             ),
                                             errorBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                                              borderSide: BorderSide(color: AppTheme.interruptionColor),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppTheme.radiusS,
+                                                  ),
+                                              borderSide: BorderSide(
+                                                color:
+                                                    AppTheme.interruptionColor,
+                                              ),
                                             ),
                                           ),
                                         ),
-                                        
-                                        const SizedBox(height: AppTheme.spacingM),
-                                        
+
+                                        const SizedBox(
+                                          height: AppTheme.spacingM,
+                                        ),
+
                                         // Password field
                                         TextFormField(
                                           controller: _passwordController,
                                           validator: _validatePassword,
                                           obscureText: _obscurePassword,
-                                          style: const TextStyle(color: Colors.white),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
                                           decoration: InputDecoration(
                                             labelText: 'Password',
-                                            labelStyle: TextStyle(color: AppTheme.textSecondary),
-                                            prefixIcon: Icon(Icons.lock_outline, color: AppTheme.primary),
+                                            labelStyle: TextStyle(
+                                              color: AppTheme.textSecondary,
+                                            ),
+                                            prefixIcon: Icon(
+                                              Icons.lock_outline,
+                                              color: AppTheme.primary,
+                                            ),
                                             suffixIcon: IconButton(
                                               icon: Icon(
                                                 _obscurePassword
-                                                    ? Icons.visibility_off_outlined
+                                                    ? Icons
+                                                          .visibility_off_outlined
                                                     : Icons.visibility_outlined,
                                                 color: AppTheme.textSecondary,
                                               ),
                                               onPressed: () {
                                                 setState(() {
-                                                  _obscurePassword = !_obscurePassword;
+                                                  _obscurePassword =
+                                                      !_obscurePassword;
                                                 });
                                               },
                                             ),
                                             border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                                              borderSide: BorderSide(color: AppTheme.textTertiary),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppTheme.radiusS,
+                                                  ),
+                                              borderSide: BorderSide(
+                                                color: AppTheme.textTertiary,
+                                              ),
                                             ),
                                             enabledBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppTheme.radiusS,
+                                                  ),
                                               borderSide: BorderSide(
-                                                color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                                                color: AppTheme.textTertiary
+                                                    .withValues(alpha: 0.5),
                                               ),
                                             ),
                                             focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                                              borderSide: BorderSide(color: AppTheme.primary),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppTheme.radiusS,
+                                                  ),
+                                              borderSide: BorderSide(
+                                                color: AppTheme.primary,
+                                              ),
                                             ),
                                             errorBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                                              borderSide: BorderSide(color: AppTheme.interruptionColor),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppTheme.radiusS,
+                                                  ),
+                                              borderSide: BorderSide(
+                                                color:
+                                                    AppTheme.interruptionColor,
+                                              ),
                                             ),
                                           ),
                                         ),
-                                        
-                                        const SizedBox(height: AppTheme.spacingS),
-                                        
+
+                                        const SizedBox(
+                                          height: AppTheme.spacingS,
+                                        ),
+
                                         // Forgot password link
                                         Align(
                                           alignment: Alignment.centerRight,
                                           child: TextButton(
-                                            onPressed: _navigateToForgotPassword,
+                                            onPressed:
+                                                _navigateToForgotPassword,
                                             child: Text(
                                               'Forgot Password?',
                                               style: TextStyle(
@@ -522,22 +601,33 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
                                             ),
                                           ),
                                         ),
-                                        
-                                        const SizedBox(height: AppTheme.spacingM),
-                                        
+
+                                        const SizedBox(
+                                          height: AppTheme.spacingM,
+                                        ),
+
                                         // Sign in button
                                         SizedBox(
                                           width: double.infinity,
                                           child: GradientButton(
-                                            onPressed: _isLoading ? null : _signInWithEmail,
-                                            text: _isLoading && _showEmailForm ? 'Signing In...' : 'Sign In',
-                                            icon: _isLoading && _showEmailForm ? null : Icons.login,
-                                            isLoading: _isLoading && _showEmailForm,
+                                            onPressed: _isLoading
+                                                ? null
+                                                : _signInWithEmail,
+                                            text: _isLoading && _showEmailForm
+                                                ? 'Signing In...'
+                                                : 'Sign In',
+                                            icon: _isLoading && _showEmailForm
+                                                ? null
+                                                : Icons.login,
+                                            isLoading:
+                                                _isLoading && _showEmailForm,
                                           ),
                                         ),
-                                        
-                                        const SizedBox(height: AppTheme.spacingM),
-                                        
+
+                                        const SizedBox(
+                                          height: AppTheme.spacingM,
+                                        ),
+
                                         // Back to options
                                         TextButton(
                                           onPressed: _toggleEmailForm,
@@ -568,9 +658,7 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
                       children: [
                         Text(
                           "Don't have an account? ",
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                          ),
+                          style: TextStyle(color: AppTheme.textSecondary),
                         ),
                         TextButton(
                           onPressed: _navigateToSignUp,

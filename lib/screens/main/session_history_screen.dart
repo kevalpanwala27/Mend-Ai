@@ -7,6 +7,8 @@ import '../../theme/app_theme.dart';
 import '../../widgets/gradient_button.dart';
 import '../../widgets/animated_card.dart';
 import '../../models/communication_session.dart';
+import '../../widgets/aurora_background.dart';
+import '../../widgets/pill_app_bar.dart';
 
 import 'session_waiting_room_screen.dart';
 
@@ -74,66 +76,19 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: Text(
-          'Session History',
-          style: TextStyle(
-            color: AppTheme.textPrimary,
-            fontSize: 20.sp,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: Container(
-            padding: EdgeInsets.all(8.w),
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(AppTheme.radiusS),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Icon(
-              Icons.arrow_back_ios_rounded,
-              color: AppTheme.textPrimary,
-              size: 16.sp,
-            ),
-          ),
-        ),
+      appBar: PillAppBar(
+        title: 'Session History',
+        showBack: true,
+        onBack: () => Navigator.pop(context),
         actions: [
           IconButton(
             onPressed: () => _showFilterDialog(context),
-            icon: Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: AppTheme.surface,
-                borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primary.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Icon(
-                Icons.filter_list_rounded,
-                color: AppTheme.textPrimary,
-                size: 16.sp,
-              ),
-            ),
+            icon: const Icon(Icons.filter_list_rounded, color: Colors.white),
           ),
         ],
       ),
-      body: Container(
-        decoration: const BoxDecoration(color: Colors.black),
+      body: AuroraBackground(
+        intensity: 0.6,
         child: Consumer<FirebaseAppState>(
           builder: (context, appState, child) {
             final sessions = _getFilteredSessions(appState);
@@ -581,8 +536,8 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen>
                     '${entry.value.averageScore.toStringAsFixed(1)}/10',
                   );
                 }),
-                if (session.scores!.overallFeedback != null)
-                  _buildDetailRow('Feedback', session.scores!.overallFeedback!),
+                if (session.scores?.overallFeedback != null)
+                  _buildDetailRow('Feedback', session.scores!.overallFeedback),
               ],
               if (session.reflection != null) ...[
                 SizedBox(height: 16.h),

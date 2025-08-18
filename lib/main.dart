@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'providers/firebase_app_state.dart';
 import 'screens/auth/splash_screen.dart';
 import 'theme/app_theme.dart';
+import 'widgets/aurora_background.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,9 +31,15 @@ class MendApp extends StatelessWidget {
         builder: (context, child) {
           return MaterialApp(
             title: 'Mend',
-            theme: AppTheme.themeData,
+            theme: AppTheme.lightThemeData,
+            darkTheme: AppTheme.themeData,
+            themeMode: ThemeMode.system,
             home: const SplashScreen(),
             debugShowCheckedModeBanner: false,
+            builder: (context, child) => AuroraBackground(
+              intensity: 0.55,
+              child: child ?? const SizedBox.shrink(),
+            ),
           );
         },
       ),

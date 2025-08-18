@@ -10,6 +10,7 @@ import '../../services/zego_token_service.dart';
 import '../../theme/app_theme.dart';
 import '../resolution/user_scoring_screen.dart';
 import '../../widgets/mood_checkin_dialog.dart';
+import '../../widgets/aurora_background.dart';
 
 class ZegoVoiceChatScreen extends StatefulWidget {
   final String sessionCode;
@@ -602,56 +603,47 @@ class _ZegoVoiceChatScreenState extends State<ZegoVoiceChatScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: _isInitializing ? _buildInitializingScreen() : _buildVoiceChatUI(),
+      body: AuroraBackground(
+        intensity: 0.6,
+        child: _isInitializing ? _buildInitializingScreen() : _buildVoiceChatUI(),
+      ),
     );
   }
 
   Widget _buildInitializingScreen() {
-    return Container(
-      decoration: const BoxDecoration(color: Colors.black),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+          SizedBox(height: 24.h),
+          Text(
+            'Connecting to your partner...',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w500,
             ),
-            SizedBox(height: 24.h),
-            Text(
-              'Connecting to your partner...',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildVoiceChatUI() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF1a1a2e), Color(0xFF16213e), Color(0xFF0f3460)],
-        ),
-      ),
-      child: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            if (_showInterruptionWarning) _buildInterruptionWarning(),
-            SizedBox(height: 20.h),
-            _buildAIMessageCard(),
-            SizedBox(height: 24.h),
-            Expanded(child: _buildPartnerViews()),
-            _buildControlsFooter(),
-          ],
-        ),
+    return SafeArea(
+      child: Column(
+        children: [
+          _buildHeader(),
+          if (_showInterruptionWarning) _buildInterruptionWarning(),
+          SizedBox(height: 20.h),
+          _buildAIMessageCard(),
+          SizedBox(height: 24.h),
+          Expanded(child: _buildPartnerViews()),
+          _buildControlsFooter(),
+        ],
       ),
     );
   }

@@ -8,6 +8,8 @@ import '../../theme/app_theme.dart';
 import '../../widgets/gradient_button.dart';
 import '../../widgets/animated_card.dart';
 import '../../models/communication_session.dart';
+import '../../widgets/aurora_background.dart';
+import '../../widgets/pill_app_bar.dart';
 import 'session_history_screen.dart';
 
 class InsightsDashboardScreen extends StatefulWidget {
@@ -69,62 +71,19 @@ class _InsightsDashboardScreenState extends State<InsightsDashboardScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: Text(
-          'Insights Dashboard',
-          style: TextStyle(
-            color: AppTheme.textPrimary,
-            fontSize: 20.sp,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: Container(
-            padding: EdgeInsets.all(8.w),
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(AppTheme.radiusS),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Icon(
-              Icons.arrow_back_ios_rounded,
-              color: AppTheme.textPrimary,
-              size: 16.sp,
-            ),
-          ),
-        ),
+      appBar: PillAppBar(
+        title: 'Insights Dashboard',
+        showBack: true,
+        onBack: () => Navigator.pop(context),
         actions: [
-          Container(
-            margin: EdgeInsets.only(right: 16.w),
-            child: IconButton(
-              onPressed: () => _showTimeRangeSelector(),
-              icon: Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                ),
-                child: Icon(
-                  Icons.tune_rounded,
-                  color: AppTheme.primary,
-                  size: 18.sp,
-                ),
-              ),
-            ),
+          IconButton(
+            onPressed: () => _showTimeRangeSelector(),
+            icon: const Icon(Icons.tune_rounded, color: Colors.white),
           ),
         ],
       ),
-      body: Container(
-        decoration: const BoxDecoration(color: Colors.black),
+      body: AuroraBackground(
+        intensity: 0.6,
         child: Consumer<FirebaseAppState>(
           builder: (context, appState, child) {
             return FadeTransition(

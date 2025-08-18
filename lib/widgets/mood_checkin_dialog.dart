@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
 
 class MoodCheckinDialog extends StatelessWidget {
   final List<MoodOption> moods = const [
@@ -21,17 +20,25 @@ class MoodCheckinDialog extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
+          gradient: LinearGradient(
+            colors: [
+              Colors.white.withValues(alpha: 0.06),
+              Colors.white.withValues(alpha: 0.02),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(32),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.15),
+            width: 1.2,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: Colors.black.withValues(alpha: 0.25),
               blurRadius: 24,
-              offset: const Offset(0, 8),
+              offset: const Offset(0, 10),
+              spreadRadius: 2,
             ),
           ],
         ),
@@ -48,7 +55,7 @@ class MoodCheckinDialog extends StatelessWidget {
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 26,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: -0.5,
                     height: 1.2,
                   ),
@@ -87,20 +94,20 @@ class MoodCheckinDialog extends StatelessWidget {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              Colors.white.withValues(alpha: 0.2),
-                              Colors.white.withValues(alpha: 0.1),
+                              Colors.white.withValues(alpha: 0.10),
+                              Colors.white.withValues(alpha: 0.02),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            width: 1.5,
+                            color: Colors.white.withValues(alpha: 0.18),
+                            width: 1.2,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                              color: Colors.black.withValues(alpha: 0.25),
+                              blurRadius: 14,
+                              offset: const Offset(0, 8),
                             ),
                           ],
                         ),
@@ -111,7 +118,7 @@ class MoodCheckinDialog extends StatelessWidget {
                               width: 64,
                               height: 64,
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.15),
+                                color: Colors.white.withValues(alpha: 0.12),
                                 shape: BoxShape.circle,
                               ),
                               child: Center(

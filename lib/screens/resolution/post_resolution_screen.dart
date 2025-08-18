@@ -7,6 +7,8 @@ import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/gradient_button.dart';
 import '../main/home_screen.dart';
+import '../../widgets/aurora_background.dart';
+import '../../widgets/pill_app_bar.dart';
 
 class PostResolutionScreen extends StatefulWidget {
   final String? sessionId;
@@ -332,12 +334,9 @@ class _PostResolutionScreenState extends State<PostResolutionScreen>
             children: [
               Scaffold(
                 backgroundColor: Colors.black,
-                appBar: AppBar(
-                  title: const Text('Resolution Complete'),
-                  automaticallyImplyLeading: false,
-                ),
-              body: Container(
-                decoration: const BoxDecoration(color: Colors.black),
+                appBar: const PillAppBar(title: 'Resolution Complete'),
+              body: AuroraBackground(
+                intensity: 0.6,
                 child: SafeArea(
                   child: Column(
                     children: [

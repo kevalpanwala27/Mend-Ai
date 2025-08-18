@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/app_logo.dart';
+import '../../widgets/aurora_background.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/firebase_app_state.dart';
 import 'start_screen.dart';
@@ -33,27 +34,19 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
+
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.elasticOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
+    );
 
     _fadeController.forward();
     _scaleController.forward();
@@ -62,25 +55,31 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _navigateToNextScreen() async {
     // Wait for splash animation
     await Future.delayed(const Duration(seconds: 2));
-    
+
     if (!mounted) return;
-    
+
     final appState = context.read<FirebaseAppState>();
-    debugPrint('🔥 SplashScreen: Initial state - isLoading=${appState.isLoading}, isAuthenticated=${appState.isAuthenticated}');
-    
+    debugPrint(
+      '🔥 SplashScreen: Initial state - isLoading=${appState.isLoading}, isAuthenticated=${appState.isAuthenticated}',
+    );
+
     // Wait for Firebase to initialize if it's still loading
     while (appState.isLoading && mounted) {
       debugPrint('🔥 SplashScreen: Still loading, waiting...');
       await Future.delayed(const Duration(milliseconds: 100));
     }
-    
+
     if (!mounted) return;
-    
-    debugPrint('🔥 SplashScreen: Final state - isLoading=${appState.isLoading}, isAuthenticated=${appState.isAuthenticated}, onboarding=${appState.isOnboardingComplete}');
-    
+
+    debugPrint(
+      '🔥 SplashScreen: Final state - isLoading=${appState.isLoading}, isAuthenticated=${appState.isAuthenticated}, onboarding=${appState.isOnboardingComplete}',
+    );
+
     // Check if user is already authenticated
     if (appState.isAuthenticated) {
-      debugPrint('🔥 SplashScreen: User is authenticated, navigating to AuthWrapper');
+      debugPrint(
+        '🔥 SplashScreen: User is authenticated, navigating to AuthWrapper',
+      );
       // Returning user - go directly to AuthWrapper (which will route to appropriate screen)
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
@@ -93,7 +92,9 @@ class _SplashScreenState extends State<SplashScreen>
         ),
       );
     } else {
-      debugPrint('🔥 SplashScreen: User not authenticated, navigating to StartScreen');
+      debugPrint(
+        '🔥 SplashScreen: User not authenticated, navigating to StartScreen',
+      );
       // New user - show start screen
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
@@ -119,17 +120,8 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment.center,
-            radius: 0.8,
-            colors: [
-              Color(0xFF111827),
-              Colors.black,
-            ],
-          ),
-        ),
+      body: AuroraBackground(
+        intensity: 0.7,
         child: Center(
           child: AnimatedBuilder(
             animation: Listenable.merge([_fadeAnimation, _scaleAnimation]),
@@ -141,7 +133,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const AppLogo(size: 160, animate: true),
+                      const AppLogo(size: 168, animate: true),
                       SizedBox(height: AppTheme.spacingL),
                       ShaderMask(
                         shaderCallback: (bounds) => const LinearGradient(
@@ -152,11 +144,9 @@ class _SplashScreenState extends State<SplashScreen>
                         ).createShader(bounds),
                         child: Text(
                           'Mend',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineLarge
+                          style: Theme.of(context).textTheme.headlineLarge
                               ?.copyWith(
-                                fontSize: 56.sp,
+                                fontSize: 58.sp,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                                 letterSpacing: -1.5,
@@ -166,11 +156,14 @@ class _SplashScreenState extends State<SplashScreen>
                       SizedBox(height: AppTheme.spacingS),
                       Text(
                         'Healing relationships through AI',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppTheme.textSecondary.withValues(alpha: 0.8),
-                          fontWeight: FontWeight.w400,
-                          letterSpacing: 0.5,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: AppTheme.textSecondary.withValues(
+                                alpha: 0.8,
+                              ),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 0.5,
+                            ),
                         textAlign: TextAlign.center,
                       ),
                       SizedBox(height: 80.h),
@@ -182,7 +175,9 @@ class _SplashScreenState extends State<SplashScreen>
                           valueColor: AlwaysStoppedAnimation<Color>(
                             AppTheme.primary.withValues(alpha: 0.6),
                           ),
-                          backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
+                          backgroundColor: AppTheme.primary.withValues(
+                            alpha: 0.2,
+                          ),
                         ),
                       ),
                     ],

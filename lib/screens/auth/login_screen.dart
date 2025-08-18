@@ -7,6 +7,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/animated_card.dart';
 import '../../widgets/loading_overlay.dart';
+import '../../widgets/aurora_background.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -76,8 +77,8 @@ class _LoginScreenState extends State<LoginScreen>
       loadingText: 'Signing you in...',
       child: Scaffold(
         backgroundColor: Colors.black,
-        body: Container(
-          decoration: const BoxDecoration(color: Colors.black),
+        body: AuroraBackground(
+          intensity: 0.65,
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppTheme.spacingL),
@@ -100,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen>
                         'Mend',
                         style: Theme.of(context).textTheme.headlineLarge
                             ?.copyWith(
-                              fontSize: 48.sp,
+                              fontSize: 50.sp,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                               letterSpacing: -1,
@@ -136,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                     ),
 
-                    SizedBox(height: 60.h),
+                    SizedBox(height: 48.h),
 
                     // Features showcase
                     AnimatedCard(
@@ -170,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                     ),
 
-                    SizedBox(height: 60.h),
+                    SizedBox(height: 48.h),
 
                     // Google Sign In button
                     SizedBox(
@@ -180,15 +181,22 @@ class _LoginScreenState extends State<LoginScreen>
                         child: Container(
                           height: 56,
                           decoration: BoxDecoration(
-                            color: AppTheme.primary,
+                            gradient: const LinearGradient(
+                              colors: [
+                                AppTheme.gradientStart,
+                                AppTheme.gradientEnd,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                             borderRadius: BorderRadius.circular(
                               AppTheme.radiusM,
                             ),
                             boxShadow: [
                               BoxShadow(
                                 color: AppTheme.primary.withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
                               ),
                             ],
                           ),
@@ -278,5 +286,4 @@ class _LoginScreenState extends State<LoginScreen>
       ],
     );
   }
-
 }

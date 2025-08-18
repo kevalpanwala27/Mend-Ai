@@ -2,22 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // 🌙 Dark Mode Foundation - Deep, calming backgrounds
-  static const Color backgroundPrimary = Color(0xFF0E0E0E); // Ultra deep black
-  static const Color backgroundSecondary = Color(0xFF121212); // Card surfaces
-  static const Color backgroundTertiary = Color(
-    0xFF1A1A1A,
-  ); // Elevated surfaces
-  static const Color backgroundQuaternary = Color(
-    0xFF242424,
-  ); // Interactive surfaces
+  // 🌙 Dark Mode Foundation - Midnight indigo palette
+  static const Color backgroundPrimary = Color(0xFF070A12); // Midnight
+  static const Color backgroundSecondary = Color(0xFF0B1120); // Deep indigo
+  static const Color backgroundTertiary = Color(0xFF0F172A); // Surfaces
+  static const Color backgroundQuaternary = Color(0xFF111827); // Interactive
 
-  // ✨ Neon Accent Colors - Soft, glowing, therapeutic
-  static const Color neonTeal = Color(0xFF64FFDA); // Primary AI accent
-  static const Color neonPink = Color(0xFFFF6B9D); // Partner B accent
-  static const Color neonBlue = Color(0xFF4FC3F7); // Partner A accent
-  static const Color neonViolet = Color(0xFFB39DDB); // Secondary accent
-  static const Color neonCoral = Color(0xFFFF8A65); // Warning/Alert
+  // ✨ Accent Colors - Fresh aurora hues
+  static const Color neonTeal = Color(0xFF6EE7F9); // Aurora cyan
+  static const Color neonPink = Color(0xFFFF9ECF); // Soft magenta
+  static const Color neonBlue = Color(0xFF9B87F5); // Iris violet
+  static const Color neonViolet = Color(0xFFA7F3D0); // Mint glow
+  static const Color neonCoral = Color(0xFFFFB86B); // Warm amber for alerts
 
   // 🎨 Partner Color System - Distinct but harmonious
   static const Color partnerAGlow = neonBlue; // Blue glow for Partner A
@@ -53,8 +49,8 @@ class AppTheme {
   static const Color borderColor = glassBorder;
   static const Color partnerAColor = partnerAGlow;
   static const Color partnerBColor = partnerBGlow;
-  static const Color gradientStart = neonTeal;
-  static const Color gradientEnd = neonViolet;
+  static const Color gradientStart = Color(0xFF6EE7F9); // Cyan
+  static const Color gradientEnd = Color(0xFF9B87F5); // Iris
   static const Color cardBackground = backgroundTertiary;
 
   // 📏 Spacing System - Consistent, rhythmic
@@ -236,7 +232,7 @@ class AppTheme {
       iconTheme: IconThemeData(color: textPrimary, size: 24),
       titleTextStyle: TextStyle(
         color: textPrimary,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         fontSize: 20,
         letterSpacing: -0.4,
       ),
@@ -288,7 +284,7 @@ class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusL),
-        borderSide: BorderSide(color: neonTeal, width: 2),
+        borderSide: BorderSide(color: neonBlue, width: 2),
       ),
       labelStyle: TextStyle(color: textTertiary, fontSize: 16),
       hintStyle: TextStyle(color: textQuaternary, fontSize: 16),
@@ -308,6 +304,198 @@ class AppTheme {
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: backgroundSecondary,
       shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(radiusXL)),
+      ),
+    ),
+  );
+
+  // 🎨 Light Theme Data (Minimal Flat variant)
+  static ThemeData get lightThemeData => ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.light,
+    colorScheme: const ColorScheme.light(
+      primary: Color(0xFF6C8EEF),
+      secondary: Color(0xFF34D399),
+      surface: Color(0xFFFFFFFF),
+      onPrimary: Color(0xFFFFFFFF),
+      onSecondary: Color(0xFFFFFFFF),
+      onSurface: Color(0xFF0F172A),
+      error: Color(0xFFEF4444),
+      onError: Color(0xFFFFFFFF),
+      outline: Color(0xFFE5E7EB),
+    ),
+    scaffoldBackgroundColor: const Color(0xFFF7FAFC),
+    fontFamily: GoogleFonts.manrope().fontFamily,
+    textTheme: TextTheme(
+      displayLarge: const TextStyle(
+        fontSize: 64,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF0F172A),
+        letterSpacing: -1.5,
+        height: 1.1,
+      ),
+      displayMedium: const TextStyle(
+        fontSize: 48,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF0F172A),
+        letterSpacing: -1.0,
+        height: 1.2,
+      ),
+      displaySmall: const TextStyle(
+        fontSize: 36,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF0F172A),
+        letterSpacing: -0.5,
+        height: 1.2,
+      ),
+      headlineLarge: const TextStyle(
+        fontSize: 32,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF0F172A),
+        letterSpacing: -0.8,
+        height: 1.1,
+      ),
+      headlineMedium: const TextStyle(
+        fontSize: 28,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF0F172A),
+        letterSpacing: -0.6,
+        height: 1.2,
+      ),
+      headlineSmall: const TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF0F172A),
+        letterSpacing: -0.4,
+        height: 1.3,
+      ),
+      titleLarge: const TextStyle(
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFF0F172A),
+        letterSpacing: -0.2,
+        height: 1.3,
+      ),
+      titleMedium: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFF334155),
+        letterSpacing: 0.1,
+        height: 1.4,
+      ),
+      titleSmall: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFF334155),
+        letterSpacing: 0.2,
+        height: 1.4,
+      ),
+      bodyLarge: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w400,
+        color: Color(0xFF475569),
+        letterSpacing: 0.2,
+        height: 1.5,
+      ),
+      bodyMedium: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        color: Color(0xFF475569),
+        letterSpacing: 0.3,
+        height: 1.5,
+      ),
+      bodySmall: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        color: Color(0xFF64748B),
+        letterSpacing: 0.4,
+        height: 1.6,
+      ),
+      labelLarge: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF0F172A),
+        letterSpacing: 0.5,
+      ),
+      labelMedium: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF334155),
+        letterSpacing: 0.5,
+      ),
+      labelSmall: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF64748B),
+        letterSpacing: 0.6,
+      ),
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      iconTheme: IconThemeData(color: Color(0xFF0F172A), size: 24),
+      titleTextStyle: TextStyle(
+        color: Color(0xFF0F172A),
+        fontWeight: FontWeight.w700,
+        fontSize: 20,
+        letterSpacing: -0.4,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF6C8EEF),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusL),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: spacingL,
+          vertical: spacingM,
+        ),
+      ),
+    ),
+    cardTheme: const CardThemeData(
+      color: Colors.white,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      margin: EdgeInsets.all(spacingS),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: const Color(0xFFFFFFFF),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: spacingL,
+        vertical: spacingM + 2,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(radiusL),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(radiusL),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(radiusL),
+        borderSide: const BorderSide(color: Color(0xFF6C8EEF), width: 2),
+      ),
+      labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 16),
+      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 16),
+    ),
+    dialogTheme: const DialogThemeData(
+      backgroundColor: Color(0xFFFFFFFF),
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(radiusXL)),
+      ),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: const Color(0xFFFFFFFF),
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(radiusXL)),
       ),
     ),

@@ -7,6 +7,8 @@ import '../chat/zego_voice_chat_screen.dart';
 import '../main/home_screen.dart';
 import '../../providers/firebase_app_state.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/aurora_background.dart';
+import '../../widgets/pill_app_bar.dart';
 
 class SessionWaitingRoomScreen extends StatefulWidget {
   final String sessionCode;
@@ -149,26 +151,24 @@ class _SessionWaitingRoomScreenState extends State<SessionWaitingRoomScreen>
       },
       child: Scaffold(
         backgroundColor: Colors.black,
-        appBar: AppBar(
-          title: const Text('Waiting Room'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              final shouldExit = await _showExitConfirmation();
-              if (shouldExit) {
-                await _leaveSession();
-                if (mounted) {
-                  navigator.pushReplacement(
-                    MaterialPageRoute(builder: (context) => const HomeScreen()),
-                  );
-                }
+        appBar: PillAppBar(
+          title: 'Waiting Room',
+          showBack: true,
+          onBack: () async {
+            final navigator = Navigator.of(context);
+            final shouldExit = await _showExitConfirmation();
+            if (shouldExit) {
+              await _leaveSession();
+              if (mounted) {
+                navigator.pushReplacement(
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                );
               }
-            },
-          ),
+            }
+          },
         ),
-        body: Container(
-          decoration: const BoxDecoration(color: Colors.black),
+        body: AuroraBackground(
+          intensity: 0.6,
           child: SafeArea(
             child: FadeTransition(
               opacity: _fadeAnimation,

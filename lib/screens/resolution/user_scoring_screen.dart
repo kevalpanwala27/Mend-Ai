@@ -8,6 +8,8 @@ import '../../widgets/gradient_button.dart';
 import '../../services/firestore_sessions_service.dart';
 import '../main/home_screen.dart';
 import 'post_resolution_screen.dart';
+import '../../widgets/aurora_background.dart';
+import '../../widgets/pill_app_bar.dart';
 
 class UserScoringScreen extends StatefulWidget {
   final String? sessionId;
@@ -441,28 +443,9 @@ class _UserScoringScreenState extends State<UserScoringScreen>
           },
           child: Scaffold(
             backgroundColor: Colors.black,
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              automaticallyImplyLeading: false, // Remove back button
-              title: Text(
-                'Rate Your Partner',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24.sp,
-                ),
-              ),
-              centerTitle: true,
-            ),
-          body: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF1a1a2e), Color(0xFF16213e), Color(0xFF0f3460)],
-              ),
-            ),
+            appBar: const PillAppBar(title: 'Rate Your Partner'),
+          body: AuroraBackground(
+            intensity: 0.6,
             child: SafeArea(
               child: AnimatedBuilder(
                 animation: _slideAnimation,

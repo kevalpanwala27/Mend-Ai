@@ -6,6 +6,8 @@ import '../../models/communication_session.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/gradient_button.dart';
 import 'scoring_screen.dart';
+import '../../widgets/aurora_background.dart';
+import '../../widgets/pill_app_bar.dart';
 
 class MutualScoringScreen extends StatefulWidget {
   const MutualScoringScreen({super.key});
@@ -261,27 +263,9 @@ class _MutualScoringScreenState extends State<MutualScoringScreen>
 
         return Scaffold(
           backgroundColor: Colors.black,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            title: Text(
-              'Rate Your Partner',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 24.sp,
-              ),
-            ),
-            centerTitle: true,
-          ),
-          body: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF1a1a2e), Color(0xFF16213e), Color(0xFF0f3460)],
-              ),
-            ),
+          appBar: const PillAppBar(title: 'Rate Your Partner'),
+          body: AuroraBackground(
+            intensity: 0.6,
             child: SafeArea(
               child: Column(
                 children: [

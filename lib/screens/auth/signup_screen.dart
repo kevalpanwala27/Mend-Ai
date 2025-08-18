@@ -7,6 +7,7 @@ import '../../widgets/app_logo.dart';
 import '../../widgets/animated_card.dart';
 import '../../widgets/loading_overlay.dart';
 import '../../widgets/gradient_button.dart';
+import '../../widgets/aurora_background.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -21,7 +22,7 @@ class _SignUpScreenState extends State<SignUpScreen>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -41,13 +42,9 @@ class _SignUpScreenState extends State<SignUpScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
 
     _fadeController.forward();
   }
@@ -65,7 +62,9 @@ class _SignUpScreenState extends State<SignUpScreen>
     if (!_formKey.currentState!.validate()) return;
 
     if (!_agreeToTerms) {
-      _showErrorSnackBar('Please agree to the Terms of Service and Privacy Policy');
+      _showErrorSnackBar(
+        'Please agree to the Terms of Service and Privacy Policy',
+      );
       return;
     }
 
@@ -82,7 +81,7 @@ class _SignUpScreenState extends State<SignUpScreen>
       } else if (mounted) {
         // Sign out the user immediately after account creation
         await context.read<FirebaseAppState>().signOut();
-        
+
         // Show verification instructions and navigate back to login
         if (mounted) {
           showDialog(
@@ -236,16 +235,8 @@ class _SignUpScreenState extends State<SignUpScreen>
       loadingText: 'Creating your account...',
       child: Scaffold(
         backgroundColor: Colors.black,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios, color: AppTheme.primary),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ),
-        body: Container(
-          decoration: const BoxDecoration(color: Colors.black),
+        body: AuroraBackground(
+          intensity: 0.6,
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppTheme.spacingL),
@@ -262,7 +253,10 @@ class _SignUpScreenState extends State<SignUpScreen>
                       // Title
                       ShaderMask(
                         shaderCallback: (bounds) => const LinearGradient(
-                          colors: [AppTheme.gradientStart, AppTheme.gradientEnd],
+                          colors: [
+                            AppTheme.gradientStart,
+                            AppTheme.gradientEnd,
+                          ],
                         ).createShader(bounds),
                         child: Text(
                           'Create Account',
@@ -281,10 +275,11 @@ class _SignUpScreenState extends State<SignUpScreen>
 
                       Text(
                         'Join thousands building stronger relationships',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppTheme.textSecondary,
-                          fontWeight: FontWeight.w400,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: AppTheme.textSecondary,
+                              fontWeight: FontWeight.w400,
+                            ),
                         textAlign: TextAlign.center,
                       ),
 
@@ -306,31 +301,52 @@ class _SignUpScreenState extends State<SignUpScreen>
                                   style: const TextStyle(color: Colors.white),
                                   decoration: InputDecoration(
                                     labelText: 'Email Address',
-                                    labelStyle: TextStyle(color: AppTheme.textSecondary),
-                                    prefixIcon: Icon(Icons.email_outlined, color: AppTheme.primary),
+                                    labelStyle: TextStyle(
+                                      color: AppTheme.textSecondary,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.email_outlined,
+                                      color: AppTheme.primary,
+                                    ),
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                                      borderSide: BorderSide(color: AppTheme.textTertiary),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusS,
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: AppTheme.textTertiary,
+                                      ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusS,
+                                      ),
                                       borderSide: BorderSide(
-                                        color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                                        color: AppTheme.textTertiary.withValues(
+                                          alpha: 0.5,
+                                        ),
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                                      borderSide: BorderSide(color: AppTheme.primary),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusS,
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: AppTheme.primary,
+                                      ),
                                     ),
                                     errorBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                                      borderSide: BorderSide(color: AppTheme.interruptionColor),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusS,
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: AppTheme.interruptionColor,
+                                      ),
                                     ),
                                   ),
                                 ),
-                                
+
                                 const SizedBox(height: AppTheme.spacingM),
-                                
+
                                 // Password field
                                 TextFormField(
                                   controller: _passwordController,
@@ -339,8 +355,13 @@ class _SignUpScreenState extends State<SignUpScreen>
                                   style: const TextStyle(color: Colors.white),
                                   decoration: InputDecoration(
                                     labelText: 'Password',
-                                    labelStyle: TextStyle(color: AppTheme.textSecondary),
-                                    prefixIcon: Icon(Icons.lock_outline, color: AppTheme.primary),
+                                    labelStyle: TextStyle(
+                                      color: AppTheme.textSecondary,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.lock_outline,
+                                      color: AppTheme.primary,
+                                    ),
                                     suffixIcon: IconButton(
                                       icon: Icon(
                                         _obscurePassword
@@ -355,37 +376,60 @@ class _SignUpScreenState extends State<SignUpScreen>
                                       },
                                     ),
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                                      borderSide: BorderSide(color: AppTheme.textTertiary),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusS,
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: AppTheme.textTertiary,
+                                      ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusS,
+                                      ),
                                       borderSide: BorderSide(
-                                        color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                                        color: AppTheme.textTertiary.withValues(
+                                          alpha: 0.5,
+                                        ),
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                                      borderSide: BorderSide(color: AppTheme.primary),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusS,
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: AppTheme.primary,
+                                      ),
                                     ),
                                     errorBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                                      borderSide: BorderSide(color: AppTheme.interruptionColor),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusS,
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: AppTheme.interruptionColor,
+                                      ),
                                     ),
                                   ),
                                 ),
-                                
+
                                 const SizedBox(height: AppTheme.spacingS),
-                                
+
                                 // Password requirements
                                 Container(
-                                  padding: const EdgeInsets.all(AppTheme.spacingS),
+                                  padding: const EdgeInsets.all(
+                                    AppTheme.spacingS,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primary.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                                    color: AppTheme.primary.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radiusS,
+                                    ),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Password requirements:',
@@ -396,16 +440,18 @@ class _SignUpScreenState extends State<SignUpScreen>
                                         ),
                                       ),
                                       const SizedBox(height: 4),
-                                      _buildRequirement('At least 6 characters'),
+                                      _buildRequirement(
+                                        'At least 6 characters',
+                                      ),
                                       _buildRequirement('One uppercase letter'),
                                       _buildRequirement('One lowercase letter'),
                                       _buildRequirement('One number'),
                                     ],
                                   ),
                                 ),
-                                
+
                                 const SizedBox(height: AppTheme.spacingM),
-                                
+
                                 // Confirm Password field
                                 TextFormField(
                                   controller: _confirmPasswordController,
@@ -414,8 +460,13 @@ class _SignUpScreenState extends State<SignUpScreen>
                                   style: const TextStyle(color: Colors.white),
                                   decoration: InputDecoration(
                                     labelText: 'Confirm Password',
-                                    labelStyle: TextStyle(color: AppTheme.textSecondary),
-                                    prefixIcon: Icon(Icons.lock_outline, color: AppTheme.primary),
+                                    labelStyle: TextStyle(
+                                      color: AppTheme.textSecondary,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.lock_outline,
+                                      color: AppTheme.primary,
+                                    ),
                                     suffixIcon: IconButton(
                                       icon: Icon(
                                         _obscureConfirmPassword
@@ -425,33 +476,50 @@ class _SignUpScreenState extends State<SignUpScreen>
                                       ),
                                       onPressed: () {
                                         setState(() {
-                                          _obscureConfirmPassword = !_obscureConfirmPassword;
+                                          _obscureConfirmPassword =
+                                              !_obscureConfirmPassword;
                                         });
                                       },
                                     ),
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                                      borderSide: BorderSide(color: AppTheme.textTertiary),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusS,
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: AppTheme.textTertiary,
+                                      ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusS,
+                                      ),
                                       borderSide: BorderSide(
-                                        color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                                        color: AppTheme.textTertiary.withValues(
+                                          alpha: 0.5,
+                                        ),
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                                      borderSide: BorderSide(color: AppTheme.primary),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusS,
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: AppTheme.primary,
+                                      ),
                                     ),
                                     errorBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                                      borderSide: BorderSide(color: AppTheme.interruptionColor),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusS,
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: AppTheme.interruptionColor,
+                                      ),
                                     ),
                                   ),
                                 ),
-                                
+
                                 const SizedBox(height: AppTheme.spacingM),
-                                
+
                                 // Terms and conditions checkbox
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -479,15 +547,17 @@ class _SignUpScreenState extends State<SignUpScreen>
                                     ),
                                   ],
                                 ),
-                                
+
                                 const SizedBox(height: AppTheme.spacingL),
-                                
+
                                 // Sign up button
                                 SizedBox(
                                   width: double.infinity,
                                   child: GradientButton(
                                     onPressed: _isLoading ? null : _signUp,
-                                    text: _isLoading ? 'Creating Account...' : 'Create Account',
+                                    text: _isLoading
+                                        ? 'Creating Account...'
+                                        : 'Create Account',
                                     icon: _isLoading ? null : Icons.person_add,
                                     isLoading: _isLoading,
                                   ),
@@ -506,9 +576,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                         children: [
                           Text(
                             "Already have an account? ",
-                            style: TextStyle(
-                              color: AppTheme.textSecondary,
-                            ),
+                            style: TextStyle(color: AppTheme.textSecondary),
                           ),
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(),
@@ -540,18 +608,11 @@ class _SignUpScreenState extends State<SignUpScreen>
       padding: const EdgeInsets.only(bottom: 2),
       child: Row(
         children: [
-          Icon(
-            Icons.check_circle_outline,
-            size: 12,
-            color: AppTheme.primary,
-          ),
+          Icon(Icons.check_circle_outline, size: 12, color: AppTheme.primary),
           const SizedBox(width: 6),
           Text(
             text,
-            style: TextStyle(
-              color: AppTheme.textTertiary,
-              fontSize: 11,
-            ),
+            style: TextStyle(color: AppTheme.textTertiary, fontSize: 11),
           ),
         ],
       ),
